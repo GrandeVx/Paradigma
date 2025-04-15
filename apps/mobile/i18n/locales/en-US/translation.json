@@ -1,0 +1,111 @@
+{
+  "language": "Language",
+  "tab-bar": {
+    "home": "Home",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome",
+    "subtitle": "Example i18n App!",
+    "description": "This is an example React Native application demonstrating how to implement internationalization (i18n) using react-i18next. The app allows users to switch between different languages for a more localized experience.",
+    "exploringLanguages": "Exploring Languages",
+    "exploringLanguagesDescription": "Click on country flags to explore the app's content in different languages.",
+    "learnMore": "Want to Learn More?",
+    "repositoryLinkText": "Project repository on GitHub",
+    "articlesLinkText": "More articles"
+  },
+  "features": {
+    "title": "Features",
+    "collapsibles": {
+      "i18n": {
+        "title": "Internationalization with i18next",
+        "description": "Uses react-i18next for language management, allowing the app to be localized for different languages."
+      },
+      "persistent": {
+        "title": "Persistent Language Selection",
+        "description": "Uses AsyncStorage to persistently store the user's preferred language, providing a consistent experience across app restarts."
+      },
+      "fallback": {
+        "title": "Language Fallback",
+        "description": "Defaults to the device's language if no language preference is saved."
+      },
+      "switching": {
+        "title": "Easy Language Switching",
+        "description": "Users can switch languages by tapping on country flags."
+      }
+    }
+  },
+  "settings": {
+    "account": {
+      "title": "Account",
+      "profileInfo": "Profile Information",
+      "notifications": "Notifications",
+      "signOut": "Sign Out",
+      "deleteAccount": "Delete Account",
+      "deleteConfirmTitle": "Delete Account",
+      "deleteConfirmMessage": "Are you sure you want to delete your account? This action cannot be undone.",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "privacySettings": "Privacy Settings",
+      "visibility": "Visibility"
+    },
+    "support": {
+      "title": "Support",
+      "helpCenter": "Help Center",
+      "contactUs": "Contact Us"
+    },
+    "signOut": {
+      "title": "Sign Out",
+      "message": "Are you sure you want to sign out?"
+    },
+    "language": {
+      "title": "Language",
+      "current": "Current Language",
+      "select": "Select Language",
+      "countries": {
+        "en-US": "United States",
+        "it-IT": "Italy"
+      }
+    }
+  },
+  "auth": {
+    "title": "We are Your Paradigm",
+    "social": {
+      "apple": "Continue with Apple",
+      "google": "Continue with Google"
+    },
+    "actions": {
+      "register": "Sign Up",
+      "registering": "Signing up...",
+      "login": "Sign In",
+      "back": "Back",
+      "loading": "Signing in...",
+      "cancel": "Cancel",
+      "send": "Send",
+      "sending": "Sending..."
+    },
+    "placeholders": {
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password"
+    },
+    "errors": {
+      "passwordMismatch": "Passwords do not match"
+    },
+    "passwordReset": {
+      "forgotPassword": "Forgot password?",
+      "title": "Reset password",
+      "description": "Enter your email address. We will send you instructions to reset your password.",
+      "success": "Email sent",
+      "successMessage": "Check your email to reset your password",
+      "error": "Error",
+      "emailRequired": "Please enter a valid email address",
+      "genericError": "An error occurred while sending the email"
+    }
+  }
+}

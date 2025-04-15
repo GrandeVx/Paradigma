@@ -1,0 +1,18 @@
+@import '@paradigma/styles/src/styles/global.css';
+
+@layer base {
+  :root {
+    --brand: 27 96% 61%;
+    --brand-foreground: 31 97% 72%}
+  .dark {
+    --brand: 31 97% 72%}
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

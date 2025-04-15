@@ -1,0 +1,64 @@
+---
+description: 
+globs: ./packages/api/
+alwaysApply: false
+---
+## 1. **Project Structure and Organization**
+
+- **Modular File Organization:**  
+  - **Routers:** Keep all API endpoints and business logic encapsulated within dedicated routers (e.g., `/src/routers`). Split related queries and mutations into separate files to minimize file size and separate concerns.  
+  - **Schemas:** Use the `/src/schemas` directory for all Zod validation schemas. This ensures that each endpoint validates its input and output types consistently.  
+  - **Utilities & Helpers:** Place all shared functions such as error handling, logging, and JWT extraction in `/src/utils`.  
+  - **Entry Point:** Use the main entry file (e.g., `index.ts`) to re-export your routers, types, and any shared utilities.
+
+- **Naming Conventions:**  
+  - Use descriptive and consistent naming. For example, name your routers, procedures, and schemas with clear suffixes (e.g., `userRouter`, `updateProfileSchema`).  
+  - Use lowercase and dashes for directory names.
+
+## 2. **TypeScript and Static Type-Safety**
+
+- **Strict Typing:**  
+  - Use TypeScript interfaces as much as possible, especially for defining API inputs and outputs, to keep data shapes consistent.
+
+- **Zod for Validation:**  
+  - Validate all external inputs using Zod. Avoid relying on client-side validation—always check data on the backend.
+  - Leverage Zod’s type inference to automatically generate corresponding TypeScript types from your schemas.
+
+## 3. **tRPC and Procedure Definitions**
+
+- **Router Composition:**  
+  - Use tRPC’s `createTRPCRouter` to build and compose your API endpoints. Break down each feature into queries and mutations and import them into a centralized router (e.g., `appRouter` in `/src/root.ts`).
+
+- **Procedure Types:**  
+  - **Public and Protected Procedures:** Use `publicProcedure` for endpoints that do not require user authentication, and `protectedProcedure` for endpoints requiring user authorization.
+
+## 4. **Error Handling and Logging**
+
+- **Error Logging:**  
+  - Use the error logging utility (found in `/src/utils/errors/errorLogger.ts`) to capture and output errors. In development mode, output detailed error logs; in production, sanitize and redact sensitive information.
+  - Always catch and log errors in middleware and procedures to aid both development and post-deployment debugging.
+
+## 5. **Coding Standards and Best Practices**
+
+- **Modularization:**  
+  - Keep functions small, concise, and focused on a single purpose. If a function starts growing too large, break it into smaller helper functions.
+  - Prefer declarative and functional code styles over class-based implementations.
+
+- **Documentation and Comments:**  
+  - Document all non-trivial functions with inline comments and/or JSDoc annotations. This helps onboard new developers and eases future maintenance.
+  - Use clear markdown documentation in your repository to explain complex business logic and decision paths.
+
+## 6. **Performance and Scalability**
+
+- **Code Splitting and Lazy Loading:**  
+  - Ensure that non-critical components and modules are dynamically imported where possible to reduce initial load times.
+  - Optimize database queries and use proper indexes to scale as the user base grows.
+
+## 7. **Security Considerations**
+
+- **Input Sanitization:**  
+  - Always sanitize data inputs, especially when interacting with databases or external services.  
+  - Use proper escaping and parameterization in your database queries.
+
+- **Rate Limiting and Access Control:**  
+  - Implement rate-limiting if necessary and follow the least privilege principle when granting access to protected routes.

@@ -1,0 +1,124 @@
+import { betterFetch } from "@better-fetch/fetch";
+import type { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+type Session = typeof auth.$Infer.Session;
+
+// List of supported locales
+export const locales = ["en", "it"];
+export const defaultLocale = "en";
+
+// Get the preferred locale from request headers
+function getLocale(request: NextRequest) {
+  // Check if there's a locale in the pathname
+  const pathname = request.nextUrl.pathname;
+  const pathnameLocale = locales.find(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
+  );
+
+  if (pathnameLocale) return pathnameLocale;
+
+  // Check the accept-language header
+  const acceptedLanguage = request.headers
+    .get("accept-language")
+    ?.split(",")[0];
+  if (acceptedLanguage) {
+    const locale = locales.find((locale) =>
+      acceptedLanguage.toLowerCase().startsWith(locale),
+    );
+    if (locale) return locale;
+  }
+
+  return defaultLocale;
+}
+
+export async function middleware(req: NextRequest) {
+  // First, handle locale redirection
+  const pathname = req.nextUrl.pathname;
+
+  // Skip locale check for API routes and static files
+  const shouldCheckLocale = ![
+    "/api/",
+    "/_next/",
+    "/images/",
+    "/favicon.ico",
+    "/sitemap.xml",
+  ].some((prefix) => pathname.startsWith(prefix));
+
+  if (shouldCheckLocale) {
+    // Check if the pathname already has a locale
+    const pathnameIsMissingLocale = locales.every(
+      (locale) =>
+        !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`,
+    );
+
+    if (pathnameIsMissingLocale) {
+      const locale = getLocale(req);
+      // Redirect to the same URL but with locale prefix
+      return NextResponse.redirect(
+        new URL(`/${locale}${pathname === "/" ? "" : pathname}`, req.url),
+      );
+    }
+  }
+
+  // Extract locale from the URL for auth redirects
+  const locale = getLocale(req);
+
+  // Function to check if a path is under the marketing route group
+  const isMarketingRoute = (path: string) => {
+    // Check if the path is the root or within the (marketing) group
+    return path === "/" || path === `/${locale}`;
+  };
+
+  // Check if the request is for a public route
+  const isPublicRoute =
+    ["/login", "/sign-up", "/forgot-password", "/sign-in"].some((route) =>
+      pathname.endsWith(route),
+    ) || isMarketingRoute(pathname);
+
+  // Skip auth check for public routes and API routes
+  if (isPublicRoute || pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
+  try {
+    // Get session using Better Auth
+    const { data: session } = await betterFetch<Session>("/api/auth/get-session", {
+      baseURL: req.nextUrl.origin,
+      headers: {
+        cookie: req.headers.get("cookie") || "", // Forward the cookies
+      },
+    });
+
+    if (!session && !isPublicRoute) {
+      // Redirect to login if not authenticated and trying to access a protected route
+      return NextResponse.redirect(new URL(`/${locale}/sign-in`, req.url));
+    }
+
+    if (session && isPublicRoute && !isMarketingRoute(pathname)) {
+      // Redirect to dashboard if authenticated and trying to access a public route
+      // But don't redirect if it's a marketing page
+      return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Auth error:", error);
+    // On auth error, redirect to login
+    return NextResponse.redirect(new URL(`/${locale}/sign-in`, req.url));
+  }
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public file extensions (.svg, .png, etc.)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};

@@ -1,0 +1,111 @@
+{
+  "language": "Lingua",
+  "tab-bar": {
+    "home": "Home",
+    "profile": "Profilo",
+    "settings": "Impostazioni"
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Benvenuto",
+    "subtitle": "App di esempio i18n!",
+    "description": "Questa è un'applicazione React Native di esempio che dimostra come implementare l'internazionalizzazione (i18n) utilizzando react-i18next. L'app permette agli utenti di passare da una lingua all'altra per un'esperienza più localizzata.",
+    "exploringLanguages": "Esplorare le Lingue",
+    "exploringLanguagesDescription": "Clicca sulle bandiere dei paesi per esplorare i contenuti dell'app in diverse lingue.",
+    "learnMore": "Vuoi Saperne di Più?",
+    "repositoryLinkText": "Repository del progetto su GitHub",
+    "articlesLinkText": "Altri articoli"
+  },
+  "features": {
+    "title": "Funzionalità",
+    "collapsibles": {
+      "i18n": {
+        "title": "Internazionalizzazione con i18next",
+        "description": "Utilizza react-i18next per la gestione delle lingue, permettendo all'app di essere localizzata in diverse lingue."
+      },
+      "persistent": {
+        "title": "Selezione Persistente della Lingua",
+        "description": "Utilizza AsyncStorage per memorizzare in modo persistente la lingua preferita dell'utente, fornendo un'esperienza coerente tra i riavvii dell'app."
+      },
+      "fallback": {
+        "title": "Lingua di Fallback",
+        "description": "Passa alla lingua del dispositivo se non è stata salvata alcuna preferenza linguistica."
+      },
+      "switching": {
+        "title": "Cambio Lingua Facilitato",
+        "description": "Gli utenti possono cambiare lingua toccando le bandiere dei paesi."
+      }
+    }
+  },
+  "settings": {
+    "account": {
+      "title": "Account",
+      "profileInfo": "Informazioni Profilo",
+      "notifications": "Notifiche",
+      "signOut": "Esci",
+      "deleteAccount": "Elimina Account",
+      "deleteConfirmTitle": "Elimina Account",
+      "deleteConfirmMessage": "Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.",
+      "delete": "Elimina",
+      "cancel": "Annulla"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "privacySettings": "Impostazioni Privacy",
+      "visibility": "Visibilità"
+    },
+    "support": {
+      "title": "Supporto",
+      "helpCenter": "Centro Assistenza",
+      "contactUs": "Contattaci"
+    },
+    "signOut": {
+      "title": "Esci",
+      "message": "Sei sicuro di voler uscire?"
+    },
+    "language": {
+      "title": "Lingua",
+      "current": "Lingua Attuale",
+      "select": "Seleziona Lingua",
+      "countries": {
+        "en-US": "Stati Uniti",
+        "it-IT": "Italia"
+      }
+    }
+  },
+  "auth": {
+    "title": "Siamo il Tuo Paradigma",
+    "social": {
+      "apple": "Continua con Apple",
+      "google": "Continua con Google"
+    },
+    "actions": {
+      "register": "Registrati",
+      "registering": "Registrando...",
+      "login": "Accedi",
+      "back": "Indietro",
+      "loading": "Accedi...",
+      "cancel": "Annulla",
+      "send": "Invia",
+      "sending": "Invio..."
+    },
+    "placeholders": {
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Conferma Password"
+    },
+    "errors": {
+      "passwordMismatch": "Le password non corrispondono"
+    },
+    "passwordReset": {
+      "forgotPassword": "Password dimenticata?",
+      "title": "Reimposta password",
+      "description": "Inserisci il tuo indirizzo email. Ti invieremo le istruzioni per reimpostare la password.",
+      "success": "Email inviata",
+      "successMessage": "Controlla la tua email per reimpostare la password",
+      "error": "Errore",
+      "emailRequired": "Inserisci un indirizzo email valido",
+      "genericError": "Si è verificato un errore durante l'invio dell'email"
+    }
+  }
+}

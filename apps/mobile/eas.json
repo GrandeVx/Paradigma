@@ -1,0 +1,32 @@
+{
+  "cli": {
+    "version": ">= 15.0.10",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://ydeelydkwpiigedjbunc.supabase.co",
+        "EXPO_PUBLIC_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkZWVseWRrd3BpaWdlZGpidW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5MDIyOTgsImV4cCI6MjA1NTQ3ODI5OH0.X_z9G46hh9XCOt-LCRLmuOFatuItkQr0bUh50M40pZ8",
+        "NEXT_PUBLIC_WEBSITE_URL": "http://localhost:3000",
+        "EXPO_PUBLIC_API_ENDPOINT": "http://localhost:3000",
+        "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS": "pk_51c4eecde90ef52f612eb11ee6258a4bc66c73af3cc46a5b",
+        "EXPO_PUBLIC_SUPERWALL_API_KEY_ANDROID": "pk_51c4eecde90ef52f612eb11ee6258a4bc66c73af3cc46a5b"
+      }
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

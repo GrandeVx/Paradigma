@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Based on Your Context analyze always:
+1. Mobile -> [tailwind.config.js](mdc:apps/mobile/tailwind.config.js) + [global.css](mdc:apps/mobile/global.css)
+2. Web -> [tailwind.config.ts](mdc:apps/web/tailwind.config.ts) + [globals.css](mdc:apps/web/src/styles/globals.css)
+
+Try always to use Color Variable and not Constant color like bg-[#AD3R3E]
+
+For every Front-End Develope

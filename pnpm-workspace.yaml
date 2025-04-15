@@ -1,0 +1,8 @@
+packages:
+  - apps/web
+  - apps/mobile
+  - apps/my-expo-app
+  - packages/api
+  - packages/db
+  - packages/styles
+  - packages/auth

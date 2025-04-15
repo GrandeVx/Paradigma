@@ -1,0 +1,329 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useRoute } from "@react-navigation/native";
+import { canGoBack, getTitle } from "@/lib/utils";
+import React, { ReactNode, useEffect } from "react";
+import { Platform, Pressable, Text, View } from "react-native";
+import { Href, Router, useRouter } from "expo-router";
+import { Dimensions } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+  useSharedValue,
+  withTiming,
+  withSequence,
+} from "react-native-reanimated";
+import { api } from "@/lib/api";
+
+interface HeaderAction {
+  icon: ReactNode;
+  onPress: () => void;
+}
+
+interface ContainerWithChildrenProps {
+  children: ReactNode;
+  router?: Router;
+  modal?: boolean;
+  backRoute?: Href<string | object>;
+  rightActions?: HeaderAction[];
+  customTitle?: string;
+  variant?: "main" | "secondary";
+}
+
+const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
+  children,
+  router = useRouter(),
+  modal = false,
+  backRoute,
+  rightActions,
+  customTitle,
+  variant = "main",
+}) => {
+  const route = useRoute();
+  const insets = useSafeAreaInsets();
+  const windowHeight = Dimensions.get("window").height;
+
+  const titleOpacity = useSharedValue(0);
+  const titleTranslateY = useSharedValue(20);
+  const rightComponentsOpacity = useSharedValue(0);
+  const rightComponentsTranslateX = useSharedValue(20);
+  const leftComponentOpacity = useSharedValue(0);
+  const leftComponentTranslateX = useSharedValue(-20);
+  const contentOpacity = useSharedValue(0);
+  const contentTranslateY = useSharedValue(20);
+
+  const headerHeight = Math.max(insets.top + 44, 0.13 * windowHeight);
+
+  // Get user data
+  const { data: userData } = api.user.getUserInfo.useQuery();
+
+  const animateElements = () => {
+    titleOpacity.value = withSequence(
+      withTiming(0, { duration: 0 }),
+      withTiming(1, { duration: 300 })
+    );
+
+    titleTranslateY.value = withSequence(
+      withTiming(20, { duration: 0 }),
+      withSpring(0, {
+        damping: 15,
+        stiffness: 150,
+      })
+    );
+
+    rightComponentsOpacity.value = withSequence(
+      withTiming(0, { duration: 0 }),
+      withTiming(1, { duration: 300 })
+    );
+
+    rightComponentsTranslateX.value = withSequence(
+      withTiming(20, { duration: 0 }),
+      withSpring(0, {
+        damping: 15,
+        stiffness: 150,
+      })
+    );
+
+    leftComponentOpacity.value = withSequence(
+      withTiming(0, { duration: 0 }),
+      withTiming(1, { duration: 300 })
+    );
+
+    leftComponentTranslateX.value = withSequence(
+      withTiming(-20, { duration: 0 }),
+      withSpring(0, {
+        damping: 15,
+        stiffness: 150,
+      })
+    );
+
+    contentOpacity.value = withSequence(
+      withTiming(0, { duration: 0 }),
+      withTiming(1, { duration: 300 })
+    );
+
+    contentTranslateY.value = withSequence(
+      withTiming(20, { duration: 0 }),
+      withSpring(0, {
+        damping: 15,
+        stiffness: 150,
+      })
+    );
+  };
+
+  useEffect(() => {
+    animateElements();
+  }, [route.name]);
+
+  const titleAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: titleOpacity.value,
+    transform: [{ translateY: titleTranslateY.value }],
+  }));
+
+  const rightComponentsAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: rightComponentsOpacity.value,
+    transform: [{ translateX: rightComponentsTranslateX.value }],
+  }));
+
+  const leftComponentAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: leftComponentOpacity.value,
+    transform: [{ translateX: leftComponentTranslateX.value }],
+  }));
+
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+    transform: [{ translateY: contentTranslateY.value }],
+  }));
+
+  const renderLeftComponent = () => {
+    if (variant === "secondary" && router?.canGoBack() && !modal && router) {
+      return (
+        <View>
+          {/* @ts-expect-error - React Native Reanimated type issue */}
+          <Animated.View style={[leftComponentAnimatedStyle]}>
+            <Pressable
+              onPress={() => {
+                backRoute ? router.navigate(backRoute) : router.back();
+              }}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: "transparent",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {/* @ts-expect-error - Expo icon type issue */}
+              <FontAwesome name="angle-left" size={24} color="black" />
+            </Pressable>
+          </Animated.View>
+        </View>
+      );
+    }
+
+    if (variant === "main") {
+      return (
+        <View>
+          {/* @ts-expect-error - React Native Reanimated type issue */}
+          <Animated.View style={[leftComponentAnimatedStyle]}>
+            <View
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 20,
+
+                overflow: "hidden",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              className="bg-primary-400"
+            >
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+                {userData?.firstName?.charAt(0).toUpperCase() ?? "JD"}
+              </Text>
+            </View>
+          </Animated.View>
+        </View>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <View style={{ flex: 1 }} className="bg-background">
+      <View
+        style={{
+          height: headerHeight,
+          paddingTop: insets.top,
+          paddingHorizontal: 15,
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 8,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              flex: 1,
+              justifyContent: variant === "secondary" ? "center" : "flex-start",
+              position: variant === "secondary" ? "relative" : "relative",
+            }}
+          >
+            {variant === "secondary" && (
+              <View
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  zIndex: 1,
+                }}
+              >
+                {renderLeftComponent()}
+              </View>
+            )}
+
+            {variant !== "secondary" && (
+              <View style={{ width: 30 }}>{renderLeftComponent()}</View>
+            )}
+
+            <View
+              style={{
+                flex: variant === "secondary" ? 1 : 0,
+                alignItems: variant === "secondary" ? "center" : "flex-start",
+                paddingHorizontal: variant === "secondary" ? 40 : 0,
+              }}
+            >
+              {/* @ts-expect-error - React Native Reanimated type issue */}
+              <Animated.Text
+                className="text-black"
+                style={[
+                  {
+                    fontSize: variant === "main" ? 20 : 24,
+                    fontWeight: "600",
+                    marginLeft: variant === "main" ? 12 : 0,
+                    textAlign: variant === "secondary" ? "center" : "left",
+                  },
+                  titleAnimatedStyle,
+                ]}
+              >
+                {customTitle ||
+                  getTitle({
+                    name:
+                      (route.params as { title?: string })?.title ?? route.name,
+                  })}
+              </Animated.Text>
+            </View>
+          </View>
+
+          {rightActions && (
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 4,
+                marginLeft: "auto",
+                position: variant === "secondary" ? "absolute" : "relative",
+                right: variant === "secondary" ? 15 : 0,
+              }}
+            >
+              {rightActions?.map((action, index) => (
+                <View key={index}>
+                  <View>
+                    {/* @ts-expect-error - React Native Reanimated type issue */}
+                    <Animated.View
+                      style={[
+                        {
+                          opacity: 0,
+                          transform: [{ translateX: 20 }],
+                        },
+                        rightComponentsAnimatedStyle,
+                      ]}
+                    >
+                      <Pressable
+                        onPress={action.onPress}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        {action.icon}
+                      </Pressable>
+                    </Animated.View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
+
+      <StatusBar style={Platform.OS === "ios" ? "auto" : "auto"} />
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          {/* @ts-expect-error - React Native Reanimated type issue */}
+          <Animated.View
+            style={[
+              {
+                flex: 1,
+              },
+              contentAnimatedStyle,
+            ]}
+          >
+            {children}
+          </Animated.View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+export default HeaderContainer;

@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "module": "commonjs"
+  },
+  "include": [
+    "src",
+    "index.ts",
+    "prisma/zod"
+  ]
+}
