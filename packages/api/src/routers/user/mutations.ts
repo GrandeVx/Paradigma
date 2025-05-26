@@ -40,13 +40,20 @@ export const mutations = {
         }
       }
 
-      // Update user profile
+      // Update user profile with cache invalidation
       const updatedUser = await ctx.db.user.update({
         where: { id: currentUserId },
         data: {
           ...input,
           notificationToken: input.notificationToken || null,
         },
+        // Invalidate user cache when profile is updated
+        uncache: {
+          uncacheKeys: [
+            // Invalidate the specific user cache
+            `balanceapp:user:id:${currentUserId}`
+          ]
+        }
       });
 
       return updatedUser;
@@ -62,13 +69,23 @@ export const mutations = {
       });
     }
 
-    // Soft delete the user
+    // Soft delete the user with cache invalidation
     const deletedUser = await ctx.db.user.update({
       where: { id: currentUserId },
       data: {
         isDeleted: true,
         deletedAt: new Date(),
       },
+      // Invalidate all user-related caches when account is deleted
+      uncache: {
+        uncacheKeys: [
+          // Invalidate all data related to this user
+          `balanceapp:*:user_id:${currentUserId}*`,
+          // Invalidate user profile data
+          `balanceapp:user:id:${currentUserId}*`
+        ],
+        hasPattern: true
+      }
     });
 
     return deletedUser;

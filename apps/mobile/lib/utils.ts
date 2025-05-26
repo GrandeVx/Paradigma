@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useTranslation } from "react-i18next";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -11,16 +12,8 @@ export function cn(...inputs: ClassValue[]) {
  * @returns
  */
 export function getTitle(route: { name: string }) {
-  switch (route.name) {
-    case "home":
-      return "Home";
-
-    case "profile-home":
-      return "Il mio Profilo";
-
-    default:
-      return route.name;
-  }
+  const { t } = useTranslation();
+  return t(`header.${route.name}`);
 }
 
 /**

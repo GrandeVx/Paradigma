@@ -1,0 +1,25 @@
+import * as React from "react";
+import Svg, { Path } from "react-native-svg";
+import { IconSvgProps, resolveColor } from "./base-icon";
+
+export const EditIcon: React.FC<IconSvgProps> = ({
+  color = "currentColor",
+  size = 24,
+  ...props
+}) => {
+  const fillColor = resolveColor(color);
+
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 38 38"
+      fill="none"
+      {...props}
+    >
+      <Path fill-rule="evenodd" clip-rule="evenodd" d="M22.3211 1.19974C23.0459 0.474921 24.0161 0.0481986 25.0401 0.00384019C26.0641 -0.0405182 27.0676 0.300712 27.8523 0.960147L28.1124 1.19974L36.8012 9.8886C37.5255 10.6132 37.9518 11.583 37.9962 12.6066C38.0405 13.6301 37.6997 14.6331 37.0408 15.4177L36.8012 15.6798L15.6801 36.8009C15.0002 37.4809 14.1027 37.8999 13.1449 37.9846L12.7845 37.9989H2.06829C1.55874 37.9989 1.06713 37.8108 0.687714 37.4707C0.308297 37.1306 0.0677819 36.6624 0.012287 36.1559L0 35.9306V25.2144C0.000234948 24.2529 0.338778 23.3221 0.956328 22.585L1.20207 22.3188L22.3211 1.19974ZM18.7866 10.5255L4.09562 25.2165V33.9033H12.7865L27.4775 19.2123L18.7887 10.5234L18.7866 10.5255ZM25.2167 4.09535L21.6822 7.62987L30.3711 16.3187L33.9056 12.7842L25.2167 4.09535Z" fill={fillColor} />
+    </Svg>
+  );
+};
+
+EditIcon.displayName = "EditIcon";

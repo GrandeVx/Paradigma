@@ -180,3 +180,4 @@ apps/mobile/.gitignore
 .turbo/
 
 
+apps/mobile/build-*

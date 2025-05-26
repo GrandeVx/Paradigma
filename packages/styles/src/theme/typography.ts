@@ -4,6 +4,7 @@ export const typography = {
   fontFamily: {
     sans: ["DM Sans", "sans-serif"],
     mono: ["JetBrains Mono", "monospace"],
+    grotezk: ["ApfelGrotezk", "sans-serif"],
   },
   // Font sizes with their respective line heights
   fontSize: {

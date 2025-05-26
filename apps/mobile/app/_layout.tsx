@@ -20,6 +20,17 @@ import "@/i18n";
 import { superwallService } from "@/services/superwall";
 import { Platform } from "react-native";
 
+import {
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
+} from 'react-native-reanimated';
+
+// This is the default configuration
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false, // Reanimated runs in strict mode by default (this is a workaround to avoid the error)
+});
+
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
@@ -36,6 +47,8 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    ApfelGrotezk: require("../assets/fonts/ApfelGrotezk-Regular.otf"),
+    DMSans: require("../assets/fonts/DMSans.ttf"),
     ...FontAwesome.font,
   });
 
@@ -76,12 +89,13 @@ function RootLayoutNav() {
           <ThemeProvider
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
-            <GestureHandlerRootView style={{ flex: 1 }}>
+            <GestureHandlerRootView style={{ flex: 1, zIndex: 20 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
               {/* @ts-expect-error Expo Router Stack is not typed */}
               <Stack              >
                 <Stack.Screen
                   name="(splash)"
                   options={{ headerShown: false, animation: "fade" }}
+
                 />
                 <Stack.Screen
                   name="(protected)"

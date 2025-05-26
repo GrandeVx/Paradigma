@@ -1,10 +1,7 @@
 import { SplashScreen, useRouter, useSegments } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
-import { decode } from "base64-arraybuffer";
 
 import { authClient } from "@/lib/auth-client";
-import { supabase } from "@/config/supabase";
-import { getBaseUrl } from "@/lib/api";
 import { Session } from "better-auth/types";
 import { User } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -24,6 +21,8 @@ type SupabaseContextProps = {
 
   // Auth
   signUp: (email: string, password: string) => Promise<string>;
+  sendVerificationOtp: (email: string) => Promise<unknown>;
+  signInWithVerificationOtp: (email: string, otp: string) => Promise<unknown>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signInWithApple: () => Promise<unknown>;
   signInWithGoogle: () => Promise<unknown>;
@@ -47,6 +46,8 @@ export const SupabaseContext = createContext<SupabaseContextProps>({
   isLoading: true,
   setIsOnboarded: async () => { },
   signUp: async () => "",
+  sendVerificationOtp: async () => { },
+  signInWithVerificationOtp: async () => { },
   signInWithPassword: async () => { },
   signInWithApple: async () => { },
   signInWithGoogle: async () => { },
@@ -94,18 +95,44 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
   /**
    * Sends a password reset email to the user.
    */
-  const PasswordReset = async () => {
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      user?.email as string,
-      {
-        // You Will redirect to the Web App (Next.js) to reset the password
-        redirectTo: getBaseUrl() + "/auth/reset-password",
-      }
-    );
+  // const PasswordReset = async () => {
+  //   const { error } = await supabase.auth.resetPasswordForEmail(
+  //     user?.email as string,
+  //     {
+  //       // You Will redirect to the Web App (Next.js) to reset the password
+  //       redirectTo: getBaseUrl() + "/auth/reset-password",
+  //     }
+  //   );
+  //   if (error) {
+  //     throw error;
+  //   }
+  // };
+
+
+  const sendVerificationOtp = async (email: string) => {
+    console.log("sending verification otp", email);
+    const { error, data } = await authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" });
     if (error) {
       throw error;
     }
+    return data;
   };
+
+
+  const signInWithVerificationOtp = async (email: string, otp: string) => {
+    console.log("signing in with verification otp", email, otp);
+    const { error, data } = await authClient.signIn.emailOtp({ email: email, otp: otp });
+    if (error) {
+      console.log("error", error);
+      throw error;
+    }
+    setUser(data.user as unknown as User);
+    setSession(data.token as unknown as Session);
+    // Reset routing flag to trigger a new routing decision
+    setIsInitialRoutingDone(false);
+    return data;
+  };
+
 
   /**
    * Signs up a new user with the provided email and password.
@@ -243,41 +270,41 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
    * @returns The uploaded data path.
    * @throws If there is an error during the upload process.
    */
-  const uploadAvatar = async (file: string) => {
-    const { data, error } = await supabase.storage
-      .from("avatars")
-      .upload(user?.id + "/" + "avatar", decode(file), {
-        contentType: "image/png",
-        cacheControl: "3600",
-        upsert: false,
-      });
-    if (error) {
-      throw error;
-    }
-    return data.path;
-  };
+  // const uploadAvatar = async (file: string) => {
+  //   const { data, error } = await supabase.storage
+  //     .from("avatars")
+  //     .upload(user?.id + "/" + "avatar", decode(file), {
+  //       contentType: "image/png",
+  //       cacheControl: "3600",
+  //       upsert: false,
+  //     });
+  //   if (error) {
+  //     throw error;
+  //   }
+  //   return data.path;
+  // };
 
   /**
    * Retrieves the URL of the user's avatar from the Supabase storage.
    * @returns The URL of the user's avatar, or an empty string if the avatar is not found.
    */
-  const getAvatarUrl = async () => {
-    const { data } = await supabase.storage
-      .from("avatars")
-      .getPublicUrl("avatar");
+  // const getAvatarUrl = async () => {
+  //   const { data } = await supabase.storage
+  //     .from("avatars")
+  //     .getPublicUrl("avatar");
 
-    if (!data) {
-      return "";
-    }
+  //   if (!data) {
+  //     return "";
+  //   }
 
-    const url =
-      data.publicUrl.split("/").slice(0, -1).join("/") +
-      "/" +
-      user?.id +
-      "/avatar";
+  //   const url =
+  //     data.publicUrl.split("/").slice(0, -1).join("/") +
+  //     "/" +
+  //     user?.id +
+  //     "/avatar";
 
-    return url;
-  };
+  //   return url;
+  // };
 
   // Initialize app state
   useEffect(() => {
@@ -320,7 +347,10 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
     type AppSection = "(protected)" | "(onboarding)" | "(auth)" | "(splash)";
 
     // Helper function to check if we're in a specific section
-    const isInSection = (section: AppSection) => segments[0] === section;
+    const isInSection = (section: AppSection) => {
+      console.log("Checking if we're in section", section, segments[0], segments);
+      return segments[0] === section;
+    }
 
     // Helper function for redirecting with type safety
     const redirectTo = (path: string) => {
@@ -374,7 +404,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
           redirectTo("/(onboarding)");
         } else if (isOnboarded && !inAuthGroup) {
           // User has completed onboarding but is not authenticated
-          redirectTo("/(auth)/sign-in");
+          redirectTo("/(auth)/");
         }
       }
 
@@ -417,12 +447,14 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
         setIsOnboarded,
         signUp,
         signInWithPassword,
+        signInWithVerificationOtp,
         signInWithApple,
         signInWithGoogle,
+        sendVerificationOtp,
         signOut,
-        PasswordReset,
-        uploadAvatar,
-        getAvatarUrl,
+        //PasswordReset,
+        // uploadAvatar,
+        // getAvatarUrl,
       }}
     >
       {children}

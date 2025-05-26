@@ -12,6 +12,8 @@
   "scripts": {
     "dev": "pnpm copy-styles && dotenv -e ./apps/mobile/.env -- turbo dev --parallel",
     "db-push": "cd ./packages/db && pnpm run db-push",
+    "db-seed": "cd ./packages/db && pnpm run seed",
+    "db-studio": "cd ./packages/db && pnpm run studio",
     "copy-styles": "cp packages/styles/src/styles/global.css apps/mobile/global.css"
   },
   "dependencies": {

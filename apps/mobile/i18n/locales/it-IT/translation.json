@@ -3,7 +3,10 @@
   "tab-bar": {
     "home": "Home",
     "profile": "Profilo",
-    "settings": "Impostazioni"
+    "accounts": "Conti",
+    "settings": "Impostazioni",
+    "budgets": "Budget",
+    "transactions": "Transazioni"
   },
   "home": {
     "title": "Home",
@@ -74,13 +77,22 @@
     }
   },
   "auth": {
-    "title": "Siamo il Tuo Paradigma",
+    "start": {
+      "title": "Benvenuto in Balance",
+      "description": "Payoff da inserire qui",
+      "button": "Crea un account",
+      "subtitle": "Hai già un account?",
+      "link": "Accedi"
+    },
+    "title": "Crea subito il tuo account",
     "social": {
       "apple": "Continua con Apple",
       "google": "Continua con Google"
     },
     "actions": {
       "register": "Registrati",
+      "or": "oppure",
+      "use-email": "Usa la tua email",
       "registering": "Registrando...",
       "login": "Accedi",
       "back": "Indietro",
@@ -106,6 +118,28 @@
       "error": "Errore",
       "emailRequired": "Inserisci un indirizzo email valido",
       "genericError": "Si è verificato un errore durante l'invio dell'email"
+    },
+    "sign-up": {
+      "title": "Bentornato",
+      "email-label": "Email",
+      "email-placeholder": "La tua email",
+      "button": "Accedi",
+      "or": "oppure",
+      "terms": "Creando un account, accetti i",
+      "terms-link": "Termini del servizio",
+      "and": "e",
+      "terms-2": "riconosci di aver letto e compreso la",
+      "terms-2-link": "Privacy Policy"
     }
+  },
+  "header": {
+    "sign-in": "BENVENUTO",
+    "sign-up": "BENTORNATO",
+    "index": "HOME"
+  },
+  "email": {
+    "title": "LA TUA EMAIL",
+    "prompt": "Inserisci la tua email",
+    "placeholder": "Email"
   }
 }

@@ -1,0 +1,25 @@
+import * as React from "react";
+import Svg, { Path } from "react-native-svg";
+import { IconSvgProps, resolveColor } from "./base-icon";
+
+export const UpIcon: React.FC<IconSvgProps> = ({
+  color = "currentColor",
+  size = 24,
+  ...props
+}) => {
+  const fillColor = resolveColor(color);
+
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 27 16"
+      fill="none"
+      {...props}
+    >
+      <Path fill-rule="evenodd" clip-rule="evenodd" d="M12.0637 0.594857C12.4447 0.21397 12.9614 0 13.5001 0C14.0389 0 14.5555 0.21397 14.9365 0.594857L26.4299 12.0882C26.8 12.4714 27.0048 12.9846 27.0002 13.5173C26.9955 14.05 26.7819 14.5596 26.4052 14.9363C26.0285 15.313 25.5189 15.5267 24.9862 15.5313C24.4535 15.5359 23.9403 15.3312 23.5571 14.9611L13.5001 4.90411L3.44316 14.9611C3.05998 15.3312 2.54676 15.5359 2.01405 15.5313C1.48135 15.5267 0.971769 15.313 0.595073 14.9363C0.218378 14.5596 0.00470589 14.05 7.68039e-05 13.5173C-0.00455228 12.9846 0.200232 12.4714 0.570325 12.0882L12.0637 0.594857Z" fill={fillColor} />
+    </Svg>
+  );
+};
+
+UpIcon.displayName = "UpIcon";

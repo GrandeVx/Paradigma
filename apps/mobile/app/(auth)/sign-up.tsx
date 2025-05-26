@@ -1,149 +1,125 @@
 import React, { useState } from "react";
-import { useRouter } from "expo-router";
-import {
-  View,
-  TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
-} from "react-native";
+import { Platform, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { useRouter } from "expo-router";
+import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { useSupabase } from "@/context/supabase-provider";
 import { useTranslation } from "react-i18next";
 
-import { api } from "@/lib/api";
-import { TRPCError } from "@trpc/server";
+import HeaderContainer from "@/components/layouts/_header";
+import { Input } from "@/components/ui/input";
+import { KeyboardAvoidingView } from "react-native"
+import { useSupabase } from "@/context/supabase-provider";
 
-export default function SignUp() {
-  const router = useRouter();
+
+
+
+export default function AuthIndex() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { sendVerificationOtp } = useSupabase();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const { signUp } = useSupabase();
   const [isLoading, setIsLoading] = useState(false);
-  const { mutate: addUser } = api.user.addUser.useMutation({
-    onSuccess: () => {
-      setIsLoading(false);
-    },
-    onError: (error: unknown) => {
-      if (error instanceof Error) {
-        Alert.alert(t("auth.passwordReset.error"), error.message);
-      } else {
-        Alert.alert(
-          t("auth.passwordReset.error"),
-          t("auth.passwordReset.genericError")
-        );
-      }
-      setIsLoading(false);
-    },
-  });
+
+  const canSignUp = email && z.string().email().safeParse(email).success;
 
   const handleSignUp = async () => {
-    if (password !== confirmPassword || password.length < 8) {
-      Alert.alert(
-        t("auth.passwordReset.error"),
-        t("auth.errors.passwordMismatch")
-      );
-      return;
-    }
 
     setIsLoading(true);
-    await signUp(email, password).then(async (session) => {
-      addUser({
-        email,
-        id: session,
-      });
+    await sendVerificationOtp(email);
+    setIsLoading(false);
+    router.push({
+      pathname: "/(auth)/sign-in-verify",
+      params: {
+        email: email,
+        fromLogin: "true",
+      },
     });
-  };
+
+  }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
-    >
-      <ScrollView
-        className="flex-1 bg-black"
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
+    <HeaderContainer variant="secondary">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 170 : 0}
       >
-        {/* Header */}
-        <View className="flex-1 justify-center">
-          <Text
-            className="text-4xl font-bold mb-12 text-white text-center"
-            style={{ color: "white" }}
-          >
-            {t("auth.title")}
-          </Text>
-        </View>
+        <View className="flex-1 bg-white px-6" >
+          <View className="flex-1 justify-center gap-10 ">
+            <View className="flex-col items-start justify-center w-full gap-10">
+              <Text className="text-[56px] font-semibold  text-black text-left font-sans leading-[64px] -tracking-wider">
+                {t("auth.sign-up.title")}
+              </Text>
+              <View className="w-full flex-col gap-2 items-start justify-center text-gray-500">
+                <Text className="text-black text-base font-sans font-semibold">
+                  {t("auth.sign-up.email-label")}
+                </Text>
+                <Input
+                  placeholder={t("auth.sign-up.email-placeholder")}
+                  className="text-black w-full bg-gray-50 !h-14 rounded-lg border-0"
+                  value={email}
+                  keyboardType="email-address"
 
-        {/* Auth Buttons Container */}
-        <View className="space-y-6 px-4 bg-zinc-900 rounded-t-3xl">
-          <View className="mb-10 pt-7 flex gap-4">
-            {/* @ts-expect-error - TODO: Fix this */}
-            <Animated.View
-              entering={FadeIn}
-              exiting={FadeOut}
-              className="gap-4"
-            >
-              <TextInput
-                className="h-12 px-4 rounded-xl bg-zinc-800 text-white text-xl"
-                placeholder={t("auth.placeholders.email")}
-                placeholderTextColor="#71717a"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-
-              <TextInput
-                className="h-12 px-4 rounded-xl bg-zinc-800 text-white text-xl"
-                placeholder={t("auth.placeholders.password")}
-                placeholderTextColor="#71717a"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-
-              <TextInput
-                className="h-12 px-4 rounded-xl bg-zinc-800 text-white text-xl"
-                placeholder={t("auth.placeholders.confirmPassword")}
-                placeholderTextColor="#71717a"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
-
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  onChangeText={setEmail}
+                />
+              </View>
+            </View>
+            <View className="justify-end mt-2 flex-col gap-8 ">
               <Button
-                variant="default"
-                className="flex-row items-center justify-center gap-2 bg-zinc-800 rounded-xl disabled:opacity-50"
+                isLoading={isLoading}
+                variant="primary"
+                size="sm"
+                textClassName="text-[16px] font-sans font-semibold"
+                disabled={!canSignUp}
                 onPress={handleSignUp}
-                disabled={isLoading || !email || !password || !confirmPassword}
               >
-                <Text className="text-xl font-semibold text-white">
-                  {isLoading
-                    ? t("auth.actions.registering")
-                    : t("auth.actions.register")}
+                <Text>
+                  {t("auth.sign-up.button")}
                 </Text>
               </Button>
+              <View className="flex-row gap-2 justify-center items-center">
+                <View className="flex-1 h-[1px] bg-gray-200" />
+                <Text className="text-gray-500 text-sm font-sans font-normal">
+                  {t("auth.actions.or")}
+                </Text>
+                <View className="flex-1 h-[1px] bg-gray-200" />
+              </View>
+              <View className="justify-center">
+                <View className="flex-row gap-2 w-full">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    textClassName="text-[16px] font-sans font-semibold text-black"
+                    className="flex-1 bg-gray-50"
+                  >
+                    <Text>
+                      "Google"
+                    </Text>
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="lg"
 
-              <Button
-                variant="outline"
-                className="flex-row items-center justify-center gap-2 bg-transparent rounded-xl border-zinc-700"
-                onPress={() => router.replace("/(auth)/sign-in")}
-              >
-                <Text className="text-xl font-semibold text-white">
-                  {t("auth.actions.back")}
-                </Text>
-              </Button>
-            </Animated.View>
+                    textClassName="text-[16px] font-sans font-semibold text-black"
+                    className="flex-1 bg-gray-50"
+                  >
+                    <Text>
+                      "Apple"
+                    </Text>
+                  </Button>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </HeaderContainer>
+
+
   );
 }
+

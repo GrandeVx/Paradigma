@@ -8,6 +8,7 @@
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/nodemailer": "^6.4.17",
     "dotenv-cli": "^7.4.2"
   },
   "scripts": {
@@ -19,7 +20,9 @@
   "dependencies": {
     "@mermaid-js/mermaid-cli": "^10.9.0",
     "@paradigma/db": "workspace:*",
-    "zod": "^3.22.4",
-    "better-auth": "^1.2.5"
+    "better-auth": "^1.2.5",
+    "nodemailer": "^6.10.1",
+    "prisma": "link:better-auth/adapters/prisma",
+    "zod": "^3.22.4"
   }
 }

@@ -9,6 +9,7 @@ const baseProfileSchema = z.object({
 
 // Schema per l'aggiornamento del profilo
 export const updateProfileSchema = baseProfileSchema.extend({
+  name: z.string().min(1).max(50).optional(),
   notifications: z.boolean().optional(),
   notificationToken: z.string().optional(),
 });

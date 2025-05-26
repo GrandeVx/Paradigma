@@ -6,7 +6,6 @@ import Constants from "expo-constants";
 import { useState } from "react";
 import superjson from "superjson";
 
-import { supabase } from "../config/supabase";
 import { authClient } from "./auth-client";
 
 const transformer = superjson;

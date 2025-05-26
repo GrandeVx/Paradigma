@@ -3,7 +3,9 @@
   "tab-bar": {
     "home": "Home",
     "profile": "Profile",
-    "settings": "Settings"
+    "settings": "Settings",
+    "budgets": "Budgets",
+    "accounts": "Accounts"
   },
   "home": {
     "title": "Home",
@@ -106,6 +108,13 @@
       "error": "Error",
       "emailRequired": "Please enter a valid email address",
       "genericError": "An error occurred while sending the email"
+    },
+    "email": {
+      "prompt": "Enter your email",
+      "placeholder": "Email"
     }
+  },
+  "header": {
+    "sign-in": "Welcome"
   }
 }

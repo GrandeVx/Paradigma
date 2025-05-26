@@ -1,20 +1,26 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Balance",
+    "slug": "balance",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "paradigma-mobile",
+    "scheme": "balance",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.grandevx.mobile",
+      "bundleIdentifier": "com.grandevx.balance",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
+    "fonts": [
+      {
+        "name": "ApfelGrotezk",
+        "asset": "./public/fonts/ApfelGrotezk.ttf"
+      }
+    ],
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -25,7 +31,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.grandevx.mobile"
+      "package": "com.grandevx.balance"
     },
     "web": {
       "bundler": "metro",
@@ -53,7 +59,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "8947ea37-12c6-4df8-8980-b281f5891ef2"
+        "projectId": "680ac63d-08e7-4607-8083-ee064a9bdeea"
       }
     }
   }

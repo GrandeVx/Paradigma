@@ -13,6 +13,7 @@ import { ZodError } from "zod";
 import { db } from "@paradigma/db";
 import { formatError } from "./utils/errors";
 import { auth } from "@paradigma/auth";
+import { notAuthenticatedError } from "./utils/errors";
 
 /**
  * 2. INITIALIZATION
@@ -97,6 +98,7 @@ export type Context = inferAsyncReturnType<typeof createTRPCContext>;
  * @param projectName - The name of the project.
  * @returns The JWT token.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getJWT = (ctx: Headers, projectName: string) => {
   // if there is no authorization header (for mobile requests) we proceed with the cookie check (for browser requests)
 
@@ -206,9 +208,10 @@ export const publicProcedure = t.procedure;
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  console.log("[DEBUG] Session on TRPC:", ctx.session);
+  // console.log("[DEBUG] Session on TRPC:", ctx.session);
   if (!ctx.session?.user) {
-    throw new Error("Not authenticated");
+    // Utilizziamo l'helper per l'errore multilingua
+    throw notAuthenticatedError(ctx);
   }
   return next({
     ctx: {

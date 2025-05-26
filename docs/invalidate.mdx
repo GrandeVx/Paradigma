@@ -1,0 +1,384 @@
+# Guida all'Invalidazione della Cache (prisma-extension-redis)
+
+Questa guida descrive le strategie di invalidazione della cache per le `Mutation` definite nella nostra struttura API tRPC, utilizzando `prisma-extension-redis`. L'obiettivo è mantenere la consistenza dei dati invalidando le cache appropriate quando i dati sottostanti vengono modificati.
+
+**Legenda:**
+* `db` si riferisce all'istanza Prisma estesa (es. `extendedPrisma` nella documentazione).
+* `userId` si riferisce all'ID dell'utente autenticato, da recuperare dal contesto della sessione.
+* `accountId` si riferisce all'ID del `MoneyAccount` finanziario.
+* Le chiavi di invalidazione sono esempi concettuali. La struttura esatta dei `params` per `db.getKey()` e `db.getKeyPattern()` potrebbe richiedere aggiustamenti basati su come l'estensione genera le chiavi per le tue query specifiche.
+
+**Invalidate Example**
+
+// Invalidate cache when updating a user's information
+```typescript
+extendedPrisma.user.update({
+  where: { id: userId },
+  data: { username: newUsername },
+  uncache: {
+    uncacheKeys: [
+      extendedPrisma.getKey({ params: [{ prisma: 'User' }, { id: userId }] }), // Specific key to invalidate
+      extendedPrisma.getKeyPattern({ params: [{ prisma: '*' }, { id: userId }]}), // Pattern for wildcard invalidation
+      extendedPrisma.getKeyPattern({ params: [{ prisma: 'Post' }, { id: userId }, { glob: '*' }]}), // Use glob for more complex patterns
+    ],
+    hasPattern: true, // Use pattern matching for invalidation
+  },
+});
+```
+
+---
+
+## Router: `user`
+
+### Mutation: `updateProfile`
+* **Azione:** Aggiorna il nome o altri dati del profilo utente.
+* **Cache da Invalidare:**
+    * Cache della query `user.getProfile` per l'utente corrente.
+* **Esempio Invalidazione (all'interno della mutazione `update`):**
+    ```typescript
+    // Nello `user.update`
+    uncache: {
+      uncacheKeys: [
+        db.getKey({ params: [{ prisma: 'User' }, { where: { id: userId } }] }) // Invalida la findUnique per questo utente
+      ]
+    }
+    ```
+
+### Mutation: `deleteAccount`
+* **Azione:** Elimina l'account dell'utente e tutti i dati associati.
+* **Cache da Invalidare:**
+    * Tutte le cache associate a questo `userId`. Questa è un'invalidazione ampia.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `user.delete`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: '*' }, { where: { userId: userId } }, { glob: '*' }] }), // Invalida tutto per questo utente
+        db.getKeyPattern({ params: [{ prisma: 'User' }, { where: { id: userId } }, { glob: '*' }] })
+      ],
+      hasPattern: true
+    }
+    ```
+    *Nota: Potrebbe essere più semplice gestire questa invalidazione a un livello più alto o direttamente in Redis se l'estensione non la gestisce in modo pulito per tutti i modelli.*
+
+---
+
+## Router: `account` (riferito a `MoneyAccount`)
+
+### Mutation: `create` (MoneyAccount)
+* **Azione:** Crea un nuovo `MoneyAccount`.
+* **Cache da Invalidare:**
+    * Cache della query `account.listWithBalances` per l'utente corrente.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `moneyAccount.create`
+    uncache: {
+      uncacheKeys: [
+        // Assumendo che listWithBalances sia cachata con una chiave basata su userId
+        db.getKeyPattern({ params: [{ prisma: 'MoneyAccount' }, { where: { userId: userId } }, { glob: '*' }] })
+      ],
+      hasPattern: true
+    }
+    ```
+
+### Mutation: `update` (MoneyAccount)
+* **Azione:** Modifica i dettagli di un `MoneyAccount`.
+* **Cache da Invalidare:**
+    * Cache della query `account.listWithBalances` per l'utente corrente.
+    * Cache della query `account.getById` per il `moneyAccountId` specifico (se cachata).
+    * **Importante:** Se `initialBalance` viene modificato, la cache del saldo calcolato per questo account deve essere invalidata (vedi sezione `transaction`).
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `moneyAccount.update`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'MoneyAccount' }, { where: { userId: userId } }, { glob: '*' }] }),
+        db.getKey({ params: [{ prisma: 'MoneyAccount' }, { where: { id: input.moneyAccountId } }] }),
+        // CHIAVE PER IL SALDO (Transaction.aggregate)
+        db.getKey({ params: [
+            { prisma: 'Transaction' }, { operation: 'aggregate' },
+            { where: { moneyAccountId: input.moneyAccountId } }
+            // Potrebbero servire altri parametri per matchare la chiave dell'aggregate
+        ]})
+      ],
+      hasPattern: true // A causa del primo pattern
+    }
+    ```
+
+### Mutation: `delete` (MoneyAccount)
+* **Azione:** Elimina un `MoneyAccount`.
+* **Cache da Invalidare:**
+    * Cache della query `account.listWithBalances` per l'utente corrente.
+    * Cache della query `account.getById` per il `moneyAccountId` specifico.
+    * Cache del saldo calcolato per questo account.
+    * Tutte le cache di `transaction.list` che potrebbero includere transazioni di questo account.
+    * Tutte le cache di `recurringRule.list` che potrebbero includere regole di questo account.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `moneyAccount.delete`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'MoneyAccount' }, { where: { userId: userId } }, { glob: '*' }] }),
+        db.getKey({ params: [{ prisma: 'MoneyAccount' }, { where: { id: input.moneyAccountId } }] }),
+        db.getKey({ params: [ // Saldo
+            { prisma: 'Transaction' }, { operation: 'aggregate' },
+            { where: { moneyAccountId: input.moneyAccountId } }
+        ]}),
+        db.getKeyPattern({ params: [{ prisma: 'Transaction' }, { where: { moneyAccountId: input.moneyAccountId } }, { glob: '*' }] }),
+        db.getKeyPattern({ params: [{ prisma: 'RecurringTransactionRule' }, { where: { moneyAccountId: input.moneyAccountId } }, { glob: '*' }] })
+      ],
+      hasPattern: true
+    }
+    ```
+
+---
+
+## Router: `transaction`
+
+### Mutations: `createExpense`, `createIncome`, `createTransfer`
+* **Azione:** Creano nuove transazioni. `createTransfer` ne crea due.
+* **Cache da Invalidare:**
+    * **Saldo del/dei `MoneyAccount` coinvolto/i:** Questa è la cache più importante. Deriva da `Transaction.aggregate`.
+    * Cache di `transaction.list` per l'utente (o qualsiasi lista che includerebbe questa nuova transazione).
+    * Se `goalId` è presente, cache di `goal.getByIdWithProgress` per quel `goalId`.
+    * Cache di `account.listWithBalances` (perché i saldi sono cambiati).
+* **Esempio Invalidazione (per `createExpense`/`createIncome`):**
+    ```typescript
+    // Nello `transaction.createExpense` o `transaction.createIncome`
+    // input.moneyAccountId è l'ID del conto coinvolto
+    uncache: {
+      uncacheKeys: [
+        // 1. Saldo del MoneyAccount
+        db.getKey({ params: [
+            { prisma: 'Transaction' }, { operation: 'aggregate' },
+            { where: { moneyAccountId: input.moneyAccountId, userId: userId } } // Assicurati che la chiave dell'aggregate sia targettizzata correttamente
+        ]}),
+        // 2. Lista Transazioni Utente (generica)
+        db.getKeyPattern({ params: [{ prisma: 'Transaction' }, { where: { userId: userId } }, { glob: '*' }] }),
+        // 3. Lista Conti con Saldi
+        db.getKeyPattern({ params: [{ prisma: 'MoneyAccount' }, { where: { userId: userId } }, { glob: '*' }] }),
+        // 4. Progresso Obiettivo (se goalId è fornito)
+        ...(input.goalId ? [
+            db.getKey({ params: [
+                { prisma: 'Transaction' }, { operation: 'aggregate' }, // O la chiave specifica per getByIdWithProgress
+                { where: { goalId: input.goalId, userId: userId } }
+            ]}),
+            db.getKey({ params: [{ prisma: 'Goal' }, { where: { id: input.goalId, userId: userId } }] }) // Se getByIdWithProgress cacha Goal
+        ] : [])
+      ],
+      hasPattern: true
+    }
+    ```
+* **Per `createTransfer`:** Dovrai invalidare i saldi e le liste per **entrambi** i `MoneyAccount` (`fromAccountId` e `toAccountId`).
+
+### Mutation: `update` (Transaction)
+* **Azione:** Modifica una transazione esistente.
+* **Cache da Invalidare:**
+    * Saldo del/dei `MoneyAccount` coinvolto/i (sia il vecchio che il nuovo se `moneyAccountId` cambia, o quello corrente se `amount` cambia).
+    * Cache di `transaction.list`.
+    * Cache di `transaction.getById` per la transazione specifica.
+    * Se `goalId` cambia o viene aggiunto/rimosso, cache di `goal.getByIdWithProgress` per il vecchio e/o nuovo `goalId`.
+    * Cache di `account.listWithBalances`.
+* **Esempio Invalidazione (complesso, richiede di conoscere i valori precedenti):**
+    * *Dovrai recuperare la transazione prima dell'update per conoscere il `moneyAccountId` e `goalId` precedenti se sono cambiati.*
+    ```typescript
+    // Nello `transaction.update`
+    // const oldTransaction = await prisma.transaction.findUnique(...);
+    // const oldMoneyAccountId = oldTransaction.moneyAccountId;
+    // const newMoneyAccountId = input.moneyAccountId || oldMoneyAccountId;
+    uncache: {
+      uncacheKeys: [
+        // 1. Saldo vecchio MoneyAccount (se cambiato)
+        ...(oldMoneyAccountId && oldMoneyAccountId !== newMoneyAccountId ? [
+            db.getKey({ params: [ { prisma: 'Transaction' }, { operation: 'aggregate' }, { where: { moneyAccountId: oldMoneyAccountId, userId: userId } } ]})
+        ] : []),
+        // 2. Saldo nuovo/attuale MoneyAccount
+        db.getKey({ params: [ { prisma: 'Transaction' }, { operation: 'aggregate' }, { where: { moneyAccountId: newMoneyAccountId, userId: userId } } ]}),
+        // 3. Lista Transazioni Utente
+        db.getKeyPattern({ params: [{ prisma: 'Transaction' }, { where: { userId: userId } }, { glob: '*' }] }),
+        // 4. Transazione specifica
+        db.getKey({ params: [{ prisma: 'Transaction' }, { where: { id: input.transactionId } }] }),
+        // 5. Lista Conti con Saldi
+        db.getKeyPattern({ params: [{ prisma: 'MoneyAccount' }, { where: { userId: userId } }, { glob: '*' }] }),
+        // ... invalidazione per Goal se goalId cambia ...
+      ],
+      hasPattern: true
+    }
+    ```
+
+### Mutation: `delete` (Transaction)
+* **Azione:** Elimina una transazione.
+* **Cache da Invalidare:** Simile a `create`, ma per la transazione che viene rimossa.
+    * Saldo del `MoneyAccount` coinvolto.
+    * Cache di `transaction.list`.
+    * Cache di `transaction.getById` per la transazione specifica.
+    * Se `goalId` era presente, cache di `goal.getByIdWithProgress`.
+    * Cache di `account.listWithBalances`.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `transaction.delete`
+    // const deletedTransaction = await prisma.transaction.findUnique(...); // Per ottenere moneyAccountId e goalId
+    uncache: {
+      uncacheKeys: [
+        db.getKey({ params: [ { prisma: 'Transaction' }, { operation: 'aggregate' }, { where: { moneyAccountId: deletedTransaction.moneyAccountId, userId: userId } } ]}),
+        db.getKeyPattern({ params: [{ prisma: 'Transaction' }, { where: { userId: userId } }, { glob: '*' }] }),
+        db.getKey({ params: [{ prisma: 'Transaction' }, { where: { id: input.transactionId } }] }),
+        db.getKeyPattern({ params: [{ prisma: 'MoneyAccount' }, { where: { userId: userId } }, { glob: '*' }] }),
+        ...(deletedTransaction.goalId ? [
+             db.getKey({ params: [ { prisma: 'Transaction' }, { operation: 'aggregate' }, { where: { goalId: deletedTransaction.goalId, userId: userId } } ]}),
+             db.getKey({ params: [{ prisma: 'Goal' }, { where: { id: deletedTransaction.goalId, userId: userId } }] })
+        ] : [])
+      ],
+      hasPattern: true
+    }
+    ```
+
+---
+
+## Router: `goal`
+
+### Mutation: `create`
+* **Azione:** Crea un nuovo obiettivo.
+* **Cache da Invalidare:**
+    * Cache di `goal.list` per l'utente.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `goal.create`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'Goal' }, { where: { userId: userId } }, { glob: '*' }] })
+      ],
+      hasPattern: true
+    }
+    ```
+
+### Mutation: `update`
+* **Azione:** Modifica un obiettivo.
+* **Cache da Invalidare:**
+    * Cache di `goal.list` per l'utente.
+    * Cache di `goal.getByIdWithProgress` per il `goalId` specifico.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `goal.update`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'Goal' }, { where: { userId: userId } }, { glob: '*' }] }),
+        db.getKey({ params: [{ prisma: 'Goal' }, { where: { id: input.goalId, userId: userId } }] }), // Per getByIdWithProgress (se cacha Goal)
+        // Invalida anche la cache specifica dell'aggregate delle transazioni per questo goal
+        db.getKey({ params: [ { prisma: 'Transaction' }, { operation: 'aggregate' }, { where: { goalId: input.goalId, userId: userId } } ]})
+      ],
+      hasPattern: true
+    }
+    ```
+
+### Mutation: `delete`
+* **Azione:** Elimina un obiettivo.
+* **Cache da Invalidare:**
+    * Cache di `goal.list` per l'utente.
+    * Cache di `goal.getByIdWithProgress` per il `goalId` specifico.
+    * *Nota: Le transazioni collegate avranno `goalId` settato a `null`. Se la visualizzazione delle transazioni dipende da questo, le liste di transazioni potrebbero non necessitare di invalidazione diretta qui, ma il dettaglio della singola transazione (se cachato e mostrava info del goal) sì.*
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `goal.delete`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'Goal' }, { where: { userId: userId } }, { glob: '*' }] }),
+        db.getKey({ params: [{ prisma: 'Goal' }, { where: { id: input.goalId, userId: userId } }] }),
+        db.getKey({ params: [ { prisma: 'Transaction' }, { operation: 'aggregate' }, { where: { goalId: input.goalId, userId: userId } } ]}) // Rimuove la cache del progresso
+      ],
+      hasPattern: true
+    }
+    ```
+
+---
+
+## Router: `budget`
+
+### Mutation: `setAmount`
+* **Azione:** Imposta o aggiorna un budget per una macro-categoria.
+* **Cache da Invalidare:**
+    * Cache di `budget.getCurrentSettings` per l'utente.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `budget.setAmount`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'Budget' }, { where: { userId: userId } }, { glob: '*' }] })
+      ],
+      hasPattern: true
+    }
+    ```
+
+---
+
+## Router: `recurringRule`
+
+### Mutation: `create`
+* **Azione:** Crea una nuova regola ricorrente/rata.
+* **Cache da Invalidare:**
+    * Cache di `recurringRule.list` per l'utente.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `recurringRule.create`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'RecurringTransactionRule' }, { where: { userId: userId } }, { glob: '*' }] })
+      ],
+      hasPattern: true
+    }
+    ```
+
+### Mutation: `update`
+* **Azione:** Modifica una regola.
+* **Cache da Invalidare:**
+    * Cache di `recurringRule.list` per l'utente.
+    * Cache di `recurringRule.getById` per il `ruleId` specifico.
+* **Esempio Invalidazione:**
+    ```typescript
+    // Nello `recurringRule.update`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'RecurringTransactionRule' }, { where: { userId: userId } }, { glob: '*' }] }),
+        db.getKey({ params: [{ prisma: 'RecurringTransactionRule' }, { where: { id: input.ruleId } }] })
+      ],
+      hasPattern: true
+    }
+    ```
+
+### Mutation: `toggleActive`
+* **Azione:** Attiva/disattiva una regola.
+* **Cache da Invalidare:**
+    * Cache di `recurringRule.list` (perché lo stato `isActive` influenza se appare in certe liste).
+    * Cache di `recurringRule.getById` per il `ruleId` specifico.
+* **Esempio Invalidazione:** (Identico a `update`)
+    ```typescript
+    // Nello `recurringRule.toggleActive`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'RecurringTransactionRule' }, { where: { userId: userId } }, { glob: '*' }] }),
+        db.getKey({ params: [{ prisma: 'RecurringTransactionRule' }, { where: { id: input.ruleId } }] })
+      ],
+      hasPattern: true
+    }
+    ```
+
+### Mutation: `delete`
+* **Azione:** Elimina una regola.
+* **Cache da Invalidare:**
+    * Cache di `recurringRule.list` per l'utente.
+    * Cache di `recurringRule.getById` per il `ruleId` specifico.
+* **Esempio Invalidazione:** (Identico a `update`)
+    ```typescript
+    // Nello `recurringRule.delete`
+    uncache: {
+      uncacheKeys: [
+        db.getKeyPattern({ params: [{ prisma: 'RecurringTransactionRule' }, { where: { userId: userId } }, { glob: '*' }] }),
+        db.getKey({ params: [{ prisma: 'RecurringTransactionRule' }, { where: { id: input.ruleId } }] })
+      ],
+      hasPattern: true
+    }
+    ```
+
+---
+
+Ricorda che questa è una guida di partenza. La strategia di caching e invalidazione ottimale può dipendere molto da come esattamente le tue query vengono strutturate e da quali dati vengono richiesti più frequentemente. Testa sempre il comportamento della cache usando i log forniti dall'estensione.

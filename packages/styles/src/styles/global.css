@@ -7,60 +7,102 @@
 @layer base {
   :root {
     /* Black & White */
-    --black: 0 0% 0%;      /* #000000 */
-    --white: 0 0% 100%;    /* #FFFFFF */
+    --black: #000000;
+    /* #000000 */
+    --white: 0 0% 100%;
+    /* #FFFFFF */
 
     /* Grey Scale */
-    --grey-50: 220 14% 96%;    /* #F3F4F6 */
-    --grey-100: 220 13% 91%;   /* #E5E7EB */
-    --grey-200: 220 13% 91%;   /* #E5E7EB */
-    --grey-300: 216 12% 84%;   /* #D1D5DB */
-    --grey-400: 218 11% 65%;   /* #9CA3AF */
-    --grey-500: 220 9% 46%;    /* #6B7280 */
-    --grey-600: 215 14% 34%;   /* #4B5563 */
-    --grey-700: 217 19% 27%;   /* #374151 */
-    --grey-800: 215 28% 17%;   /* #1F2937 */
-    --grey-900: 221 39% 11%;   /* #111827 */
-    --grey-950: 224 71% 4%;    /* #030712 */
+    --grey-50: #F9FAFB;
+    /* #F9FAFB */
+    --grey-100: #F3F4F6;
+    /* #F3F4F6 */
+    --grey-200: #E5E7EB;
+    /* #E5E7EB */
+    --grey-300: #D1D5DB;
+    /* #D1D5DB */
+    --grey-400: #9CA3AF;
+    /* #9CA3AF */
+    --grey-500: #6B7280;
+    /* #6B7280 */
+    --grey-600: #4B5563;
+    /* #4B5563 */
+    --grey-700: #374151;
+    /* #374151 */
+    --grey-800: #1F2937;
+    /* #1F2937 */
+    --grey-900: #111827;
+    /* #111827 */
 
     /* Primary Colors */
-    --primary-50: 204 100% 97%;  /* #F0F9FF */
-    --primary-100: 204 94% 94%;  /* #E0F2FE */
-    --primary-200: 201 94% 86%;  /* #BAE6FD */
-    --primary-300: 199 95% 74%;  /* #7DD3FC */
-    --primary-400: 198 93% 60%;  /* #38BDF8 */
-    --primary-500: 199 89% 48%;  /* #0EA5E9 */
-    --primary-600: 200 98% 39%;  /* #0284C7 */
-    --primary-700: 201 96% 32%;  /* #0369A1 */
-    --primary-800: 201 90% 27%;  /* #075985 */
-    --primary-900: 202 80% 24%;  /* #0C4A6E */
-    --primary-950: 204 80% 16%;  /* #082F49 */
+    --primary-50: #EDF8FF;
+    /* #F0F9FF */
+    --primary-100: #D6EDFF;
+    /* #E0F2FE */
+    --primary-200: #B5E2FF;
+    /* #BAE6FD */
+    --primary-300: #83D2FF;
+    /* #7DD3FC */
+    --primary-400: #48B7FF;
+    /* #38BDF8 */
+    --primary-500: #1E94FF;
+    /* #0EA5E9 */
+    --primary-600: #0673FF;
+    /* #0284C7 */
+    --primary-700: #005EFD;
+    /* #0369A1 */
+    --primary-800: #0849C5;
+    /* #075985 */
+    --primary-900: #0D429B;
+    /* #0C4A6E */
+    --primary-950: #0E295D;
+    /* #082F49 */
 
     /* Secondary Colors */
-    --orange-500: 27 96% 61%;    /* #FD9F00 */
-    --lime-500: 73 100% 50%;     /* #C3FF28 */
+    --orange-500: #FD9F00;
+    /* #FD9F00 */
+    --lime-500: #C8FE28;
+    /* #C3FF28 */
 
     /* State Colors */
-    --success-50: 138 76% 97%;   /* #F3FAF3 */
-    --success-500: 142 71% 45%;  /* #3FAF3F */
-    --error-50: 0 86% 97%;       /* #FAF3F3 */
-    --error-500: 0 84% 60%;      /* #EF4444 */
-    --attention-50: 48 100% 96%; /* #FFF8E6 */
-    --attention-500: 45 93% 47%; /* #EDB100 */
+    --success-50: #67bd5181;
+    /* #F3FAF3 */
+    --success-500: #66BD50;
+    /* #3FAF3F */
+    --error-50: #DE484180;
+    /* #FAF3F3 */
+    --error-500: #DE4841;
+    /* #EF4444 */
+    --attention-50: #EBBC4680;
+    /* #FFF8E6 */
+    --attention-500: #EBBC46;
+    /* #EDB100 */
 
     /* Category Colors */
-    --orange-50: 27 100% 98%;    /* #FFF5E6 */
-    --orange-500: 27 100% 50%;   /* #FDA000 */
-    --red-50: 0 100% 98%;        /* #FFF5F5 */
-    --red-500: 0 72% 51%;        /* #E13141 */
-    --pink-50: 350 100% 98%;     /* #FFF5F9 */
-    --pink-500: 350 85% 67%;     /* #FA6997 */
-    --sky-50: 204 100% 97%;      /* #F5FAFF */
-    --sky-500: 204 89% 48%;      /* #4D9FF8 */
-    --purple-50: 267 100% 98%;   /* #FAF5FF */
-    --purple-500: 267 85% 67%;   /* #7E01FB */
-    --green-50: 152 100% 98%;    /* #F5FFF9 */
-    --green-500: 152 85% 67%;    /* #03965E */
+    --orange-50: #FFF5E6;
+    /* #FFF5E6 */
+    --orange-500: #FDA000;
+    /* #FDA000 */
+    --red-50: #FFF5F5;
+    /* #FFF5F5 */
+    --red-500: #E13141;
+    /* #E13141 */
+    --pink-50: #FFF5F9;
+    /* #FFF5F9 */
+    --pink-500: #FA6997;
+    /* #FA6997 */
+    --sky-50: #F5FAFF;
+    /* #F5FAFF */
+    --sky-500: #4D9FF8;
+    /* #4D9FF8 */
+    --purple-50: #FAF5FF;
+    /* #FAF5FF */
+    --purple-500: #7E01FB;
+    /* #7E01FB */
+    --green-50: #F5FFF9;
+    /* #F5FFF9 */
+    --green-500: #03965E;
+    /* #03965E */
 
     /* System Variables */
     --background: var(--white);
@@ -83,6 +125,7 @@
     --input: var(--grey-200);
     --ring: var(--primary-500);
     --radius: 0.5rem;
+
   }
 
   .dark {
@@ -111,9 +154,7 @@
 /* Shared component styles */
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
-           focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring 
-           disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-primary {
@@ -125,10 +166,7 @@
   }
 
   .input {
-    @apply flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm
-           transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium
-           placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1
-           focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
   }
 }
 
@@ -137,4 +175,13 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* container 4 colonne orizzontali con un margine di 24 e un gutter di 16
+    8 righe  con un gutter di 1
+  */
+  .container {
+    @apply grid grid-cols-4 grid-rows-8 gap-4;
+  }
+
+
 }

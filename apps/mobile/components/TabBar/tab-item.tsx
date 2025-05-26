@@ -17,12 +17,13 @@ export function TabItem({ descriptor, activeIndex, index, ...other }: Props) {
         size: 27
       })
     ) : (
+      // @ts-expect-error - Ionicons is not typed
       <Ionicons name="flask" size={27} color={isFocused ? '#704f37' : '#c4c4c6'} />
     );
 
   return (
     <TouchableOpacity {...other} style={styles.item_container}>
-      {Icon}
+      {(Icon as React.ReactNode)}
     </TouchableOpacity>
   );
 }

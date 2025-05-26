@@ -1,7 +1,7 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRoute } from "@react-navigation/native";
-import { canGoBack, getTitle } from "@/lib/utils";
+import { getTitle } from "@/lib/utils";
 import React, { ReactNode, useEffect } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { Href, Router, useRouter } from "expo-router";
@@ -14,7 +14,6 @@ import Animated, {
   withTiming,
   withSequence,
 } from "react-native-reanimated";
-import { api } from "@/lib/api";
 
 interface HeaderAction {
   icon: ReactNode;
@@ -25,10 +24,11 @@ interface ContainerWithChildrenProps {
   children: ReactNode;
   router?: Router;
   modal?: boolean;
-  backRoute?: Href<string | object>;
+  backRoute?: Href;
   rightActions?: HeaderAction[];
   customTitle?: string;
   variant?: "main" | "secondary";
+  hideBackButton?: boolean;
 }
 
 const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
@@ -39,6 +39,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   rightActions,
   customTitle,
   variant = "main",
+  hideBackButton = false,
 }) => {
   const route = useRoute();
   const insets = useSafeAreaInsets();
@@ -53,10 +54,9 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   const contentOpacity = useSharedValue(0);
   const contentTranslateY = useSharedValue(20);
 
-  const headerHeight = Math.max(insets.top + 44, 0.13 * windowHeight);
+  const headerHeight = Math.max(insets.top + 44, 0.16 * windowHeight);
 
   // Get user data
-  const { data: userData } = api.user.getUserInfo.useQuery();
 
   const animateElements = () => {
     titleOpacity.value = withSequence(
@@ -137,7 +137,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   }));
 
   const renderLeftComponent = () => {
-    if (variant === "secondary" && router?.canGoBack() && !modal && router) {
+    if (variant === "secondary" && router?.canGoBack() && !modal && router && !hideBackButton) {
       return (
         <View>
           {/* @ts-expect-error - React Native Reanimated type issue */}
@@ -181,7 +181,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
               className="bg-primary-400"
             >
               <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
-                {userData?.firstName?.charAt(0).toUpperCase() ?? "JD"}
+                JD
               </Text>
             </View>
           </Animated.View>
@@ -193,11 +193,11 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   };
 
   return (
-    <View style={{ flex: 1 }} className="bg-background">
+    <View style={{ flex: 1 }} className="bg-white">
       <View
         style={{
           height: headerHeight,
-          paddingTop: insets.top,
+          paddingTop: insets.top - 40,
           paddingHorizontal: 15,
         }}
       >
@@ -243,14 +243,9 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
             >
               {/* @ts-expect-error - React Native Reanimated type issue */}
               <Animated.Text
-                className="text-black"
+                className="text-black font-sans font-medium"
                 style={[
-                  {
-                    fontSize: variant === "main" ? 20 : 24,
-                    fontWeight: "600",
-                    marginLeft: variant === "main" ? 12 : 0,
-                    textAlign: variant === "secondary" ? "center" : "left",
-                  },
+
                   titleAnimatedStyle,
                 ]}
               >

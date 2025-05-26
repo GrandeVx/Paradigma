@@ -8,14 +8,20 @@
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest",
-    "dotenv-cli": "^7.4.2"
+    "dotenv-cli": "^7.4.2",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.1"
   },
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "tsc --watch",
     "db-push": "dotenv -e ../../apps/web/.env -- prisma db push",
     "studio": "dotenv -e ../../apps/web/.env -- prisma studio",
-    "db-generate": "dotenv -e ../../apps/web/.env -- prisma generate"
+    "db-generate": "dotenv -e ../../apps/web/.env -- prisma generate",
+    "seed": "dotenv -e ../../apps/web/.env -- tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "dotenv -e ../../apps/web/.env -- tsx prisma/seed.ts"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -23,8 +29,11 @@
   "dependencies": {
     "@mermaid-js/mermaid-cli": "^10.9.0",
     "@prisma/client": "^5.11.0",
+    "iovalkey": "^0.3.1",
+    "pino": "^9.6.0",
     "prisma": "^5.1.1",
     "prisma-erd-generator": "^1.11.2",
+    "prisma-extension-redis": "^2.1.1",
     "zod": "^3.22.4",
     "zod-prisma": "^0.5.4"
   }

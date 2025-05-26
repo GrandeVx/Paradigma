@@ -10,7 +10,9 @@ export default function AuthLayout() {
         animation: Platform.OS === "ios" ? "slide_from_right" : "fade",
         animationDuration: 200,
       }}
+      initialRouteName="index"
     >
+      <Stack.Screen name="index" />
       <Stack.Screen name="sign-in" />
       <Stack.Screen name="sign-up" />
     </Stack>

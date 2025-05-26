@@ -1,0 +1,149 @@
+# Struttura API tRPC - App Finanziaria
+
+Questa è una definizione generale delle procedure tRPC per l'applicazione finanziaria, basata sullo schema Prisma v7. Le procedure sono raggruppate per "router" logico (corrispondente alle principali entità/funzionalità) e suddivise in `Queries` (per recuperare dati) e `Mutations` (per creare, modificare o eliminare dati).
+
+---
+
+## Router: `user`
+
+Gestisce l'autenticazione e il profilo dell'utente.
+
+### Queries
+
+-   `getProfile`: `()` => `User`
+    * Recupera i dati essenziali del profilo dell'utente attualmente autenticato (es. id, nome, email).
+-   `getSession`: `()` => `Session | null`
+    * Verifica lo stato della sessione corrente e restituisce i dati della sessione se valida, altrimenti `null`.
+
+### Mutations
+
+-   `updateProfile`: `(input: { name: string })` => `User`
+    * Aggiorna il nome del profilo utente.
+-   `deleteAccount`: `()` => `void`
+    * **Azione critica:** Elimina l'account dell'utente e tutti i dati associati in modo permanente. Richiede conferma forte.
+
+---
+
+## Router: `account`
+
+Gestisce i conti finanziari dell'utente.
+
+### Queries
+
+-   `listWithBalances`: `()` => `Array<{ account: Account, balance: Decimal }>`
+    * Recupera l'elenco di tutti i conti dell'utente. Per ogni conto, calcola e include il saldo attuale (`balance`) interrogando le transazioni associate.
+-   `getById`: `(input: { accountId: string })` => `Account | null`
+    * Recupera i dettagli di un singolo conto specificato dal suo ID (non include le transazioni di default per performance).
+
+### Mutations
+
+-   `create`: `(input: { name: string, type: AccountType, currency: string, initialBalance?: Decimal })` => `Account`
+    * Crea un nuovo conto finanziario.
+-   `update`: `(input: { accountId: string, name?: string })` => `Account`
+    * Modifica i dettagli (es. il nome) di un conto esistente.
+-   `delete`: `(input: { accountId: string })` => `void`
+    * Elimina un conto. È necessario definire la strategia per le transazioni e le regole associate (es. bloccare l'eliminazione se ci sono transazioni, o riassegnarle/eliminarle).
+
+---
+
+## Router: `transaction`
+
+Gestisce le singole transazioni finanziarie.
+
+### Queries
+
+-   `list`: `(input: { accountId?: string, dateFrom?: Date, dateTo?: Date, subCategoryId?: string, goalId?: string, type?: 'income' | 'expense' | 'transfer', limit?: number, cursor?: string })` => `{ items: Transaction[], nextCursor?: string }`
+    * Recupera un elenco paginato di transazioni per l'utente, con opzioni avanzate di filtro. Il `type` può essere dedotto lato backend controllando `amount` e `transferId`.
+-   `getById`: `(input: { transactionId: string })` => `Transaction | null`
+    * Recupera i dettagli completi di una singola transazione.
+
+### Mutations
+
+-   `createExpense`: `(input: { accountId: string, amount: Decimal, date: Date, description: string, currency: string, subCategoryId?: string, goalId?: string, notes?: string })` => `Transaction`
+    * Crea una nuova transazione di spesa (l'importo `amount` deve essere positivo, verrà memorizzato come negativo).
+-   `createIncome`: `(input: { accountId: string, amount: Decimal, date: Date, description: string, currency: string, subCategoryId?: string, goalId?: string, notes?: string })` => `Transaction`
+    * Crea una nuova transazione di entrata (l'importo `amount` deve essere positivo).
+-   `createTransfer`: `(input: { fromAccountId: string, toAccountId: string, amount: Decimal, date: Date, description: string, currency: string, notes?: string })` => `{ outflowTransaction: Transaction, inflowTransaction: Transaction }`
+    * Crea un trasferimento tra due conti. Genera internamente due record `Transaction` (uno negativo, uno positivo) con lo stesso `transferId`.
+-   `update`: `(input: { transactionId: string, accountId?: string, amount?: Decimal, date?: Date, description?: string, currency?: string, subCategoryId?: string | null, goalId?: string | null, notes?: string | null })` => `Transaction`
+    * Modifica i dettagli di una transazione esistente. **Attenzione:** La modifica di `amount` o `accountId` richiede l'invalidazione della cache del saldo per i conti coinvolti.
+-   `delete`: `(input: { transactionId: string })` => `void`
+    * Elimina una transazione. Richiede l'invalidazione della cache del saldo per il conto associato.
+
+---
+
+## Router: `category`
+
+Gestisce le categorie (predefinite nell'MVP).
+
+### Queries
+
+-   `list`: `()` => `Array<MacroCategory & { subCategories: SubCategory[] }>`
+    * Recupera l'elenco completo delle MacroCategorie predefinite, includendo le relative SottoCategorie.
+
+### Mutations
+
+-   *(Nessuna prevista per l'MVP con categorie predefinite)*
+
+---
+
+## Router: `goal`
+
+Gestisce gli obiettivi di risparmio.
+
+### Queries
+
+-   `list`: `()` => `Array<Goal>`
+    * Recupera l'elenco di tutti gli obiettivi di risparmio definiti dall'utente.
+-   `getByIdWithProgress`: `(input: { goalId: string })` => `{ goal: Goal, progress: Decimal, totalContributed: Decimal } | null`
+    * Recupera i dettagli di un singolo obiettivo e calcola il progresso attuale (`progress` in percentuale o assoluto) sommando l'importo (`totalContributed`) delle transazioni associate tramite `goalId`.
+
+### Mutations
+
+-   `create`: `(input: { name: string, targetAmount: Decimal, targetDate?: Date, description?: string })` => `Goal`
+    * Crea un nuovo obiettivo di risparmio.
+-   `update`: `(input: { goalId: string, name?: string, targetAmount?: Decimal, targetDate?: Date | null, description?: string | null })` => `Goal`
+    * Modifica i dettagli di un obiettivo esistente.
+-   `delete`: `(input: { goalId: string })` => `void`
+    * Elimina un obiettivo. Le `Transaction` e `RecurringTransactionRule` associate dovrebbero avere il loro `goalId` impostato a `null`.
+
+---
+
+## Router: `budget`
+
+Gestisce le impostazioni di budget mensile (fisso per categoria).
+
+### Queries
+
+-   `getCurrentSettings`: `()` => `Array<Budget & { macroCategory: MacroCategory }>`
+    * Recupera le impostazioni di budget correnti per l'utente, includendo i dettagli della macro-categoria associata (probabilmente solo per quelle di tipo `EXPENSE`).
+
+### Mutations
+
+-   `setAmount`: `(input: { macroCategoryId: string, allocatedAmount: Decimal })` => `Budget`
+    * Imposta o aggiorna l'importo del budget (`allocatedAmount`) per una specifica `MacroCategory` per l'utente. Utilizza `upsert` (update or insert) per creare il record se non esiste o aggiornarlo se esiste già.
+
+---
+
+## Router: `recurringRule`
+
+Gestisce le transazioni pianificate (rate e ricorrenti).
+
+### Queries
+
+-   `list`: `(input: { isInstallment?: boolean })` => `Array<RecurringTransactionRule>`
+    * Recupera l'elenco delle regole ricorrenti/rate dell'utente, con possibilità opzionale di filtrare per tipo (`isInstallment`).
+-   `getById`: `(input: { ruleId: string })` => `RecurringTransactionRule | null`
+    * Recupera i dettagli completi di una singola regola.
+
+### Mutations
+
+-   `create`: `(input: { accountId: string, description: string, amount: Decimal, currency: string, type: RuleType, subCategoryId?: string, goalId?: string, startDate: Date, frequencyType: FrequencyType, frequencyInterval?: number, dayOfWeek?: number, dayOfMonth?: number, isInstallment: boolean, endDate?: Date, totalOccurrences?: number, notes?: string })` => `RecurringTransactionRule`
+    * Crea una nuova regola (ricorrente o rata). La logica backend calcola la prima `nextDueDate` basandosi su `startDate` e la frequenza. Valida che `endDate` o `totalOccurrences` siano presenti se `isInstallment` è `true`.
+-   `update`: `(input: { ruleId: string, /* ... stessi campi di create, tutti opzionali ... */ })` => `RecurringTransactionRule`
+    * Modifica i dettagli di una regola esistente. Potrebbe richiedere il ricalcolo di `nextDueDate` se la frequenza o la data di inizio cambiano.
+-   `toggleActive`: `(input: { ruleId: string, isActive: boolean })` => `RecurringTransactionRule`
+    * Attiva o disattiva una regola impostando il flag `isActive`.
+-   `delete`: `(input: { ruleId: string })` => `void`
+    * Elimina una regola pianificata.
+

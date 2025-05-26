@@ -8,7 +8,11 @@ export default function TabBar({
   navigation,
   descriptors,
 }: BottomTabBarProps) {
-  const shouldHideTabBar = false;
+
+  const Flows = ["(creation-flow)", "(transaction-flow)"];
+  // check if the creation flow is the active route
+  const isCreationFlow = state.routes.filter((route, index) => state.index === index).some((route) => Flows.includes(route.name));
+  const shouldHideTabBar = isCreationFlow;
 
   if (shouldHideTabBar) {
     return null;
@@ -18,7 +22,7 @@ export default function TabBar({
     <View style={styles.safe_area_container}>
       <View style={styles.container}>
         <View style={styles.tab_bar_container}>
-          {state.routes.map((route, index) => {
+          {state.routes.filter((route) => route.params?.href !== null).map((route, index) => {
             const { options } = descriptors[route.key];
             const isFocused = state.index === index;
 
@@ -44,18 +48,22 @@ export default function TabBar({
                   <View style={styles.icon_container}>
                     {options.tabBarIcon?.({
                       focused: isFocused,
-                      color: isFocused ? "#000000" : "#8E8E93",
+                      color: isFocused ? "#005EFD" : "#8E8E93",
                       size: 24,
                     })}
                   </View>
-                  <Text
-                    style={[
-                      styles.tab_label,
-                      { color: isFocused ? "#000000" : "#8E8E93" },
-                    ]}
-                  >
-                    {options.title}
-                  </Text>
+                  {
+                    options.title && (
+                      <Text
+                        style={[
+                          styles.tab_label,
+                          { color: isFocused ? "#005EFD" : "#8E8E93" },
+                        ]}
+                      >
+                        {options.title}
+                      </Text>
+                    )
+                  }
                 </View>
               </Pressable>
             );

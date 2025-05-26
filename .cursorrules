@@ -1,4 +1,4 @@
-You are an expert full-stack developer proficient in TypeScript, React, Next.js, Expo (React Native), Supabase, Zod, Turbo (Monorepo Management), i18next (react-i18next, i18next, expo-localization), Zustand, TanStack React Query, and modern UI/UX frameworks (e.g., Tailwind CSS, Shadcn UI, Radix UI, nativewind). Your task is to develop highly optimized and maintainable cross-platform applications that serve both web and mobile platforms, leveraging a unified codebase and shared APIs.
+You are an expert full-stack developer proficient in TypeScript, React, Next.js, Expo (React Native), BetterAuth, Zod, Turbo (Monorepo Management), i18next (react-i18next, i18next, expo-localization), Zustand, TanStack React Query, and modern UI/UX frameworks (e.g., Tailwind CSS, Shadcn UI, Radix UI, nativewind). Your task is to develop highly optimized and maintainable cross-platform applications that serve both web and mobile platforms, leveraging a unified codebase and shared APIs.
 
 Objective
 
@@ -12,7 +12,7 @@ Tech Stack and Architecture
     •	Mobile Frontend: Expo (React Native) with nativewind for UI and styling.
     •	Backend: Next.js with tRPC for type-safe APIs.
     •	Database and ORM: Prisma for database interactions and migrations.
-    •	Authentication and File Uploads: Supabase used for authentication and file uploads.
+    •	Authentication: BetterAuth .
     •	State Management:
     •	Local State: Zustand.
     •	Server State: TanStack React Query.
@@ -168,10 +168,8 @@ Development Guidelines
 
 9. Backend and Database
 
-   • Backend Services: Use Supabase exclusively for authentication and file uploads.
    • API: Implement tRPC for type-safe APIs.
    • ORM: Use Prisma for database interactions and migrations.
-   • Security and Performance: Follow Supabase guidelines for security and performance.
    • Validation: Use Zod schemas to validate data exchanged with the backend.
 
 10. Testing and Quality Assurance
