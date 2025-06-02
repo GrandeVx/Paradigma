@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useCallback } from "react";
+import React, { useMemo, useRef, useState, useCallback, RefObject } from "react";
 import { View, TextInput, Pressable, Switch, SafeAreaView } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
@@ -682,7 +682,7 @@ export default function SummaryScreen() {
       </HeaderContainer>
 
       <MoneyAccountBottomSheet
-        bottomSheetRef={bottomSheetMoneyAccountRef}
+        bottomSheetRef={bottomSheetMoneyAccountRef as RefObject<BottomSheet>}
         snapPoints={snapPointsMoneyAccount}
         renderBackdrop={renderBackdrop}
         handleClosePress={handleCloseMoneyAccountBottomSheet}
@@ -692,7 +692,7 @@ export default function SummaryScreen() {
       />
 
       <MoneyAccountBottomSheet
-        bottomSheetRef={bottomSheetTransferAccountRef}
+        bottomSheetRef={bottomSheetTransferAccountRef as RefObject<BottomSheet>}
         snapPoints={snapPointsTransferAccount}
         renderBackdrop={renderBackdrop}
         handleClosePress={handleCloseTransferAccountBottomSheet}
@@ -702,7 +702,7 @@ export default function SummaryScreen() {
       />
 
       <CategoryBottomSheet
-        bottomSheetRef={bottomSheetCategoryRef}
+        bottomSheetRef={bottomSheetCategoryRef as RefObject<BottomSheet>}
         snapPoints={snapPointsCategory}
         renderBackdrop={renderBackdrop}
         handleClosePress={handleCloseCategoryBottomSheet}
@@ -711,7 +711,7 @@ export default function SummaryScreen() {
         setSelectedCategoryId={setSelectedCategoryId}
       />
       <DateBottomSheet
-        bottomSheetRef={bottomSheetDateRef}
+        bottomSheetRef={bottomSheetDateRef as RefObject<BottomSheet>}
         snapPoints={snapPointsDate}
         renderBackdrop={renderBackdrop}
         handleClosePress={handleCloseDateBottomSheet}
@@ -721,7 +721,7 @@ export default function SummaryScreen() {
       />
 
       <RecurrencePickerBottomSheet
-        bottomSheetRef={bottomSheetRecurrenceRef}
+        bottomSheetRef={bottomSheetRecurrenceRef as RefObject<BottomSheet>}
         snapPoints={snapPointsRecurrence}
         renderBackdrop={renderBackdrop}
         handleClosePress={handleCloseRecurrenceBottomSheet}
@@ -730,7 +730,7 @@ export default function SummaryScreen() {
       />
 
       <RecurringBottomSheet
-        bottomSheetRef={bottomSheetRecurringRef}
+        bottomSheetRef={bottomSheetRecurringRef as RefObject<BottomSheet>}
         snapPoints={snapPointsRecurring}
         renderBackdrop={renderBackdrop}
         handleClosePress={handleCloseRecurringBottomSheet}

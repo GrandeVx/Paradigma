@@ -1,4 +1,4 @@
-import { FrequencyType } from "@prisma/client";
+
 
 /**
  * Calculates the next occurrence date for a recurring rule
@@ -11,7 +11,7 @@ import { FrequencyType } from "@prisma/client";
  */
 export function calculateNextOccurrenceDate(
   currentDate: Date,
-  frequencyType: FrequencyType,
+  frequencyType: string,
   frequencyInterval: number = 1,
   dayOfMonth?: number | null,
   dayOfWeek?: number | null
@@ -92,7 +92,7 @@ function getLastDayOfMonth(year: number, month: number): number {
  * @returns Object with frequencyType and frequencyInterval
  */
 export function convertDaysToFrequency(frequencyDays: number): {
-  frequencyType: FrequencyType,
+  frequencyType: string,
   frequencyInterval: number
 } {
   // Standard mappings for common frequencies

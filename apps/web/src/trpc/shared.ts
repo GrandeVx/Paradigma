@@ -1,6 +1,6 @@
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
-import { type AppRouter } from "@boilerplate/api";
+import { type AppRouter } from "@paradigma/api";
 export const transformer = superjson;
 
 export function getBaseUrl() {

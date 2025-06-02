@@ -12,8 +12,8 @@ export function cn(...inputs: ClassValue[]) {
  * @returns
  */
 export function getTitle(route: { name: string }) {
-  const { t } = useTranslation();
-  return t(`header.${route.name}`);
+  const { t } = useTranslation("translation", { keyPrefix: "tab-bar" });
+  return t(`${route.name}`);
 }
 
 /**

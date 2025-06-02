@@ -4,6 +4,16 @@
   "module": "index.ts",
   "main": "./index.ts",
   "types": "./index.ts",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./index.ts"
+    },
+    "./server": {
+      "types": "./server.ts",
+      "default": "./server.ts"
+    }
+  },
   "license": "MIT",
   "type": "module",
   "devDependencies": {
@@ -18,11 +28,11 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.2.5",
     "@mermaid-js/mermaid-cli": "^10.9.0",
     "@paradigma/db": "workspace:*",
     "better-auth": "^1.2.5",
     "nodemailer": "^6.10.1",
-    "prisma": "link:better-auth/adapters/prisma",
     "zod": "^3.22.4"
   }
 }

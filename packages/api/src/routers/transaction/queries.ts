@@ -1,25 +1,23 @@
-import { Prisma } from "@prisma/client";
 import { protectedProcedure } from "../../trpc";
 import { 
   getTransactionByIdSchema, 
   listTransactionsSchema 
 } from "../../schemas/transaction";
 import { notFoundError } from "../../utils/errors";
+import type { Prisma } from "@paradigma/db";
 
 export const queries = {
   list: protectedProcedure
     .input(listTransactionsSchema)
     .query(async ({ ctx, input }) => {
       const limit = input.limit ?? 20;
-      const { cursor, accountId, dateFrom, dateTo, subCategoryId, goalId, type } = input;
+      const { cursor, accountId, dateFrom, dateTo, subCategoryId, type } = input;
       
       const userId = ctx.session.user.id;
       
       const filters: Prisma.TransactionWhereInput = { userId };
-      
-      if (accountId) filters.accountId = accountId;
+      if (accountId) filters.moneyAccountId = accountId;
       if (subCategoryId) filters.subCategoryId = subCategoryId;
-      if (goalId) filters.goalId = goalId;
       
       // Date range filter
       if (dateFrom || dateTo) {
@@ -57,8 +55,7 @@ export const queries = {
               macroCategory: true,
             }
           },
-          MoneyAccount: true,
-          goal: true,
+          moneyAccount: true,
         }
       });
       
@@ -90,8 +87,7 @@ export const queries = {
               macroCategory: true,
             }
           },
-          MoneyAccount: true,
-          goal: true,
+          moneyAccount: true,
         }
       });
       

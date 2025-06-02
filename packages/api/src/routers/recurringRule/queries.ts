@@ -22,13 +22,14 @@ export const queries = {
       const rules = await ctx.db.recurringTransactionRule.findMany({
         where,
         include: {
-          MoneyAccount: true,
+          moneyAccount: true,
           subCategory: {
             include: {
               macroCategory: true,
             }
           },
-          goal: true,
+          // TODO: Restore after goal refactor to MoneyAccount
+          // goal: true,
         },
         orderBy: {
           nextDueDate: "asc",
@@ -49,13 +50,14 @@ export const queries = {
           userId,
         },
         include: {
-          MoneyAccount: true,
+          moneyAccount: true,
           subCategory: {
             include: {
               macroCategory: true,
             }
           },
-          goal: true,
+          // TODO: Restore after goal refactor to MoneyAccount
+          // goal: true,
         },
       });
       

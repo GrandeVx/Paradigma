@@ -9,10 +9,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@better-fetch/fetch": "^1.1.18",
     "@paradigma/api": "workspace:*",
+    "@paradigma/auth": "workspace:*",
     "@paradigma/db": "workspace:*",
     "@paradigma/styles": "workspace:*",
-    "@paradigma/auth": "workspace:*",
     "@prisma/client": "^5.1.1",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-slot": "^1.1.2",
@@ -26,6 +27,7 @@
     "@trpc/next": "^10.37.1",
     "@trpc/react-query": "^10.37.1",
     "@trpc/server": "^10.37.1",
+    "better-auth": "^1.2.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.5",
@@ -64,5 +66,5 @@
   "ct3aMetadata": {
     "initVersion": "7.23.2"
   },
-  "packageManager": "npm@10.2.0"
+  "packageManager": "pnpm@10.11.1"
 }

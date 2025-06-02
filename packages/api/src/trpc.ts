@@ -12,7 +12,7 @@ import { SuperJSON } from "superjson";
 import { ZodError } from "zod";
 import { db } from "@paradigma/db";
 import { formatError } from "./utils/errors";
-import { auth } from "@paradigma/auth";
+import { auth } from "@paradigma/auth/server";
 import { notAuthenticatedError } from "./utils/errors";
 
 /**

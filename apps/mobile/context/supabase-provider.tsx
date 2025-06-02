@@ -1,4 +1,4 @@
-import { SplashScreen, useRouter, useSegments } from "expo-router";
+import { SplashScreen, useRouter, useSegments, useRootNavigation } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
@@ -62,6 +62,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
   const router = useRouter();
   const segments = useSegments();
+  const rootNavigation = useRootNavigation();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [initialized, setInitialized] = useState<boolean>(true);
@@ -111,7 +112,8 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
   const sendVerificationOtp = async (email: string) => {
     console.log("sending verification otp", email);
-    const { error, data } = await authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error, data } = await (authClient as any).emailOtp.sendVerificationOtp({ email, type: "sign-in" });
     if (error) {
       throw error;
     }
@@ -121,7 +123,8 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
   const signInWithVerificationOtp = async (email: string, otp: string) => {
     console.log("signing in with verification otp", email, otp);
-    const { error, data } = await authClient.signIn.emailOtp({ email: email, otp: otp });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error, data } = await (authClient.signIn as any).emailOtp({ email: email, otp: otp });
     if (error) {
       console.log("error", error);
       throw error;
@@ -343,6 +346,11 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
   // Handle routing only after initial state is loaded
   useEffect(() => {
+    // Wait until the root navigator is mounted and ready before making any redirects
+    if (!(rootNavigation?.isReady && rootNavigation.isReady())) {
+      return;
+    }
+
     // Define our route sections for better type safety
     type AppSection = "(protected)" | "(onboarding)" | "(auth)" | "(splash)";
 
@@ -418,7 +426,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
     };
 
     handleRouting();
-  }, [isLoading, session, isOnboarded, segments, isInitialRoutingDone]);
+  }, [isLoading, session, isOnboarded, segments, isInitialRoutingDone, rootNavigation]);
 
   // Reset routing flag when segments change
   useEffect(() => {
@@ -452,9 +460,10 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
         signInWithGoogle,
         sendVerificationOtp,
         signOut,
-        //PasswordReset,
-        // uploadAvatar,
-        // getAvatarUrl,
+        // Stub implementations to satisfy the context contract (not yet implemented on mobile)
+        PasswordReset: async () => { },
+        uploadAvatar: async () => "",
+        getAvatarUrl: async () => "",
       }}
     >
       {children}

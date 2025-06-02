@@ -90,7 +90,6 @@ function RootLayoutNav() {
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
             <GestureHandlerRootView style={{ flex: 1, zIndex: 20 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
-              {/* @ts-expect-error Expo Router Stack is not typed */}
               <Stack              >
                 <Stack.Screen
                   name="(splash)"

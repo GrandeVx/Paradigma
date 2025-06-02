@@ -1,9 +1,17 @@
 import { betterFetch } from "@better-fetch/fetch";
-import type { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-type Session = typeof auth.$Infer.Session;
+// Define Session type locally since we don't have access to the auth lib here
+type Session = {
+  user: {
+    id: string;
+    email: string;
+    name?: string;
+  };
+  sessionId: string;
+  expiresAt: Date;
+} | null;
 
 // List of supported locales
 export const locales = ["en", "it"];

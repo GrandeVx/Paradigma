@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FrequencyType, RuleType } from "@prisma/client";
+
 
 // Schema for listing recurring rules
 export const listRecurringRulesSchema = z.object({
@@ -14,23 +14,24 @@ export const getRecurringRuleByIdSchema = z.object({
 // Schema for creating a recurring rule
 export const createRecurringRuleSchema = z.object({
   accountId: z.string(),
-  description: z.string(),
-  amount: z.number(),
+  description: z.string().min(1),
+  amount: z.number().positive(),
   currency: z.string().default("EUR"),
-  type: z.nativeEnum(RuleType),
+  type: z.enum(["INCOME", "EXPENSE"]),
   subCategoryId: z.string().optional(),
-  goalId: z.string().optional(),
+  // TODO: Restore after goal refactor to MoneyAccount
+  // goalId: z.string().optional(),
   
-  // Recurrence fields
+  // Recurrence configuration
   startDate: z.date(),
-  frequencyType: z.nativeEnum(FrequencyType),
-  frequencyInterval: z.number().default(1),
-  dayOfWeek: z.number().optional(),
-  dayOfMonth: z.number().optional(),
+  frequencyType: z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]),
+  frequencyInterval: z.number().int().positive().default(1),
+  dayOfWeek: z.number().int().min(0).max(6).optional(), // 0=Sunday, 6=Saturday
+  dayOfMonth: z.number().int().min(1).max(31).optional(),
   
-  // End conditions
+  // End conditions (optional)
   endDate: z.date().optional(),
-  totalOccurrences: z.number().optional(),
+  totalOccurrences: z.number().int().positive().optional(),
   isInstallment: z.boolean().default(false),
   
   // Notes
@@ -40,16 +41,19 @@ export const createRecurringRuleSchema = z.object({
 // Schema for updating a recurring rule
 export const updateRecurringRuleSchema = z.object({
   ruleId: z.string(),
+  
+  // Optional fields to update
+  description: z.string().min(1).optional(),
+  amount: z.number().positive().optional(),
   accountId: z.string().optional(),
-  description: z.string().optional(),
-  amount: z.number().optional(),
-  type: z.nativeEnum(RuleType).optional(),
+  type: z.enum(["INCOME", "EXPENSE"]),
   subCategoryId: z.string().nullable().optional(),
-  goalId: z.string().nullable().optional(),
+  // TODO: Restore after goal refactor to MoneyAccount
+  // goalId: z.string().nullable().optional(),
   
   // Recurrence fields
   startDate: z.date().optional(),
-  frequencyType: z.nativeEnum(FrequencyType).optional(),
+  frequencyType: z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]),
   frequencyInterval: z.number().optional(),
   dayOfWeek: z.number().nullable().optional(),
   dayOfMonth: z.number().nullable().optional(),

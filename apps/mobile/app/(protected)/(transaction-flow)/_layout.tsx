@@ -3,7 +3,6 @@ import { Platform } from "react-native";
 
 export default function TransactionFlowLayout() {
   return (
-    // @ts-expect-error - Stack is not typed
     <Stack
       screenOptions={{
         headerShown: false,
@@ -13,6 +12,7 @@ export default function TransactionFlowLayout() {
       initialRouteName="value"
     >
       <Stack.Screen name="value" />
+      <Stack.Screen name="summary" />
     </Stack>
   );
 }

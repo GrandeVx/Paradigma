@@ -1,5 +1,6 @@
 import pino from 'pino';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient , Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import SuperJSON from 'superjson'; // Corretto import
 
 import {
@@ -132,6 +133,7 @@ export const db = prismaBase.$extends(
 
 // Esporta tutti gli schemi Zod generati
 export * from "./prisma/zod";
+export { Decimal, Prisma };
 
 // Gestione dell'istanza Prisma in sviluppo per evitare multiple istanze con HMR
 // @ts-expect-error - PrismaClient con estensione Redis potrebbe non essere perfettamente tipizzato per globalThis

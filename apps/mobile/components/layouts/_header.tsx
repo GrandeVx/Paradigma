@@ -1,6 +1,6 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useRoute } from "@react-navigation/native";
+import { useSegments, useLocalSearchParams } from "expo-router";
 import { getTitle } from "@/lib/utils";
 import React, { ReactNode, useEffect } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
@@ -41,7 +41,14 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   variant = "main",
   hideBackButton = false,
 }) => {
-  const route = useRoute();
+  const segments = useSegments();
+  const searchParams = useLocalSearchParams<{
+    title?: string;
+  }>();
+
+  // Derive route name from the last segment of the path
+  const currentRouteName = segments[segments.length - 1] ?? "";
+
   const insets = useSafeAreaInsets();
   const windowHeight = Dimensions.get("window").height;
 
@@ -114,10 +121,11 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
 
   useEffect(() => {
     animateElements();
-  }, [route.name]);
+  }, [currentRouteName]);
 
   const titleAnimatedStyle = useAnimatedStyle(() => ({
     opacity: titleOpacity.value,
+    fontSize: 16,
     transform: [{ translateY: titleTranslateY.value }],
   }));
 
@@ -140,7 +148,6 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
     if (variant === "secondary" && router?.canGoBack() && !modal && router && !hideBackButton) {
       return (
         <View>
-          {/* @ts-expect-error - React Native Reanimated type issue */}
           <Animated.View style={[leftComponentAnimatedStyle]}>
             <Pressable
               onPress={() => {
@@ -155,7 +162,6 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
                 alignItems: "center",
               }}
             >
-              {/* @ts-expect-error - Expo icon type issue */}
               <FontAwesome name="angle-left" size={24} color="black" />
             </Pressable>
           </Animated.View>
@@ -166,7 +172,6 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
     if (variant === "main") {
       return (
         <View>
-          {/* @ts-expect-error - React Native Reanimated type issue */}
           <Animated.View style={[leftComponentAnimatedStyle]}>
             <View
               style={{
@@ -241,18 +246,15 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
                 paddingHorizontal: variant === "secondary" ? 40 : 0,
               }}
             >
-              {/* @ts-expect-error - React Native Reanimated type issue */}
               <Animated.Text
                 className="text-black font-sans font-medium"
                 style={[
-
                   titleAnimatedStyle,
                 ]}
               >
                 {customTitle ||
                   getTitle({
-                    name:
-                      (route.params as { title?: string })?.title ?? route.name,
+                    name: searchParams.title ?? (currentRouteName as string),
                   })}
               </Animated.Text>
             </View>
@@ -271,7 +273,6 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
               {rightActions?.map((action, index) => (
                 <View key={index}>
                   <View>
-                    {/* @ts-expect-error - React Native Reanimated type issue */}
                     <Animated.View
                       style={[
                         {
@@ -304,7 +305,6 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
       <StatusBar style={Platform.OS === "ios" ? "auto" : "auto"} />
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
-          {/* @ts-expect-error - React Native Reanimated type issue */}
           <Animated.View
             style={[
               {

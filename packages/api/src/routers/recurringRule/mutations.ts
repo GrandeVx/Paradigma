@@ -8,7 +8,8 @@ import {
   convertFrequencySchema
 } from "../../schemas/recurringRule";
 import { calculateNextOccurrenceDate, convertDaysToFrequency } from "../../utils/dateCalculations";
-import { FrequencyType } from "@prisma/client";
+
+
 
 // // Helper to calculate the next due date based on the rule settings
 // function calculateNextDueDate(
@@ -91,22 +92,23 @@ export const mutations = {
         }
       }
       
+      // TODO: Implement goal verification after goal refactor to MoneyAccount
       // Verify goal if provided
-      if (input.goalId) {
-        const goal = await ctx.db.goal.findFirst({
-          where: {
-            id: input.goalId,
-            userId,
-          },
-        });
-        
-        if (!goal) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Goal not found",
-          });
-        }
-      }
+      // if (input.goalId) {
+      //   const goal = await ctx.db.goal.findFirst({
+      //     where: {
+      //       id: input.goalId,
+      //       userId,
+      //     },
+      //   });
+      //   
+      //   if (!goal) {
+      //     throw new TRPCError({
+      //       code: "NOT_FOUND",
+      //       message: "Goal not found",
+      //     });
+      //   }
+      // }
       
       // For MONTHLY frequency, extract day of month from startDate if not provided
       let dayOfMonth = input.dayOfMonth;
@@ -134,7 +136,7 @@ export const mutations = {
             amount: input.amount,
             type: input.type,
             subCategoryId: input.subCategoryId || null,
-            goalId: input.goalId || null,
+            // TODO: goalId removed until goal refactor is complete
             
             // Recurrence logic
             startDate: input.startDate,
@@ -185,7 +187,7 @@ export const mutations = {
               amount: signedAmount,
               date: input.startDate,
               subCategoryId: input.subCategoryId || null,
-              goalId: input.goalId || null,
+              // TODO: goalId removed until goal refactor is complete
               notes: input.notes || null,
               isRecurringInstance: true,
               recurringRuleId: recurringRule.id,
@@ -251,7 +253,8 @@ export const mutations = {
       if (input.amount !== undefined) updateData.amount = input.amount;
       if (input.accountId) updateData.moneyAccountId = input.accountId;
       if ('subCategoryId' in input) updateData.subCategoryId = input.subCategoryId;
-      if ('goalId' in input) updateData.goalId = input.goalId;
+      // TODO: goalId removed until goal refactor is complete
+      // if ('goalId' in input) updateData.goalId = input.goalId;
       if ('notes' in input) updateData.notes = input.notes;
       if ('isActive' in input) updateData.isActive = input.isActive;
       
@@ -305,7 +308,7 @@ export const mutations = {
       // Recalculate nextDueDate if needed
       if (recalculateNextDueDate) {
         const startDate = (input.startDate || existingRule.startDate);
-        const frequencyType = (input.frequencyType || existingRule.frequencyType) as FrequencyType;
+        const frequencyType = (input.frequencyType || existingRule.frequencyType);
         const frequencyInterval = input.frequencyInterval || existingRule.frequencyInterval;
         const dayOfWeek = 'dayOfWeek' in input ? input.dayOfWeek : existingRule.dayOfWeek;
         

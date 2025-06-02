@@ -1,5 +1,5 @@
 {
-  "name": "ecoffice",
+  "name": "balance",
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
@@ -43,5 +43,6 @@
     "overrides": {
       "superjson": "^2.0.0"
     }
-  }
+  },
+  "packageManager": "pnpm@9.7.0"
 }

@@ -6,3 +6,4 @@ packages:
   - packages/db
   - packages/styles
   - packages/auth
+  - scripts/cron

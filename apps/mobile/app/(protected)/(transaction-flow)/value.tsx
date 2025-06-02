@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { useRouter, useFocusEffect } from 'expo-router';
+
 
 import { NumericKeyboard } from '@/components/primitives/NumericKeyboard';
 import HeaderContainer from '@/components/layouts/_header';
@@ -79,12 +79,7 @@ export default function ValueScreen() {
   return (
     <HeaderContainer variant="secondary" customTitle="NUOVA TRANSAZIONE">
       <View className="flex-1 bg-white">
-        <Stack.Screen
-          options={{
-            headerTitle: 'Enter amount',
-            headerShadowVisible: false,
-          }}
-        />
+
 
         {/* Transaction Type Selector */}
 

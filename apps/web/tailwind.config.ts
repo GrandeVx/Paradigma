@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss";
-import { colors, typography } from "@paradigma/styles";
 
 const config: Config = {
   darkMode: ["class"],
@@ -10,8 +9,6 @@ const config: Config = {
   ],
   theme: {
     extend: {
-			...typography,
-      ...colors,
       borderColor: {
         input: "hsl(var(--input))",
       },

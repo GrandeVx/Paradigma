@@ -1,4 +1,5 @@
-import { auth } from "./lib/auth";
-import { signIn, signUp, useSession , signOut , authClient, emailOtp } from "./lib/auth-client";
+// Client-side exports only
+export { signIn, signUp, useSession , signOut , authClient, emailOtp } from "./lib/auth-client";
 
-export { auth, signIn, signUp, useSession , signOut , authClient, emailOtp };
+// Server-side exports should be imported directly from ./lib/auth
+// export { auth } from "./lib/auth"; // Remove this to prevent client bundling

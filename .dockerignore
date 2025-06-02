@@ -1,0 +1,75 @@
+# Dependencies
+**/node_modules
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# Build outputs
+**/.next
+**/out
+**/dist
+**/build
+**/.turbo
+
+# Environment files
+**/.env*
+!**/.env.example
+
+# Development files
+**/.vscode
+**/.idea
+**/*.log
+**/coverage
+**/.nyc_output
+
+# OS generated files
+**/.DS_Store
+**/Thumbs.db
+
+# Git
+**/.git
+**/.gitignore
+
+# Docker files
+**/Dockerfile*
+**/docker-compose*.yml
+**/.dockerignore
+
+# Mobile specific
+**/android
+**/ios
+**/.expo
+
+# Database
+**/prisma/migrations
+
+# Temporary files
+**/tmp
+**/temp
+
+# Documentation
+**/README.md
+**/docs
+
+# Test files
+**/__tests__
+**/*.test.*
+**/*.spec.*
+
+# Scripts and config that aren't needed in container (except tsconfig and tailwind which are needed for build)
+**/scripts
+**/.cursor
+**/.roo
+**/tasks
+**/.eslintrc*
+**/.prettierrc*
+# Keep tsconfig.json and tailwind.config for build
+# **/tsconfig*.json
+# **/tailwind.config*
+**/.taskmasterconfig
+**/.roomodes
+**/.windsurfrules
+**/.cursorrules
+**/eas.json
+**/app.json 

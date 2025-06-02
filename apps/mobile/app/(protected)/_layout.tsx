@@ -22,7 +22,7 @@ export default function TabLayout() {
 
 
   return (
-    // @ts-expect-error - Expo Router type issue
+
     <Tabs
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{
