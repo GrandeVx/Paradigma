@@ -78,6 +78,7 @@ COPY --from=builder /app/node_modules ./node_modules
 EXPOSE 3000
 
 # Stay in /app directory where node_modules are located
-# Run from the root directory but specify the web app
-ENV NODE_PATH=/app/node_modules
+# Create symlink to node_modules in web directory for module resolution
+RUN ln -sf /app/node_modules /app/apps/web/node_modules
+
 CMD ["sh", "-c", "cd /app/apps/web && /app/node_modules/.pnpm/node_modules/.bin/next start -p 3000"]
