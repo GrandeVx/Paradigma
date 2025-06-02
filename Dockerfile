@@ -35,8 +35,8 @@ COPY packages ./packages
 # Run install again to execute scripts and ensure proper linking
 RUN pnpm install --frozen-lockfile
 
-# Set NODE_ENV to development for the build
-ENV NODE_ENV=development
+# Set NODE_ENV to production for the build
+ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
 
 RUN pnpm turbo run build --filter=@paradigma/web
@@ -47,7 +47,7 @@ RUN npm install -g pnpm
 # Install OpenSSL for Prisma compatibility in production
 RUN apk add --no-cache openssl libc6-compat
 
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 
 # Maintain workspace structure in production stage
 WORKDIR /app

@@ -1,0 +1,58 @@
+FROM node:20-alpine
+RUN npm install -g pnpm
+
+# Install OpenSSL for Prisma compatibility and additional dev tools
+RUN apk add --no-cache openssl libc6-compat curl bash
+
+# Set development environment
+ENV NODE_ENV=development
+ENV SKIP_ENV_VALIDATION=true
+
+# Enable comprehensive logging for development
+ENV DEBUG=*
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV TURBO_TELEMETRY_DISABLED=1
+
+# Define build arguments for environment variables
+ARG DATABASE_URL
+ARG DIRECT_URL
+ARG NEXT_PUBLIC_WEBSITE_URL
+
+# Set environment variables from build args
+ENV DATABASE_URL=$DATABASE_URL
+ENV DIRECT_URL=$DIRECT_URL
+ENV NEXT_PUBLIC_WEBSITE_URL=$NEXT_PUBLIC_WEBSITE_URL
+
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+
+# Create directory structure
+RUN mkdir -p apps/web packages/api packages/styles packages/db packages/auth
+
+# Copy package.json files first for better layer caching
+COPY apps/web/package.json apps/web/package.json
+COPY packages/api/package.json packages/api/package.json
+COPY packages/styles/package.json packages/styles/package.json
+COPY packages/auth/package.json packages/auth/package.json
+COPY packages/db/package.json packages/db/package.json
+
+# Install ALL dependencies including devDependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY apps ./apps
+COPY packages ./packages
+
+# Generate Prisma client for development
+RUN pnpm --filter @paradigma/db exec prisma generate
+
+# Build the project in development mode
+RUN pnpm turbo run build --filter=@paradigma/web
+
+EXPOSE 3000
+
+# Use development server with hot reloading and detailed logging
+WORKDIR /app/apps/web
+CMD ["pnpm", "dev", "--port", "3000", "--hostname", "0.0.0.0"] 
