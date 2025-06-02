@@ -35,9 +35,6 @@ COPY packages ./packages
 # Run install again to execute scripts and ensure proper linking
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma client with correct binary targets
-RUN pnpm --filter @paradigma/db exec prisma generate
-
 # Set NODE_ENV to production for the build
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
@@ -70,15 +67,11 @@ COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
 # Copy packages to maintain workspace structure
 COPY --from=builder /app/packages ./packages
 
-# Copy node_modules with generated Prisma client
-COPY --from=builder /app/node_modules ./node_modules
-
-# No need to install again, we have everything from builder stage
+# Install only production dependencies
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 EXPOSE 3000
 
-# Stay in /app directory where node_modules are located
-# Create symlink to node_modules in web directory for module resolution
-RUN ln -sf /app/node_modules /app/apps/web/node_modules
-
-CMD ["sh", "-c", "cd /app/apps/web && /app/node_modules/.pnpm/node_modules/.bin/next start -p 3000"]
+# Run from the web app directory
+WORKDIR /app/apps/web
+CMD ["pnpm", "start", "-p", "3000"]
