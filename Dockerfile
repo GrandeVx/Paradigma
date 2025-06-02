@@ -79,4 +79,5 @@ EXPOSE 3000
 
 # Stay in /app directory where node_modules are located
 # Run from the root directory but specify the web app
-CMD ["sh", "-c", "cd /app/apps/web && /app/node_modules/.pnpm/node_modules/.bin/next start -p 3000"]
+ENV NODE_PATH=/app/node_modules
+CMD ["sh", "-c", "cd /app/apps/web && next start -p 3000"]
