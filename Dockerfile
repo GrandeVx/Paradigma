@@ -74,4 +74,4 @@ EXPOSE 3000
 
 # Run from the web app directory
 WORKDIR /app/apps/web
-CMD ["pnpm", "dev", "-p", "3000"]
+CMD ["pnpm", "start", "-p", "3030"]
