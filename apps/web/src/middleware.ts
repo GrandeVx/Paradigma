@@ -42,12 +42,16 @@ function getLocale(request: NextRequest) {
 }
 
 export async function middleware(req: NextRequest) {
-  // First, handle locale redirection
   const pathname = req.nextUrl.pathname;
 
-  // Skip locale check for API routes and static files
+  // Skip ALL API routes from locale and auth handling
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
+  // First, handle locale redirection
+  // Skip locale check for other static files
   const shouldCheckLocale = ![
-    "/api/",
     "/_next/",
     "/images/",
     "/favicon.ico",
@@ -85,8 +89,8 @@ export async function middleware(req: NextRequest) {
       pathname.endsWith(route),
     ) || isMarketingRoute(pathname);
 
-  // Skip auth check for public routes and API routes
-  if (isPublicRoute || pathname.startsWith("/api/")) {
+  // Skip auth check for public routes and API routes (already handled above)
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
