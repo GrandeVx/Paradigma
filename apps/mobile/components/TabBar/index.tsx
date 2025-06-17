@@ -1,6 +1,7 @@
 import * as React from "react";
-import { StyleSheet, View, Pressable, Text } from "react-native";
+import { StyleSheet, View, Pressable, Text, Animated } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { useTabBar } from "@/context/TabBarContext";
 
 export default function TabBar({
   state,
@@ -8,18 +9,32 @@ export default function TabBar({
   navigation,
   descriptors,
 }: BottomTabBarProps) {
+  const { isTabBarVisible, tabBarAnimation } = useTabBar();
 
   const Flows = ["(creation-flow)", "(transaction-flow)"];
   // check if the creation flow is the active route
   const isCreationFlow = state.routes.filter((route, index) => state.index === index).some((route) => Flows.includes(route.name));
-  const shouldHideTabBar = isCreationFlow;
+  const shouldHideTabBar = isCreationFlow || !isTabBarVisible;
 
   if (shouldHideTabBar) {
     return null;
   }
 
   return (
-    <View style={styles.safe_area_container}>
+    <Animated.View
+      style={[
+        styles.safe_area_container,
+        {
+          transform: [{
+            translateY: tabBarAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [100, 0], // Slide up from below
+            })
+          }],
+          opacity: tabBarAnimation
+        }
+      ]}
+    >
       <View style={styles.container}>
         <View style={styles.tab_bar_container}>
           {state.routes.filter((route) => route.params?.href !== null).map((route, index) => {
@@ -71,7 +86,7 @@ export default function TabBar({
         </View>
         <View style={{ height: insets.bottom, backgroundColor: "#FFFFFF" }} />
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -90,7 +105,6 @@ const styles = StyleSheet.create({
   tab_bar_container: {
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
-
     borderTopColor: "#E5E5EA",
     paddingTop: 12,
     paddingBottom: 8,

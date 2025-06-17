@@ -50,7 +50,17 @@ export const mutations = {
             `balanceapp:money_account:user_id:${userId}:*`,
             // Additional specific patterns for the new cache structure if needed
             `balanceapp:transaction:op:aggregate:user_id:${userId}:*`,
-            `balanceapp:money_account:op:find_many:user_id:${userId}:*`
+            `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
+            // Specific account cache keys
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
+            })
           ],
           hasPattern: true
         }
@@ -100,7 +110,17 @@ export const mutations = {
             `balanceapp:money_account:user_id:${userId}:*`,
             // Additional specific patterns for the new cache structure if needed
             `balanceapp:transaction:op:aggregate:user_id:${userId}:*`,
-            `balanceapp:money_account:op:find_many:user_id:${userId}:*`
+            `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
+            // Specific account cache keys
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
+            })
           ],
           hasPattern: true
         }
@@ -187,7 +207,17 @@ export const mutations = {
             `balanceapp:money_account:user_id:${userId}:*`,
             // Additional specific patterns for the new cache structure if needed
             `balanceapp:transaction:op:aggregate:user_id:${userId}:*`,
-            `balanceapp:money_account:op:find_many:user_id:${userId}:*`
+            `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
+            // Specific account cache keys
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.fromAccountId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.fromAccountId }] 
+            })
           ],
           hasPattern: true
         }
@@ -206,7 +236,17 @@ export const mutations = {
               `balanceapp:money_account:user_id:${userId}:*`,
               // Additional specific patterns for the new cache structure if needed
               `balanceapp:transaction:op:aggregate:user_id:${userId}:*`,
-              `balanceapp:money_account:op:find_many:user_id:${userId}:*`
+              `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
+              // Specific account cache keys
+              ctx.db.getKey({ 
+                params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+              }),
+              ctx.db.getKey({ 
+                params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.toAccountId }] 
+              }),
+              ctx.db.getKey({ 
+                params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.toAccountId }] 
+              })
             ],
             hasPattern: true
           }

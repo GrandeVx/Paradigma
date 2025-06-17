@@ -24,6 +24,7 @@ import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
+import { TabBarProvider } from "@/context/TabBarContext";
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -90,25 +91,27 @@ function RootLayoutNav() {
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
             <GestureHandlerRootView style={{ flex: 1, zIndex: 20 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
-              <Stack              >
-                <Stack.Screen
-                  name="(splash)"
-                  options={{ headerShown: false, animation: "fade" }}
+              <TabBarProvider>
+                <Stack>
+                  <Stack.Screen
+                    name="(splash)"
+                    options={{ headerShown: false, animation: "fade" }}
 
-                />
-                <Stack.Screen
-                  name="(protected)"
-                  options={{ headerShown: false, animation: "fade" }}
-                />
-                <Stack.Screen
-                  name="(onboarding)"
-                  options={{ headerShown: false, animation: "fade" }}
-                />
-                <Stack.Screen
-                  name="(auth)"
-                  options={{ headerShown: false, animation: "fade" }}
-                />
-              </Stack>
+                  />
+                  <Stack.Screen
+                    name="(protected)"
+                    options={{ headerShown: false, animation: "fade" }}
+                  />
+                  <Stack.Screen
+                    name="(onboarding)"
+                    options={{ headerShown: false, animation: "fade" }}
+                  />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false, animation: "fade" }}
+                  />
+                </Stack>
+              </TabBarProvider>
             </GestureHandlerRootView>
           </ThemeProvider>
         </SafeAreaProvider>

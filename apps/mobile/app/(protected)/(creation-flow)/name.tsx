@@ -45,7 +45,7 @@ export default function NameStepFlow(
               </Text>
               <View className="relative w-full h-fit items-center justify-center">
                 <TextInput
-                  autoFocus={true}
+                  autoFocus
                   ref={nameInputRef}
                   className="font-sans text-black"
                   style={{ fontSize: 34 }}
@@ -67,7 +67,7 @@ export default function NameStepFlow(
           </View>
 
           {/* Floating Button at the bottom */}
-          {/* @ts-expect-error - Known issue with Reanimated v3 types in certain contexts */}
+
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <Button
               variant="primary"

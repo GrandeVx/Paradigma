@@ -40,9 +40,11 @@ export const getBaseUrl = () => {
   }
   */
 
-  return process.env.EXPO_PUBLIC_API_ENDPOINT
+  const baseUrl = process.env.EXPO_PUBLIC_API_ENDPOINT
     ? process.env.EXPO_PUBLIC_API_ENDPOINT
     : `http://${localhost}:3000`;
+
+  return baseUrl;
 };
 
 /**

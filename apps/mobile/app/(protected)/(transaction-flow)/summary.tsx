@@ -247,7 +247,7 @@ export default function SummaryScreen() {
             type: transactionType === "income" ? "INCOME" : "EXPENSE",
             subCategoryId: selectedCategoryId || undefined,
             startDate: selectedDate,
-            frequencyType,
+            frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
             frequencyInterval,
             isInstallment: true,
             totalOccurrences: numInstallments,
@@ -357,7 +357,7 @@ export default function SummaryScreen() {
             type: transactionType === "income" ? "INCOME" : "EXPENSE",
             subCategoryId: selectedCategoryId || undefined,
             startDate: selectedDate, // Use selected date as start date
-            frequencyType,
+            frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
             frequencyInterval,
             isInstallment: false, // Not an installment, but a recurring transaction
             notes: note ? `${note} (${recurrenceOption.label.toLowerCase()})` : `Transazione ricorrente ${recurrenceOption.label.toLowerCase()}`

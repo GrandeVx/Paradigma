@@ -29,6 +29,7 @@ interface ContainerWithChildrenProps {
   customTitle?: string;
   variant?: "main" | "secondary";
   hideBackButton?: boolean;
+  onBackPress?: () => void;
 }
 
 const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
@@ -40,6 +41,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   customTitle,
   variant = "main",
   hideBackButton = false,
+  onBackPress,
 }) => {
   const segments = useSegments();
   const searchParams = useLocalSearchParams<{
@@ -151,7 +153,9 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
           <Animated.View style={[leftComponentAnimatedStyle]}>
             <Pressable
               onPress={() => {
+                onBackPress?.();
                 backRoute ? router.navigate(backRoute) : router.back();
+
               }}
               style={{
                 width: 40,

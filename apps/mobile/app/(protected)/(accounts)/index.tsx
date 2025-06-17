@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
+import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { IconName } from '@/components/ui/icons';
@@ -9,6 +9,7 @@ import HeaderContainer from '@/components/layouts/_header';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
+import { useTabBar } from '@/context/TabBarContext';
 
 
 // Format currency helper
@@ -133,9 +134,9 @@ const AccountCard: React.FC<{
 
 export default function AccountsScreen() {
   const router = useRouter();
-
+  const { hideTabBar } = useTabBar();
   // Fetch accounts data
-  const { data: accountsData, isLoading } = api.account.listWithBalances.useQuery({});
+  const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({});
 
   // Process accounts data with integrated goal functionality
   const { accounts, totalBalance } = useMemo(() => {
@@ -191,6 +192,7 @@ export default function AccountsScreen() {
   const { integer, decimal } = formatCurrency(totalBalance);
 
   const handleAccountPress = (id: string) => {
+    hideTabBar();
     // Navigate to account details using the id parameter
     router.push({
       pathname: "/(protected)/(accounts)/[id]",
@@ -199,8 +201,7 @@ export default function AccountsScreen() {
   };
 
   const handleBudgetForecastPress = () => {
-    // Navigate to budget forecast screen
-    router.push("/(protected)/(accounts)");
+    alert("Coming soon");
   };
 
   const rightActions = [
@@ -209,6 +210,10 @@ export default function AccountsScreen() {
       onPress: () => router.push("/(protected)/(accounts)"),
     },
   ];
+
+  const handleRefresh = () => {
+    refetchAccounts();
+  };
 
   return (
     <HeaderContainer variant="secondary" rightActions={rightActions} hideBackButton={true}>
@@ -240,12 +245,14 @@ export default function AccountsScreen() {
           className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={handleRefresh}
+            />
+          }
         >
-          {isLoading ? (
-            <View className="items-center justify-center py-8">
-              <Text className="text-gray-500">Caricamento conti...</Text>
-            </View>
-          ) : accounts.length === 0 ? (
+          {accounts.length === 0 ? (
             <View className="items-center justify-center py-8">
               <Text className="text-gray-500">Nessun conto trovato</Text>
             </View>

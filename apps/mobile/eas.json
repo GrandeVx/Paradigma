@@ -11,8 +11,9 @@
         "simulator": true
       },
       "env": {
-        "NEXT_PUBLIC_WEBSITE_URL": "http://localhost:3000",
-        "EXPO_PUBLIC_API_ENDPOINT": "http://localhost:3000",
+        "NEXT_PUBLIC_WEBSITE_URL": "http://balance-nextjs-7cdwdo-7e4173-89-168-16-211.traefik.me",
+        "EXPO_PUBLIC_API_ENDPOINT": "http://balance-nextjs-7cdwdo-7e4173-89-168-16-211.traefik.me",
+        "EXPO_PUBLIC_BACKEND_URL": "http://balance-nextjs-7cdwdo-7e4173-89-168-16-211.traefik.me",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS": "pk_86b4721ca862863fe7a594d6627c8b7993fe60aeab9c2854",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_ANDROID": "pk_86b4721ca862863fe7a594d6627c8b7993fe60aeab9c2854"
       }

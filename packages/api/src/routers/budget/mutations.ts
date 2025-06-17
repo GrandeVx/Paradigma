@@ -30,6 +30,11 @@ export const mutations = {
         });
       }
       
+      // Create precise cache keys for invalidation
+      const budgetListCacheKey = ctx.db.getKey({ 
+        params: [{ prisma: 'Budget' }, { operation: 'getCurrentSettings' }, { userId: userId }] 
+      });
+      
       // Use upsert to create or update the budget
       const budget = await ctx.db.budget.upsert({
         where: {
@@ -49,17 +54,17 @@ export const mutations = {
         // Invalidate budget-related caches
         uncache: {
           uncacheKeys: [
-            // Invalidate specific budget cache
-            `balanceapp:budget:user_id:${userId}:macro_category_id:${input.macroCategoryId}*`,
-            // Invalidate user's budget list
-            `balanceapp:budget:user_id:${userId}*`,
-            // Invalidate category aggregates that might show budget vs. actual
-            `balanceapp:transaction:operation:aggregate:macro_category_id:${input.macroCategoryId}*`
+            // Invalidate user's budget list with precise key
+            budgetListCacheKey,
+            
+            // Keep pattern-based invalidation for transaction aggregates
+            `balanceapp:transaction:operation:aggregate:macro_category_id:${input.macroCategoryId}*`,
+            `balanceapp:transaction:op:aggregate:user_id:${userId}:*`
           ],
           hasPattern: true
         }
       });
       
       return budget;
-    }),
+    })
 }; 

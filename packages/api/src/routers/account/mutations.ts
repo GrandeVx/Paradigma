@@ -28,14 +28,15 @@ export const mutations = {
           ...input,
           userId,
         },
-        // Invalidate user's account list cache with user-specific patterns
+        // Precise cache invalidation using custom keys
         uncache: {
           uncacheKeys: [
-            // Invalidate all MoneyAccount queries for this user
-            `balanceapp:money_account:user_id:${userId}:*`,
-            `balanceapp:money_account:op:find_many:user_id:${userId}:*`
+            // Invalidate the user's account list cache
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+            }),
           ],
-          hasPattern: true
+          hasPattern: false
         }
       });
       
@@ -91,13 +92,14 @@ export const mutations = {
           data: {
             default: false,
           },
-          // Invalidate all accounts for this user since default status changed
+          // Invalidate account list when changing default status
           uncache: {
             uncacheKeys: [
-              `balanceapp:money_account:user_id:${userId}:*`,
-              `balanceapp:money_account:op:find_many:user_id:${userId}:*`
+              ctx.db.getKey({ 
+                params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+              }),
             ],
-            hasPattern: true
+            hasPattern: false
           }
         });
       }
@@ -109,6 +111,8 @@ export const mutations = {
       if ('iconName' in input) updateData.iconName = input.iconName;
       if ('color' in input) updateData.color = input.color;
       if ('default' in input) updateData.default = input.default;
+      if ('isGoalAccount' in input) updateData.isGoalAccount = input.isGoalAccount;
+      if ('targetAmount' in input) updateData.targetAmount = input.targetAmount;
       
       // Update account
       const updatedAccount = await ctx.db.moneyAccount.update({
@@ -116,16 +120,19 @@ export const mutations = {
           id: input.accountId,
         },
         data: updateData,
-        // Invalidate account caches with user-specific patterns
+        // Precise cache invalidation for both list and specific account
         uncache: {
           uncacheKeys: [
-            // Invalidate all MoneyAccount queries for this user 
-            `balanceapp:money_account:user_id:${userId}:*`,
-            `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
-            // Also invalidate specific account patterns
-            `balanceapp:money_account:id:${input.accountId}:*`
+            // Invalidate the user's account list cache
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+            }),
+            // Invalidate specific account cache
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
+            }),
           ],
-          hasPattern: true
+          hasPattern: false
         }
       });
       
@@ -179,19 +186,23 @@ export const mutations = {
         where: {
           id: input.accountId,
         },
-        // Invalidate account caches with user-specific patterns
+        // Precise invalidation for accounts and related transactions
         uncache: {
           uncacheKeys: [
-            // Invalidate all MoneyAccount queries for this user
-            `balanceapp:money_account:user_id:${userId}:*`,
-            `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
-            // Invalidate specific account patterns
-            `balanceapp:money_account:id:${input.accountId}:*`,
-            // Invalidate transaction queries that might reference this account
-            `balanceapp:transaction:user_id:${userId}:*`,
-            `balanceapp:transaction:op:find_many:user_id:${userId}:*`
+            // Invalidate the user's account list cache
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+            }),
+            // Invalidate specific account cache
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
+            }),
+            // Invalidate transaction cache for this account (balances will change)
+            ctx.db.getKey({ 
+              params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
+            }),
           ],
-          hasPattern: true
+          hasPattern: false
         }
       });
       

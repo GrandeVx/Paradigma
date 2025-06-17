@@ -41,7 +41,7 @@ const logger = pino({
 
 // Configurazione Auto-Caching
 const autoCacheConfig: AutoCacheConfig = {
-  excludedModels: ['Session', 'Account', 'Verification'], // Escludiamo i modelli di BetterAuth dal caching automatico di questa estensione
+  excludedModels: ['Session', 'Account', 'Verification', 'MoneyAccount'], // Escluso MoneyAccount per usare solo chiavi custom
   excludedOperations: [], // Nessuna operazione esclusa globalmente per ora
   models: [
     {
@@ -49,16 +49,6 @@ const autoCacheConfig: AutoCacheConfig = {
       ttl: 3600, // 1 ora: i dati utente non cambiano spessissimo
       stale: 600, // 10 minuti
       excludedOperations: ['count'], // Il count degli utenti totali non è rilevante per la cache per-utente
-    },
-    {
-      model: 'MoneyAccount',
-      ttl: 600, // 10 minuti per la lista dei conti di un utente
-      stale: 60,  // 1 minuto
-      // NOTA IMPORTANTE: La cache del SALDO di MoneyAccount (che deriva da Transaction.aggregate)
-      // verrà cachata con il TTL di default di 'autoCacheConfig.ttl' o 'cacheMainConfig.ttl'.
-      // L'INVALIDAZIONE di questa cache del saldo dovrà essere gestita MANUALMENTE
-      // nel codice delle tue procedure tRPC quando una Transaction viene creata/modificata/eliminata,
-      // poiché questa estensione potrebbe non avere un meccanismo 'invalidateRelated' robusto.
     },
     {
       model: 'Transaction',
@@ -74,11 +64,11 @@ const autoCacheConfig: AutoCacheConfig = {
       ttl: 1800, // 30 minuti per la lista e i dettagli degli obiettivi
       stale: 300, // 5 minuti
     },
-    {
-      model: 'Budget', // Le impostazioni di budget (fisse per utente/macro)
-      ttl: 3600, // 1 ora, non cambiano molto frequentemente
-      stale: 600, // 10 minuti
-    },
+    // {
+    //   model: 'Budget', // Le impostazioni di budget (fisse per utente/macro)
+    //   ttl: 3600, // 1 ora, non cambiano molto frequentemente
+    //   stale: 600, // 10 minuti
+    // },
     {
       model: 'RecurringTransactionRule',
       ttl: 1800, // 30 minuti

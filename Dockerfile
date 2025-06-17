@@ -38,27 +38,44 @@ ENV NODE_ENV=development
 
 WORKDIR /app
 
+# Copy workspace configuration files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY tsconfig.json ./
+
+# Create package structure and copy package.json files
 RUN mkdir -p apps/web packages/api packages/styles packages/db packages/auth
 COPY apps/web/package.json apps/web/package.json
+COPY apps/web/tsconfig.json apps/web/tsconfig.json
+COPY apps/web/next.config.mjs apps/web/next.config.mjs
+COPY apps/web/tailwind.config.ts apps/web/tailwind.config.ts
+COPY apps/web/postcss.config.cjs apps/web/postcss.config.cjs
 COPY packages/api/package.json packages/api/package.json
+COPY packages/api/tsconfig.json packages/api/tsconfig.json
 COPY packages/styles/package.json packages/styles/package.json
+COPY packages/styles/tsconfig.json packages/styles/tsconfig.json
 COPY packages/auth/package.json packages/auth/package.json
+COPY packages/auth/tsconfig.json packages/auth/tsconfig.json
 COPY packages/db/package.json packages/db/package.json
+COPY packages/db/tsconfig.json packages/db/tsconfig.json
 
 # Install dependencies but ignore scripts initially
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
+# Copy all source files
 COPY apps ./apps
 COPY packages ./packages
 
 # Run install again to execute scripts and ensure proper linking
 RUN pnpm install --frozen-lockfile
 
+# Generate Prisma client
+RUN pnpm run db-generate --filter=@paradigma/db
+
 # Set NODE_ENV to production for the build
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
 
+# Build the web application
 RUN pnpm turbo run build --filter=@paradigma/web
 
 FROM node:20-alpine
@@ -76,15 +93,16 @@ WORKDIR /app
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
-# Copy the built web app
+# Copy the built web app with all necessary files
 COPY --from=builder /app/apps/web/next.config.mjs ./apps/web/next.config.mjs
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
 COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY --from=builder /app/apps/web/src ./apps/web/src
 COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
+COPY --from=builder /app/apps/web/tsconfig.json ./apps/web/tsconfig.json
 
-# Copy packages to maintain workspace structure
+# Copy packages to maintain workspace structure and dependencies
 COPY --from=builder /app/packages ./packages
 
 # Install only production dependencies
@@ -94,5 +112,4 @@ EXPOSE 3000
 
 # Run from the web app directory
 WORKDIR /app/apps/web
-#CMD ["pnpm", "start", "-p", "3030"]
 CMD ["pnpm", "dev", "-p", "3030"]

@@ -19,6 +19,16 @@ export default function AuthLayout() {
         }}
       />
 
+      <Stack.Screen
+        name="[id]"
+        options={{
+          animation: Platform.OS === "ios" ? "slide_from_right" : "fade",
+        }}
+        initialParams={{
+          title: "account",
+        }}
+      />
+
 
     </Stack>
   );

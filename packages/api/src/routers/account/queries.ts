@@ -8,7 +8,12 @@ export const queries = {
     .query(async ({ ctx }) => {
       const userId = ctx.session.user.id;
       
-      // Get all accounts for the user
+      // Create custom cache key for this user's account list
+      const cacheKey = ctx.db.getKey({ 
+        params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+      });
+      
+      // Get all accounts for the user with custom cache key
       const accounts = await ctx.db.moneyAccount.findMany({
         where: {
           userId,
@@ -16,11 +21,20 @@ export const queries = {
         orderBy: {
           name: "asc",
         },
+        cache: { 
+          ttl: 300, // 5 minutes TTL for account lists
+          key: cacheKey 
+        }
       });
       
       // For each account, calculate balance by summing all transactions
       const accountsWithBalances = await Promise.all(
         accounts.map(async (account) => {
+          // Create custom cache key for transactions per account
+          const transactionsCacheKey = ctx.db.getKey({ 
+            params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: account.id }] 
+          });
+          
           const transactions = await ctx.db.transaction.findMany({
             where: {
               moneyAccountId: account.id,
@@ -28,6 +42,10 @@ export const queries = {
             select: {
               amount: true,
             },
+            cache: { 
+              ttl: 180, // 3 minutes TTL for transaction amounts
+              key: transactionsCacheKey 
+            }
           });
           
           // Sum the transaction amounts and add the initial account balance
@@ -53,11 +71,20 @@ export const queries = {
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       
+      // Create custom cache key for specific account
+      const cacheKey = ctx.db.getKey({ 
+        params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
+      });
+      
       const account = await ctx.db.moneyAccount.findFirst({
         where: {
           id: input.accountId,
           userId,
         },
+        cache: { 
+          ttl: 600, // 10 minutes TTL for individual accounts
+          key: cacheKey 
+        }
       });
       
       if (!account) {

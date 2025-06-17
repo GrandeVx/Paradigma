@@ -22,6 +22,15 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Whitelist {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("whitelist")
+}
+
 model User {
   id                String    @id @unique @default(uuid())
   username          String?   @unique

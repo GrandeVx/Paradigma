@@ -59,4 +59,12 @@ export const updateTransactionSchema = z.object({
 // Schema for deleting transaction
 export const deleteTransactionSchema = z.object({
   transactionId: z.string(),
+});
+
+// Schema for getting monthly spending
+export const getMonthlySpendingSchema = z.object({
+  month: z.number().min(1).max(12),
+  year: z.number().min(1900).max(2100),
+  accountId: z.string().optional(),
+  macroCategoryIds: z.array(z.string()).optional(),
 }); 
