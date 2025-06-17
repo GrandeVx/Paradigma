@@ -68,9 +68,6 @@ COPY packages ./packages
 # Run install again to execute scripts and ensure proper linking
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma client
-RUN pnpm run db-generate --filter=@paradigma/db
-
 # Set NODE_ENV to production for the build
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
