@@ -105,8 +105,8 @@ COPY --from=builder /app/packages ./packages
 # Install only production dependencies
 RUN pnpm install --prod --frozen-lockfile
 
-EXPOSE 3000
+EXPOSE 3030
 
 # Run from the web app directory
 WORKDIR /app/apps/web
-CMD ["pnpm", "dev", "-p", "3030"]
+CMD ["pnpm", "start", "-p", "3030"]
