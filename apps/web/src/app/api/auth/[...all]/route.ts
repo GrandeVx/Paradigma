@@ -1,64 +1,51 @@
-import { auth } from "@paradigma/auth/server"; // path to your auth file
+import { auth } from "@paradigma/auth/server";
 import { toNextJsHandler } from "better-auth/next-js";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-// Create handlers with logging
-const authHandlers = toNextJsHandler(auth);
+console.log("🔄 [Auth Handler] Initializing toNextJsHandler...");
+
+// Test if toNextJsHandler works
+let authHandlers: any;
+try {
+    authHandlers = toNextJsHandler(auth);
+    console.log("✅ [Auth Handler] toNextJsHandler created successfully");
+} catch (error) {
+    console.error("❌ [Auth Handler] toNextJsHandler failed:", error);
+    authHandlers = null;
+}
 
 export async function POST(request: NextRequest) {
-    const url = new URL(request.url);
-    const path = url.pathname;
+    console.log("🔗 [Auth API] POST request received");
     
-    console.log("🔗 [Auth API] POST request:", {
-        path,
-        origin: request.headers.get('origin'),
-        userAgent: request.headers.get('user-agent'),
-        timestamp: new Date().toISOString()
-    });
+    if (!authHandlers) {
+        console.error("❌ [Auth API] authHandlers is null");
+        return NextResponse.json({ error: "Auth handler not initialized" }, { status: 500 });
+    }
     
     try {
         const response = await authHandlers.POST(request);
-        console.log("✅ [Auth API] POST response:", {
-            path,
-            status: response.status,
-            timestamp: new Date().toISOString()
-        });
+        console.log("✅ [Auth API] POST successful");
         return response;
     } catch (error) {
-        console.error("❌ [Auth API] POST error:", {
-            path,
-            error: error instanceof Error ? error.message : error,
-            timestamp: new Date().toISOString()
-        });
-        throw error;
+        console.error("❌ [Auth API] POST error:", error);
+        return NextResponse.json({ error: "Auth POST failed" }, { status: 500 });
     }
 }
 
 export async function GET(request: NextRequest) {
-    const url = new URL(request.url);
-    const path = url.pathname;
+    console.log("🔗 [Auth API] GET request received");
     
-    console.log("🔗 [Auth API] GET request:", {
-        path,
-        origin: request.headers.get('origin'),
-        userAgent: request.headers.get('user-agent'),
-        timestamp: new Date().toISOString()
-    });
+    if (!authHandlers) {
+        console.error("❌ [Auth API] authHandlers is null");
+        return NextResponse.json({ error: "Auth handler not initialized" }, { status: 500 });
+    }
     
     try {
         const response = await authHandlers.GET(request);
-        console.log("✅ [Auth API] GET response:", {
-            path,
-            status: response.status,
-            timestamp: new Date().toISOString()
-        });
+        console.log("✅ [Auth API] GET successful");
         return response;
     } catch (error) {
-        console.error("❌ [Auth API] GET error:", {
-            path,
-            error: error instanceof Error ? error.message : error,
-            timestamp: new Date().toISOString()
-        });
-        throw error;
+        console.error("❌ [Auth API] GET error:", error);
+        return NextResponse.json({ error: "Auth GET failed" }, { status: 500 });
     }
 }
