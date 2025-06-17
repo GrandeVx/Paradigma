@@ -81,6 +81,35 @@ RUN npm install -g pnpm
 # Install OpenSSL for Prisma compatibility in production
 RUN apk add --no-cache openssl libc6-compat
 
+# Define build arguments for environment variables needed at runtime
+ARG DATABASE_URL
+ARG DIRECT_URL
+ARG NEXT_PUBLIC_WEBSITE_URL
+ARG EMAIL_HOST
+ARG EMAIL_USER
+ARG EMAIL_PASSWORD
+ARG BETTER_AUTH_SECRET
+ARG BETTER_AUTH_URL
+ARG REDIS_HOST
+ARG REDIS_USERNAME
+ARG REDIS_PASSWORD
+ARG REDIS_DB
+ARG REDIS_PORT
+
+# Set environment variables from build args
+ENV DATABASE_URL=$DATABASE_URL
+ENV DIRECT_URL=$DIRECT_URL
+ENV NEXT_PUBLIC_WEBSITE_URL=$NEXT_PUBLIC_WEBSITE_URL
+ENV EMAIL_HOST=$EMAIL_HOST
+ENV EMAIL_USER=$EMAIL_USER
+ENV EMAIL_PASSWORD=$EMAIL_PASSWORD
+ENV BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
+ENV BETTER_AUTH_URL=$BETTER_AUTH_URL
+ENV REDIS_HOST=$REDIS_HOST
+ENV REDIS_USERNAME=$REDIS_USERNAME
+ENV REDIS_PASSWORD=$REDIS_PASSWORD
+ENV REDIS_DB=$REDIS_DB
+ENV REDIS_PORT=$REDIS_PORT
 ENV NODE_ENV=production
 
 # Maintain workspace structure in production stage
@@ -98,6 +127,9 @@ COPY --from=builder /app/apps/web/.next ./apps/web/.next
 COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
 COPY --from=builder /app/apps/web/tsconfig.json ./apps/web/tsconfig.json
+COPY --from=builder /app/apps/web/src ./apps/web/src
+COPY --from=builder /app/apps/web/tailwind.config.ts ./apps/web/tailwind.config.ts
+COPY --from=builder /app/apps/web/postcss.config.cjs ./apps/web/postcss.config.cjs
 
 # Copy packages to maintain workspace structure and dependencies
 COPY --from=builder /app/packages ./packages
