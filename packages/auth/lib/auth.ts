@@ -6,6 +6,16 @@ import { prismaBase as db } from "@paradigma/db";
 import { nextCookies } from "better-auth/next-js";
 import { expo } from "@better-auth/expo";
 import nodemailer from 'nodemailer';
+
+// Log initialization
+console.log("🚀 [BetterAuth] Initializing with config:", {
+    databaseUrl: process.env.DATABASE_URL ? "Connected" : "Missing",
+    emailHost: process.env.EMAIL_HOST || "Missing",
+    emailUser: process.env.EMAIL_USER || "Missing",
+    hasEmailPassword: !!process.env.EMAIL_PASSWORD,
+    betterAuthSecret: process.env.BETTER_AUTH_SECRET ? "Set" : "Missing",
+    betterAuthUrl: process.env.BETTER_AUTH_URL || "Missing"
+});
  
 export const auth = betterAuth({
     user: {
@@ -81,22 +91,38 @@ export const auth = betterAuth({
   plugins: [nextCookies(),expo(), emailOTP(
     {
         async sendVerificationOTP({ email, otp, type}) { 
-            const transporter = nodemailer.createTransport({
-                host: process.env.EMAIL_HOST,
-                port: 587,
-                secure: false,
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASSWORD
-                }
+            console.log("🔐 [BetterAuth] Sending verification OTP:", { 
+                email, 
+                otp, 
+                type,
+                emailHost: process.env.EMAIL_HOST,
+                emailUser: process.env.EMAIL_USER,
+                hasPassword: !!process.env.EMAIL_PASSWORD
             });
+            
+            try {
+                const transporter = nodemailer.createTransport({
+                    host: process.env.EMAIL_HOST,
+                    port: 587,
+                    secure: false,
+                    auth: {
+                        user: process.env.EMAIL_USER,
+                        pass: process.env.EMAIL_PASSWORD
+                    }
+                });
 
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: `Verification Code (${type})`,
-                text: `Your verification code is ${otp}`
-            });
+                const result = await transporter.sendMail({
+                    from: process.env.EMAIL_USER,
+                    to: email,
+                    subject: `Verification Code (${type})`,
+                    text: `Your verification code is ${otp}`
+                });
+                
+                console.log("✅ [BetterAuth] Email sent successfully:", result);
+            } catch (error) {
+                console.error("❌ [BetterAuth] Email sending failed:", error);
+                throw error;
+            }
         }
     }
   )],
