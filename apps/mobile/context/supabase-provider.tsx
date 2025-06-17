@@ -111,13 +111,44 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
 
   const sendVerificationOtp = async (email: string) => {
-    console.log("sending verification otp", email);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error, data } = await (authClient as any).emailOtp.sendVerificationOtp({ email, type: "sign-in" });
-    if (error) {
-      throw error;
+    console.log("🚀 [Mobile Auth] Starting sendVerificationOtp for:", email);
+    console.log("🔧 [Mobile Auth] Auth client config:", {
+      baseURL: process.env.EXPO_PUBLIC_BACKEND_URL || 'unknown',
+      hasEmailOtp: !!(authClient as unknown as { emailOtp?: unknown }).emailOtp,
+      clientType: typeof authClient
+    });
+
+    try {
+      console.log("📤 [Mobile Auth] Calling authClient.emailOtp.sendVerificationOtp...");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error, data } = await (authClient as any).emailOtp.sendVerificationOtp({
+        email,
+        type: "sign-in"
+      });
+
+      console.log("📥 [Mobile Auth] Response received:", {
+        hasError: !!error,
+        hasData: !!data,
+        errorMessage: error?.message || null,
+        errorCode: error?.code || null,
+        dataKeys: data ? Object.keys(data) : null
+      });
+
+      if (error) {
+        console.error("❌ [Mobile Auth] sendVerificationOtp error:", error);
+        throw error;
+      }
+
+      console.log("✅ [Mobile Auth] sendVerificationOtp successful:", data);
+      return data;
+    } catch (networkError) {
+      console.error("💥 [Mobile Auth] Network/unexpected error in sendVerificationOtp:", {
+        message: networkError instanceof Error ? networkError.message : networkError,
+        stack: networkError instanceof Error ? networkError.stack : null,
+        name: networkError instanceof Error ? networkError.name : null
+      });
+      throw networkError;
     }
-    return data;
   };
 
 

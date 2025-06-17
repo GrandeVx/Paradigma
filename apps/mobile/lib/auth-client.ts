@@ -5,11 +5,14 @@ import * as SecureStore from "expo-secure-store";
 
 // Use base URL since API routes are now excluded from i18n middleware
 const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-console.log("🔐 Auth Backend URL:", backendUrl);
-console.log("🔧 EXPO_PUBLIC_BACKEND_URL:", process.env.EXPO_PUBLIC_BACKEND_URL);
+console.log("🔐 [Auth Client] Backend URL:", backendUrl);
+console.log("🔧 [Auth Client] EXPO_PUBLIC_BACKEND_URL:", process.env.EXPO_PUBLIC_BACKEND_URL);
+console.log("🌐 [Auth Client] Full auth URL will be:", `${backendUrl}/api/auth`);
 
 if (!backendUrl) {
-  console.error("❌ EXPO_PUBLIC_BACKEND_URL is not set!");
+  console.error("❌ [Auth Client] EXPO_PUBLIC_BACKEND_URL is not set!");
+} else {
+  console.log("✅ [Auth Client] Backend URL is configured correctly");
 }
  
 export const authClient = createAuthClient({
