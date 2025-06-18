@@ -44,10 +44,7 @@ function getLocale(request: NextRequest) {
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
-  // Skip ALL API routes from locale and auth handling
-  if (pathname.startsWith("/api/")) {
-    return NextResponse.next();
-  }
+
 
   // First, handle locale redirection
   // Skip locale check for other static files
@@ -56,6 +53,7 @@ export async function middleware(req: NextRequest) {
     "/images/",
     "/favicon.ico",
     "/sitemap.xml",
+    "/api/",
   ].some((prefix) => pathname.startsWith(prefix));
 
   if (shouldCheckLocale) {
