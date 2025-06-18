@@ -69,7 +69,8 @@ COPY packages ./packages
 RUN pnpm install --frozen-lockfile
 
 # Set NODE_ENV to production for the build
-ENV NODE_ENV=production
+# change to production for production build
+ENV NODE_ENV=development
 ENV SKIP_ENV_VALIDATION=true
 
 # Build the web application
@@ -141,4 +142,5 @@ EXPOSE 3030
 
 # Run from the web app directory
 WORKDIR /app/apps/web
+# change to start for production build
 CMD ["pnpm", "dev", "-p", "3030"]
