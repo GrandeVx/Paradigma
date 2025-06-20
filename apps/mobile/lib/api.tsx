@@ -67,12 +67,33 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
           url: `${getBaseUrl()}/api/trpc`,
           async headers() {
             const headers = new Map<string, string>();
+
             const cookies = await authClient.getCookie();
             if (cookies) {
               headers.set("Cookie", cookies);
             }
-            return Object.fromEntries(headers);
 
+            console.log(`🔗 [Mobile API] Preparing headers for ${getBaseUrl()}/api/trpc`);
+
+            try {
+              // Check session for debugging
+              const session = await authClient.getSession();
+              console.log(`🔑 [Mobile API] Session:`, session ? 'Found session' : 'No session');
+
+              if (session && 'data' in session && session.data) {
+                console.log(`👤 [Mobile API] User ID: ${session.data.user?.id}`);
+              }
+            } catch (error) {
+              console.log(`⚠️ [Mobile API] Error getting auth data:`, error);
+            }
+
+            // Add content type for mutations
+            headers.set("Content-Type", "application/json");
+
+            const headersObj = Object.fromEntries(headers);
+            console.log(`📤 [Mobile API] Final headers:`, headersObj);
+
+            return headersObj;
           },
         }),
       ],

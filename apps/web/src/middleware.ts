@@ -46,6 +46,13 @@ export async function middleware(req: NextRequest) {
 
   // Skip ALL API routes from locale and auth handling
   if (pathname.startsWith("/api/")) {
+    // Log API requests for debugging
+    if (req.method === "POST" && pathname.includes("/trpc/")) {
+      console.log(`🔄 [Middleware] POST request to: ${pathname} from ${req.headers.get("user-agent")?.substring(0, 50) || 'unknown'}`);
+    }
+    if (req.method === "OPTIONS" && pathname.includes("/trpc/")) {
+      console.log(`🔄 [Middleware] OPTIONS request to: ${pathname} from ${req.headers.get("origin") || 'unknown origin'}`);
+    }
     return NextResponse.next();
   }
 
