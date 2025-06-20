@@ -78,6 +78,7 @@ export default function AccountDetailsScreen() {
             await utils.account.getById.invalidate({ accountId: id });
             await utils.transaction.list.invalidate({ accountId: id });
             setIsSaving(false);
+            setTabBarVisible();
             router.back();
         },
         onError: (error) => {

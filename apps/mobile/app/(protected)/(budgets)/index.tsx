@@ -14,6 +14,7 @@ import { api } from '@/lib/api';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { SvgIcon } from '@/components/ui/svg-icon';
 
 // Helper function to format currency
 const formatCurrency = (amount: number) => {
@@ -217,9 +218,18 @@ export default function BudgetScreen() {
   // Determine if we're refreshing
   const isRefreshing = isRefetchingBudgets || isRefetchingTransactions;
 
+
+  const rightActions = [
+    {
+      icon: <SvgIcon name="edit" color={"#005EFD"} size={20} />,
+      onPress: () => handleOpenBottomSheet()
+    },
+  ];
+
+
   return (
     <>
-      <HeaderContainer variant="secondary" customTitle="BUDGET">
+      <HeaderContainer variant="secondary" customTitle="BUDGET" rightActions={rightActions}>
         <SafeAreaView className="flex-1 bg-white">
           {isLoadingBudgets || !hasBudgets ? (
             // Empty state - no budgets set
@@ -446,16 +456,6 @@ export default function BudgetScreen() {
                     })}
                 </View>
 
-                {/* Edit Budget Button */}
-                <Button
-                  variant="primary"
-                  size="lg"
-                  rounded="default"
-                  className="mt-4"
-                  onPress={handleOpenBottomSheet}
-                >
-                  <Text className="text-white font-semibold">Modifica budget</Text>
-                </Button>
               </View>
             </ScrollView>
           )}
