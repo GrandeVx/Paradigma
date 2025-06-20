@@ -77,22 +77,9 @@ export const createTRPCContext = async (opts: {
   req: NextRequest;
 }): Promise<inferAsyncReturnType<typeof createInnerTRPCContext>> => {
   
-  console.log(`🔐 [Context] Creating tRPC context`);
-  console.log(`📋 [Context] Request headers:`, Object.fromEntries(opts.req.headers.entries()));
-  
-  const startTime = Date.now();
-  
   const session = await auth.api.getSession({
     headers: opts.req.headers,
   });
-
-  const authTime = Date.now() - startTime;
-  console.log(`🔑 [Context] Auth check completed in ${authTime}ms`);
-  console.log(`👤 [Context] Session:`, session ? {
-    userId: session.user?.id,
-    email: session.user?.email,
-    sessionId: session.session?.id
-  } : 'No session');
 
   // Return context with session if available
   return createInnerTRPCContext({
@@ -221,20 +208,11 @@ export const publicProcedure = t.procedure;
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  console.log(`🛡️ [Auth] Protected procedure check starting`);
-  console.log(`👤 [Auth] Session user:`, ctx.session?.user ? {
-    id: ctx.session.user.id,
-    email: ctx.session.user.email
-  } : 'No user in session');
-  
+  // console.log("[DEBUG] Session on TRPC:", ctx.session);
   if (!ctx.session?.user) {
-    console.log(`❌ [Auth] Authentication failed - no user in session`);
     // Utilizziamo l'helper per l'errore multilingua
     throw notAuthenticatedError(ctx);
   }
-  
-  console.log(`✅ [Auth] Authentication successful for user: ${ctx.session.user.id}`);
-  
   return next({
     ctx: {
       ...ctx,

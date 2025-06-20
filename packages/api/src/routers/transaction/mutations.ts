@@ -14,162 +14,119 @@ export const mutations = {
   createExpense: protectedProcedure
     .input(createExpenseSchema)
     .mutation(async ({ ctx, input }) => {
-      console.log(`💰 [Transaction] Starting createExpense mutation`);
-      console.log(`📥 [Transaction] Input:`, input);
-      
       const userId = ctx.session.user.id;
-      console.log(`👤 [Transaction] User ID: ${userId}`);
       
-      try {
-        console.log(`🔍 [Transaction] Verifying account ownership for ID: ${input.accountId}`);
-        
-        // Verify account belongs to user
-        const account = await ctx.db.moneyAccount.findFirst({
-          where: {
-            id: input.accountId,
-            userId,
-          },
-        });
-        
-        if (!account) {
-          console.log(`❌ [Transaction] Account not found or doesn't belong to user`);
-          throw translatedError(ctx, 'NOT_FOUND', ['transaction', 'errors', 'accountNotFound']);
-        }
-        
-        console.log(`✅ [Transaction] Account verified:`, account);
-        
-        // Store amount as negative for expenses
-        const negativeAmount = -Math.abs(input.amount);
-        console.log(`💱 [Transaction] Amount converted to negative: ${negativeAmount}`);
-        
-        console.log(`💾 [Transaction] Creating expense transaction`);
-        const startTime = Date.now();
-        
-        const transaction = await ctx.db.transaction.create({
-          data: {
-            userId: userId,
-            moneyAccountId: input.accountId,
-            amount: negativeAmount,
-            date: input.date,
-            description: input.description,
-            subCategoryId: input.subCategoryId || null,
-            notes: input.notes || null,  
-          },
-          // Invalidate relevant caches after creating a transaction
-          uncache: {
-            uncacheKeys: [
-              // Pattern specifici per userId per evitare invalidazione cross-user
-              `balanceapp:transaction:operation:aggregate:money_account_id:${input.accountId}:*`,
-              `balanceapp:transaction:user_id:${userId}:*`,
-              `balanceapp:money_account:user_id:${userId}:*`,
-              // Additional specific patterns for the new cache structure if needed
-              `balanceapp:transaction:op:aggregate:user_id:${userId}:*`,
-              `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
-              // Specific account cache keys
-              ctx.db.getKey({ 
-                params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
-              }),
-              ctx.db.getKey({ 
-                params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
-              }),
-              ctx.db.getKey({ 
-                params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
-              })
-            ],
-            hasPattern: true
-          }
-        });
-        
-        const dbTime = Date.now() - startTime;
-        console.log(`✅ [Transaction] Expense transaction created in ${dbTime}ms`);
-        console.log(`📤 [Transaction] Created transaction:`, transaction);
-        
-        return transaction;
-      } catch (error) {
-        console.error(`❌ [Transaction] Error in createExpense:`, error);
-        throw error;
+      // Verify account belongs to user
+      const account = await ctx.db.moneyAccount.findFirst({
+        where: {
+          id: input.accountId,
+          userId,
+        },
+      });
+      
+      if (!account) {
+        throw translatedError(ctx, 'NOT_FOUND', ['transaction', 'errors', 'accountNotFound']);
       }
+      
+      // Store amount as negative for expenses
+      const negativeAmount = -Math.abs(input.amount);
+      
+      const transaction = await ctx.db.transaction.create({
+        data: {
+          userId: userId,
+          moneyAccountId: input.accountId,
+          amount: negativeAmount,
+          date: input.date,
+          description: input.description,
+          subCategoryId: input.subCategoryId || null,
+          notes: input.notes || null,  
+        },
+        // Invalidate relevant caches after creating a transaction
+        uncache: {
+          uncacheKeys: [
+            // Pattern specifici per userId per evitare invalidazione cross-user
+            `balanceapp:transaction:operation:aggregate:money_account_id:${input.accountId}:*`,
+            `balanceapp:transaction:user_id:${userId}:*`,
+            `balanceapp:money_account:user_id:${userId}:*`,
+            // Additional specific patterns for the new cache structure if needed
+            `balanceapp:transaction:op:aggregate:user_id:${userId}:*`,
+            `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
+            // Specific account cache keys
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
+            })
+          ],
+          hasPattern: true
+        }
+      });
+      
+      return transaction;
     }),
   
   // Create income transaction
   createIncome: protectedProcedure
     .input(createIncomeSchema)
     .mutation(async ({ ctx, input }) => {
-      console.log(`💰 [Transaction] Starting createIncome mutation`);
-      console.log(`📥 [Transaction] Input:`, input);
-      
       const userId = ctx.session.user.id;
-      console.log(`👤 [Transaction] User ID: ${userId}`);
       
-      try {
-        console.log(`🔍 [Transaction] Verifying account ownership for ID: ${input.accountId}`);
-        
-        // Verify account belongs to user
-        const account = await ctx.db.moneyAccount.findFirst({
-          where: {
-            id: input.accountId,
-            userId,
-          },
-        });
-        
-        if (!account) {
-          console.log(`❌ [Transaction] Account not found or doesn't belong to user`);
-          throw translatedError(ctx, 'NOT_FOUND', ['transaction', 'errors', 'accountNotFound']);
-        }
-        
-        console.log(`✅ [Transaction] Account verified:`, account);
-        
-        // Store amount as positive for income
-        const positiveAmount = Math.abs(input.amount);
-        console.log(`💱 [Transaction] Amount converted to positive: ${positiveAmount}`);
-        
-        console.log(`💾 [Transaction] Creating income transaction`);
-        const startTime = Date.now();
-        
-        const transaction = await ctx.db.transaction.create({
-          data: {
-            userId,
-            moneyAccountId: input.accountId,
-            amount: positiveAmount,
-            date: input.date,
-            description: input.description,
-            subCategoryId: input.subCategoryId || null,
-            notes: input.notes || null,
-          },
-          // Invalidate relevant caches after creating a transaction
-          uncache: {
-            uncacheKeys: [
-              // Pattern specifici per userId per evitare invalidazione cross-user
-              `balanceapp:transaction:operation:aggregate:money_account_id:${input.accountId}:*`,
-              `balanceapp:transaction:user_id:${userId}:*`,
-              `balanceapp:money_account:user_id:${userId}:*`,
-              // Additional specific patterns for the new cache structure if needed
-              `balanceapp:transaction:op:aggregate:user_id:${userId}:*`,
-              `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
-              // Specific account cache keys
-              ctx.db.getKey({ 
-                params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
-              }),
-              ctx.db.getKey({ 
-                params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
-              }),
-              ctx.db.getKey({ 
-                params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
-              })
-            ],
-            hasPattern: true
-          }
-        });
-        
-        const dbTime = Date.now() - startTime;
-        console.log(`✅ [Transaction] Income transaction created in ${dbTime}ms`);
-        console.log(`📤 [Transaction] Created transaction:`, transaction);
-        
-        return transaction;
-      } catch (error) {
-        console.error(`❌ [Transaction] Error in createIncome:`, error);
-        throw error;
+      // Verify account belongs to user
+      const account = await ctx.db.moneyAccount.findFirst({
+        where: {
+          id: input.accountId,
+          userId,
+        },
+      });
+      
+      if (!account) {
+        throw translatedError(ctx, 'NOT_FOUND', ['transaction', 'errors', 'accountNotFound']);
       }
+      
+      // Store amount as positive for income
+      const positiveAmount = Math.abs(input.amount);
+      
+      const transaction = await ctx.db.transaction.create({
+        data: {
+          userId,
+
+          moneyAccountId: input.accountId,
+          amount: positiveAmount,
+          date: input.date,
+          description: input.description,
+          subCategoryId: input.subCategoryId || null,
+          notes: input.notes || null,
+        },
+        // Invalidate relevant caches after creating a transaction
+        uncache: {
+          uncacheKeys: [
+            // Pattern specifici per userId per evitare invalidazione cross-user
+            `balanceapp:transaction:operation:aggregate:money_account_id:${input.accountId}:*`,
+            `balanceapp:transaction:user_id:${userId}:*`,
+            `balanceapp:money_account:user_id:${userId}:*`,
+            // Additional specific patterns for the new cache structure if needed
+            `balanceapp:transaction:op:aggregate:user_id:${userId}:*`,
+            `balanceapp:money_account:op:find_many:user_id:${userId}:*`,
+            // Specific account cache keys
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
+            }),
+            ctx.db.getKey({ 
+              params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
+            })
+          ],
+          hasPattern: true
+        }
+      });
+      
+      return transaction;
     }),
   
   // Create transfer between accounts
