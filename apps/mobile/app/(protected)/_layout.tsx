@@ -33,10 +33,10 @@ export default function TabLayout() {
         },
         headerShown: false,
       }}
-      initialRouteName="index"
+      initialRouteName="(home)"
     >
       <Tabs.Screen
-        name="index"
+        name="(home)"
         // This title is used to set the title of the header
         initialParams={{}}
         options={{

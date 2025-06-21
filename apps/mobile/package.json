@@ -57,6 +57,7 @@
     "react-i18next": "^15.4.1",
     "react-native": "0.79.2",
     "react-native-awesome-slider": "^2.9.0",
+    "react-native-collapsible-tab-view": "^8.0.1",
     "react-native-dynamically-selected-picker": "^3.3.0",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-keyboard-controller": "^1.17.4",
