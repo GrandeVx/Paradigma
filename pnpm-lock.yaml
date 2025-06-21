@@ -50,7 +50,7 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.2.16
+        version: 1.2.17
 
   apps/mobile:
     dependencies:
@@ -144,6 +144,9 @@ importers:
       expo-splash-screen:
         specifier: ~0.30.8
         version: 0.30.8(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))
+      expo-sqlite:
+        specifier: ^15.2.12
+        version: 15.2.12(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
       expo-status-bar:
         specifier: ~2.2.3
         version: 2.2.3(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
@@ -183,6 +186,9 @@ importers:
       react-native-awesome-slider:
         specifier: ^2.9.0
         version: 2.9.0(react-native-gesture-handler@2.24.0(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native-reanimated@3.17.5(@babel/core@7.26.9)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
+      react-native-collapsible-tab-view:
+        specifier: ^8.0.1
+        version: 8.0.1(react-native-pager-view@6.8.1(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native-reanimated@3.17.5(@babel/core@7.26.9)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
       react-native-dynamically-selected-picker:
         specifier: ^3.3.0
         version: 3.3.0(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
@@ -467,7 +473,7 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.2.16
+        version: 1.2.17
       tsx:
         specifier: ^4.7.1
         version: 4.19.3
@@ -498,7 +504,7 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.2.16
+        version: 1.2.17
       '@types/nodemailer':
         specifier: ^6.4.17
         version: 6.4.17
@@ -544,7 +550,7 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.2.16
+        version: 1.2.17
       dotenv-cli:
         specifier: ^7.4.2
         version: 7.4.4
@@ -2406,8 +2412,8 @@ packages:
   '@types/body-parser@1.19.5':
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
 
-  '@types/bun@1.2.16':
-    resolution: {integrity: sha512-1aCZJ/6nSiViw339RsaNhkNoEloLaPzZhxMOYEa7OzRzO41IGg5n/7I43/ZIAW/c+Q6cT12Vf7fOZOoVIzb5BQ==}
+  '@types/bun@1.2.17':
+    resolution: {integrity: sha512-l/BYs/JYt+cXA/0+wUhulYJB6a6p//GTPiJ7nV+QHa8iiId4HZmnu/3J/SowP5g0rTiERY2kfGKXEK5Ehltx4Q==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -2953,6 +2959,9 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
+  await-lock@2.2.2:
+    resolution: {integrity: sha512-aDczADvlvTGajTDjcjpJMqRkOF6Qdz3YbPZm/PyW6tKPkx2hlYBzxMhEywM/tU72HrVZjgl5VCdRuMlA7pZ8Gw==}
+
   axe-core@4.10.2:
     resolution: {integrity: sha512-RE3mdQ7P3FRSe7eqCWoeQ/Z9QXrtniSjp1wUjt5nRC3WIpz5rSCve6o3fsZ2aCpJtrZjSZgjwXAoTO5k4tEI0w==}
     engines: {node: '>=4'}
@@ -3109,8 +3118,8 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
-  bun-types@1.2.16:
-    resolution: {integrity: sha512-ciXLrHV4PXax9vHvUrkvun9VPVGOVwbbbBF/Ev1cXz12lyEZMoJpIJABOfPcN9gDJRaiKF9MVbSygLg4NXu3/A==}
+  bun-types@1.2.17:
+    resolution: {integrity: sha512-ElC7ItwT3SCQwYZDYoAH+q6KT4Fxjl8DtZ6qDulUFBmXA8YB4xo+l54J9ZJN+k2pphfn9vk7kfubeSd5QfTVJQ==}
 
   busboy@1.6.0:
     resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}
@@ -4261,6 +4270,13 @@ packages:
     resolution: {integrity: sha512-2eh+uA543brfeG5HILXmtNKA7E2/pfywKzNumzy3Ef6OtDjYy6zJUGNSbhnZRbVEjUZo3/QNRs0JRBfY80okZg==}
     peerDependencies:
       expo: '*'
+
+  expo-sqlite@15.2.12:
+    resolution: {integrity: sha512-J2Y7tChIFEcpgiVxxAXWaArOSIaHxct6keNZPs/6aHrSzUWmAlQS5vzGQueB1II65rl47ZtZcQEIl0NpiRhxxQ==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
 
   expo-status-bar@2.2.3:
     resolution: {integrity: sha512-+c8R3AESBoduunxTJ8353SqKAKpxL6DvcD8VKBuh81zzJyUUbfB4CVjr1GufSJEKsMzNPXZU+HJwXx7Xh7lx8Q==}
@@ -6457,6 +6473,18 @@ packages:
       react-native-gesture-handler: '>=2.0.0'
       react-native-reanimated: '>=3.0.0'
 
+  react-native-collapsible-tab-view@8.0.1:
+    resolution: {integrity: sha512-/MRimYn4FB4Dzmypy0J976FVZeX9OEOyFR3fogO68YDHyleSEEgVI2ecrcbtJ4jC8LPT0weDhJPtUQtWtzlQ8A==}
+    peerDependencies:
+      '@shopify/flash-list': '>=1.0.0'
+      react: '*'
+      react-native: '*'
+      react-native-pager-view: '*'
+      react-native-reanimated: '>=3.8.1'
+    peerDependenciesMeta:
+      '@shopify/flash-list':
+        optional: true
+
   react-native-css-interop@0.1.22:
     resolution: {integrity: sha512-Mu01e+H9G+fxSWvwtgWlF5MJBJC4VszTCBXopIpeR171lbeBInHb8aHqoqRPxmJpi3xIHryzqKFOJYAdk7PBxg==}
     engines: {node: '>=18'}
@@ -6521,6 +6549,12 @@ packages:
     resolution: {integrity: sha512-tyyS6iswwxn/CWIgk9j82X5/9gkgAQuI4fiWa+TEWjOo1WIhBr0x7914mtagrVuVgJCMRnHCopCIWL78afakHw==}
     peerDependencies:
       react-native: '>=0.59'
+
+  react-native-pager-view@6.8.1:
+    resolution: {integrity: sha512-XIyVEMhwq7sZqM7GobOJZXxFCfdFgVNq/CFB2rZIRNRSVPJqE1k1fsc8xfQKfdzsp6Rpt6I7VOIvhmP7/YHdVg==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
 
   react-native-purchases@7.28.1:
     resolution: {integrity: sha512-5nd8s79dq+O9O+B0Gn9QNrKHn63kMNm5NQx1mnN8awBaDe95YpjqBaAgmVI/K66BSEDAkzTR0ep2BzUMawNmtQ==}
@@ -7535,6 +7569,11 @@ packages:
 
   url@0.11.0:
     resolution: {integrity: sha512-kbailJa29QrtXnxgq+DdCEGlbTeYM2eJUxsz6vjZavrCYPMIFHMKQmSKYAIuUK2i7hgPm28a8piX5NTUtM/LKQ==}
+
+  use-deep-compare@1.3.0:
+    resolution: {integrity: sha512-94iG+dEdEP/Sl3WWde+w9StIunlV8Dgj+vkt5wTwMoFQLaijiEZSXXy8KtcStpmEDtIptRJiNeD4ACTtVvnIKA==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   use-latest-callback@0.2.3:
     resolution: {integrity: sha512-7vI3fBuyRcP91pazVboc4qu+6ZqM8izPWX9k7cRnT8hbD5svslcknsh3S9BUhaK11OmgTV4oWZZVSeQAiV53SQ==}
@@ -10011,9 +10050,9 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/node': 20.17.19
 
-  '@types/bun@1.2.16':
+  '@types/bun@1.2.17':
     dependencies:
-      bun-types: 1.2.16
+      bun-types: 1.2.17
 
   '@types/connect@3.4.38':
     dependencies:
@@ -10737,6 +10776,8 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
+  await-lock@2.2.2: {}
+
   axe-core@4.10.2: {}
 
   axobject-query@4.1.0: {}
@@ -11010,7 +11051,7 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  bun-types@1.2.16:
+  bun-types@1.2.17:
     dependencies:
       '@types/node': 20.17.19
 
@@ -12355,6 +12396,13 @@ snapshots:
       expo: 53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
       - supports-color
+
+  expo-sqlite@15.2.12(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      await-lock: 2.2.2
+      expo: 53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)
 
   expo-status-bar@2.2.3(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
     dependencies:
@@ -15039,6 +15087,14 @@ snapshots:
       react-native-gesture-handler: 2.24.0(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
       react-native-reanimated: 3.17.5(@babel/core@7.26.9)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
 
+  react-native-collapsible-tab-view@8.0.1(react-native-pager-view@6.8.1(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native-reanimated@3.17.5(@babel/core@7.26.9)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)
+      react-native-pager-view: 6.8.1(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
+      react-native-reanimated: 3.17.5(@babel/core@7.26.9)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
+      use-deep-compare: 1.3.0(react@19.0.0)
+
   react-native-css-interop@0.1.22(react-native-reanimated@3.17.5(@babel/core@7.26.9)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native-safe-area-context@5.4.0(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native-svg@15.11.2(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@20.17.19)(typescript@5.8.3))):
     dependencies:
       '@babel/helper-module-imports': 7.25.9
@@ -15102,6 +15158,11 @@ snapshots:
     dependencies:
       moment-jalaali: 0.9.6
       prop-types: 15.8.1
+      react-native: 0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)
+
+  react-native-pager-view@6.8.1(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
       react-native: 0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)
 
   react-native-purchases@7.28.1(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
@@ -16384,6 +16445,11 @@ snapshots:
     dependencies:
       punycode: 1.3.2
       querystring: 0.2.0
+
+  use-deep-compare@1.3.0(react@19.0.0):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.0.0
 
   use-latest-callback@0.2.3(react@19.0.0):
     dependencies:
