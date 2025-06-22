@@ -93,6 +93,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^4.32.6
         version: 4.36.1(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
+      '@tanstack/react-query-persist-client':
+        specifier: ^4.36.1
+        version: 4.40.0(@tanstack/react-query@4.36.1(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))
       '@trpc/client':
         specifier: ^10.45.2
         version: 10.45.2(@trpc/server@10.45.2)
@@ -135,6 +138,9 @@ importers:
       expo-localization:
         specifier: ~16.1.5
         version: 16.1.5(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react@19.0.0)
+      expo-network:
+        specifier: ^7.1.5
+        version: 7.1.5(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react@19.0.0)
       expo-router:
         specifier: ~5.0.7
         version: 5.0.7(bsswwhgq62w6jdccuit2hgnoke)
@@ -144,9 +150,6 @@ importers:
       expo-splash-screen:
         specifier: ~0.30.8
         version: 0.30.8(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))
-      expo-sqlite:
-        specifier: ^15.2.12
-        version: 15.2.12(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
       expo-status-bar:
         specifier: ~2.2.3
         version: 2.2.3(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
@@ -201,6 +204,9 @@ importers:
       react-native-linear-gradient:
         specifier: ^2.8.3
         version: 2.8.3(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
+      react-native-mmkv:
+        specifier: ^3.3.0
+        version: 3.3.0(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
       react-native-reanimated:
         specifier: ~3.17.5
         version: 3.17.5(@babel/core@7.26.9)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
@@ -2334,6 +2340,17 @@ packages:
   '@tanstack/query-core@4.36.1':
     resolution: {integrity: sha512-DJSilV5+ytBP1FbFcEJovv4rnnm/CokuVvrBEtW/Va9DvuJ3HksbXUJEpI0aV1KtuL4ZoO9AVE6PyNLzF7tLeA==}
 
+  '@tanstack/query-core@4.40.0':
+    resolution: {integrity: sha512-7MJTtZkCSuehMC7IxMOCGsLvHS3jHx4WjveSrGsG1Nc1UQLjaFwwkpLA2LmPfvOAxnH4mszMOBFD6LlZE+aB+Q==}
+
+  '@tanstack/query-persist-client-core@4.40.0':
+    resolution: {integrity: sha512-eJqC60UG/xEJisCJh1ss2PeynO/xi4EX+K8inKi0vmAePdb1bFDfVpfPnbqVLFUroGirQmf7UcJqtsx432SEgw==}
+
+  '@tanstack/react-query-persist-client@4.40.0':
+    resolution: {integrity: sha512-9QQ/x0JxErleZLrjz+flL7kzezVRd9EZgAf/BLT14szF3g5neC8fjPqJKHMFDJMgoKCUGUW+TRK0WTDaFWAG6g==}
+    peerDependencies:
+      '@tanstack/react-query': ^4.40.0
+
   '@tanstack/react-query@4.36.1':
     resolution: {integrity: sha512-y7ySVHFyyQblPl3J3eQBWpXZkliroki3ARnBKsdJchlgt7yJLRDUcf4B8soufgiYt3pEQIkBWBx1N9/ZPIeUWw==}
     peerDependencies:
@@ -4242,6 +4259,12 @@ packages:
   expo-modules-core@2.3.13:
     resolution: {integrity: sha512-vmKHv7tEo2wUQoYDV6grhsLsQfD3DUnew5Up3yNnOE1gHGQE+zhV1SBYqaPMPB12OvpyD1mlfzGhu6r9PODnng==}
 
+  expo-network@7.1.5:
+    resolution: {integrity: sha512-VNgxNe3Y1xo00zMzFy7Q+35qWnSJnjZ9RRLtW3Nu/ITtv9ak+BIghfWj1PANLYB3ZkWzY5656R1YIkkRkeDukg==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+
   expo-router@5.0.7:
     resolution: {integrity: sha512-NlEgRXCKtseDuIHBp87UfkvqsuVrc0MYG+zg33dopaN6wik4RkrWWxUYdNPHub0s/7qMye6zZBY4ZCrXwd/xpA==}
     peerDependencies:
@@ -4271,12 +4294,7 @@ packages:
     peerDependencies:
       expo: '*'
 
-  expo-sqlite@15.2.12:
-    resolution: {integrity: sha512-J2Y7tChIFEcpgiVxxAXWaArOSIaHxct6keNZPs/6aHrSzUWmAlQS5vzGQueB1II65rl47ZtZcQEIl0NpiRhxxQ==}
-    peerDependencies:
-      expo: '*'
-      react: '*'
-      react-native: '*'
+
 
   expo-status-bar@2.2.3:
     resolution: {integrity: sha512-+c8R3AESBoduunxTJ8353SqKAKpxL6DvcD8VKBuh81zzJyUUbfB4CVjr1GufSJEKsMzNPXZU+HJwXx7Xh7lx8Q==}
@@ -6541,6 +6559,12 @@ packages:
 
   react-native-linear-gradient@2.8.3:
     resolution: {integrity: sha512-KflAXZcEg54PXkLyflaSZQ3PJp4uC4whM7nT/Uot9m0e/qxFV3p6uor1983D1YOBJbJN7rrWdqIjq0T42jOJyA==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
+  react-native-mmkv@3.3.0:
+    resolution: {integrity: sha512-2iPjIJ+IAODXN35wm53EN6nv+hR/0NXLLiLWOdPA/0gXDB2dYVrr6MqvoiFpxhLhdj0B8fkf5ARNVavJaSvuuQ==}
     peerDependencies:
       react: '*'
       react-native: '*'
@@ -9972,6 +9996,17 @@ snapshots:
 
   '@tanstack/query-core@4.36.1': {}
 
+  '@tanstack/query-core@4.40.0': {}
+
+  '@tanstack/query-persist-client-core@4.40.0':
+    dependencies:
+      '@tanstack/query-core': 4.40.0
+
+  '@tanstack/react-query-persist-client@4.40.0(@tanstack/react-query@4.36.1(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))':
+    dependencies:
+      '@tanstack/query-persist-client-core': 4.40.0
+      '@tanstack/react-query': 4.36.1(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
+
   '@tanstack/react-query@4.36.1(react-dom@19.0.0(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@tanstack/query-core': 4.36.1
@@ -12356,6 +12391,11 @@ snapshots:
     dependencies:
       invariant: 2.2.4
 
+  expo-network@7.1.5(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react@19.0.0):
+    dependencies:
+      expo: 53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
+      react: 19.0.0
+
   expo-router@5.0.7(bsswwhgq62w6jdccuit2hgnoke):
     dependencies:
       '@expo/metro-runtime': 5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))
@@ -12397,12 +12437,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  expo-sqlite@15.2.12(expo@53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
-    dependencies:
-      await-lock: 2.2.2
-      expo: 53.0.9(@babel/core@7.26.9)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)))(graphql@15.8.0)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
-      react: 19.0.0
-      react-native: 0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)
 
   expo-status-bar@2.2.3(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
     dependencies:
@@ -15150,6 +15184,11 @@ snapshots:
       react-native-reanimated: 3.17.5(@babel/core@7.26.9)(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0)
 
   react-native-linear-gradient@2.8.3(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)
+
+  react-native-mmkv@3.3.0(react-native@0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0))(react@19.0.0):
     dependencies:
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.26.9)(@types/react@19.0.10)(react@19.0.0)

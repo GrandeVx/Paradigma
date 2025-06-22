@@ -1,12 +1,13 @@
+import React, { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { type AppRouter } from "@paradigma/api";
 import Constants from "expo-constants";
-import { useState } from "react";
 import superjson from "superjson";
 
 import { authClient } from "./auth-client";
+import { useAutoQuerySync } from "./cache-hooks";
 
 const transformer = superjson;
 /**
@@ -52,7 +53,23 @@ export const getBaseUrl = () => {
  * Use only in _app.tsx
  */
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+        retry: (failureCount, error) => {
+          // Don't retry on auth errors
+          if (error && typeof error === 'object' && 'message' in error &&
+            typeof error.message === 'string' && error.message.includes('UNAUTHORIZED')) {
+            return false;
+          }
+          return failureCount < 3;
+        },
+      },
+    },
+  }));
+
   const [trpcClient] = useState(() =>
     api.createClient({
       transformer,
@@ -67,11 +84,6 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
           url: `${getBaseUrl()}/api/trpc`,
           async headers() {
             const headers = new Map<string, string>();
-
-            const cookies = await authClient.getCookie();
-            if (cookies) {
-              headers.set("Cookie", cookies);
-            }
 
             console.log(`🔗 [Mobile API] Preparing headers for ${getBaseUrl()}/api/trpc`);
 
@@ -90,6 +102,12 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
             // Add content type for mutations
             headers.set("Content-Type", "application/json");
 
+            // @ts-expect-error - getCookie is not typed but exists 🧐
+            const cookies = await authClient.getCookie();
+            if (cookies) {
+              headers.set("Cookie", cookies);
+            }
+
             const headersObj = Object.fromEntries(headers);
             console.log(`📤 [Mobile API] Final headers:`, headersObj);
 
@@ -102,7 +120,15 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <api.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <CacheProvider>{children}</CacheProvider>
+      </QueryClientProvider>
     </api.Provider>
   );
+}
+
+// Cache provider component to handle MMKV sync
+function CacheProvider({ children }: { children: React.ReactNode }) {
+  useAutoQuerySync();
+  return <>{children}</>;
 }
