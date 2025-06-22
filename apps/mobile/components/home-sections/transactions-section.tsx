@@ -3,6 +3,8 @@ import { View, TouchableOpacity, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { LeftIcon, RightIcon } from '@/components/ui/svg-icons';
 import { api } from '@/lib/api';
+import { useRouter } from 'expo-router';
+import { useTabBar } from '@/context/TabBarContext';
 
 interface TransactionGroup {
   date: string;
@@ -77,6 +79,9 @@ const MonthSelector: React.FC<{
     }
   };
 
+  const lastMonth = new Date().getMonth() + 1
+
+
   return (
     <View className="flex-row items-center justify-between">
       <TouchableOpacity
@@ -92,9 +97,10 @@ const MonthSelector: React.FC<{
 
       <TouchableOpacity
         onPress={goToNextMonth}
-        className="w-10 h-10 items-center justify-center"
+        disabled={currentMonth === lastMonth}
+        className={`w-10 h-10 items-center justify-center ${currentMonth === lastMonth ? 'opacity-50' : ''}`}
       >
-        <RightIcon size={14} className="text-black" />
+        <RightIcon size={14} className={`text-black ${currentMonth === lastMonth ? 'text-gray-400' : 'text-black'}`} />
       </TouchableOpacity>
     </View>
   );
@@ -149,15 +155,22 @@ const SummaryContainer: React.FC<{
 };
 
 const TransactionListItem: React.FC<{ transaction: TransactionItem }> = ({ transaction }) => {
+  const router = useRouter();
+  const { hideTabBar } = useTabBar();
   const isIncome = transaction.type === 'income';
   const categoryColor = transaction.category?.color || categoryColors.default;
   const categoryEmoji = transaction.category?.emoji || categoryEmojis.default;
 
+  const handlePress = () => {
+    hideTabBar();
+    router.push(`/(protected)/(home)/transaction-edit/${transaction.id}`);
+  };
+
   return (
-    <View className="flex-row items-center py-2">
+    <TouchableOpacity onPress={handlePress} className="flex-row items-center py-2">
       <View className="flex-row items-center flex-1">
         <View
-          className="w-8 h-6 rounded-lg items-center justify-center mr-2"
+          className="w-8 h-8 rounded-lg items-center justify-center mr-2"
           style={{ backgroundColor: categoryColor }}
         >
           <Text className="text-base" style={{ fontFamily: 'DM Sans' }}>
@@ -183,7 +196,7 @@ const TransactionListItem: React.FC<{ transaction: TransactionItem }> = ({ trans
       >
         {isIncome ? '+ ' : ''}€ {Math.abs(transaction.amount).toFixed(2)}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -334,7 +347,7 @@ export const TransactionsSection: React.FC = () => {
         onMonthChange={handleMonthChange}
       />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} className="mb-24">
         {groupedTransactions.length === 0 ? (
           <View className="items-center justify-center py-12">
             <Text className="text-gray-500 text-center" style={{ fontFamily: 'DM Sans' }}>

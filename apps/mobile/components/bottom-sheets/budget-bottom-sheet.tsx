@@ -9,6 +9,7 @@ import BottomSheet, {
 import * as Haptics from 'expo-haptics';
 import { useTabBar } from '@/context/TabBarContext';
 import { api } from '@/lib/api';
+import { budgetUtils } from '@/lib/mmkv-storage';
 
 
 interface BudgetBottomSheetProps {
@@ -27,6 +28,8 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
   // States
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [budgetAmounts, setBudgetAmounts] = useState<Record<string, number>>({});
+  const [monthlyTotalBudget, setMonthlyTotalBudget] = useState<number>(0);
+  const [editingTotalBudget, setEditingTotalBudget] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Tab bar context
@@ -53,14 +56,15 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
     }
   });
 
-  // Fetch categories
+  // Fetch categories (only expense categories for budget allocation)
   const { data: allCategories } = api.category.list.useQuery({});
 
-  // Extract macro categories from the category data
-  const macroCategories = allCategories?.filter(cat => cat.type === 'INCOME' || cat.type === 'EXPENSE');
+  // Extract only expense categories for budget allocation
+  const expenseCategories = allCategories?.filter(cat => cat.type === 'EXPENSE');
 
-  // Initialize budget amounts from API data
+  // Initialize budget amounts from API data and total budget from MMKV
   useEffect(() => {
+    // Initialize expense budget amounts from API
     if (budgetSettings) {
       const initialBudgets: Record<string, number> = {};
       budgetSettings.forEach(budget => {
@@ -68,13 +72,15 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
       });
       setBudgetAmounts(initialBudgets);
     }
+
+    // Initialize total budget from MMKV
+    const storedTotalBudget = budgetUtils.getMonthlyTotalBudget();
+    setMonthlyTotalBudget(storedTotalBudget);
   }, [budgetSettings]);
 
-  // Calculate total budget and remaining amount
+  // Calculate total allocated budget and remaining amount
   const totalAllocated = Object.values(budgetAmounts).reduce((sum, amount) => sum + amount, 0);
-  const incomeCategory = macroCategories?.find(cat => cat.type === 'INCOME');
-  const incomeAmount = incomeCategory ? (budgetAmounts[incomeCategory.id] || 0) : 0;
-  const remainingAmount = incomeAmount - totalAllocated;
+  const remainingAmount = monthlyTotalBudget - totalAllocated;
 
   // Handle category amount change
   const handleAmountChange = (id: string, value: string) => {
@@ -85,18 +91,33 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
     }));
   };
 
+  // Handle total budget change
+  const handleTotalBudgetChange = (value: string) => {
+    const numValue = parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
+    setMonthlyTotalBudget(numValue);
+  };
+
   // Handle save
   const handleSave = async () => {
     try {
       setIsLoading(true);
 
-      // Save each budget amount
-      const savePromises = Object.entries(budgetAmounts).map(([macroCategoryId, allocatedAmount]) => {
-        return setBudgetMutation.mutateAsync({
-          macroCategoryId,
-          allocatedAmount
+      // Save total budget to MMKV
+      budgetUtils.setMonthlyTotalBudget(monthlyTotalBudget);
+
+      // Save each expense category budget amount to database
+      const savePromises = Object.entries(budgetAmounts)
+        .filter(([macroCategoryId]) => {
+          // Only save expense categories
+          const category = expenseCategories?.find(cat => cat.id === macroCategoryId);
+          return category && category.type === 'EXPENSE';
+        })
+        .map(([macroCategoryId, allocatedAmount]) => {
+          return setBudgetMutation.mutateAsync({
+            macroCategoryId,
+            allocatedAmount
+          });
         });
-      });
 
       await Promise.all(savePromises);
 
@@ -119,21 +140,7 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
     });
   };
 
-  // Get category color based on type
-  const getCategoryColor = (type: string, name: string) => {
-    if (type === 'INCOME') return '#66BD50'; // Green for income
 
-    // Colors for expense categories based on name
-    switch (name) {
-      case 'Casa': return '#E81411';
-      case 'Cibo & Bevande': return '#FDAD0C';
-      case 'Benessere': return '#409FF8';
-      case 'Finanze': return '#03965E';
-      case 'Intrattenimento': return '#FA6B97';
-      case 'Trasporti': return '#7E01FB';
-      default: return '#6B7280';
-    }
-  };
 
   return (
     <BottomSheet
@@ -177,40 +184,37 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
           </Pressable>
         </View>
 
-        {isLoadingBudgets || !macroCategories ? (
+        {isLoadingBudgets || !expenseCategories ? (
           <View className="flex-1 justify-center items-center">
             <Text className="text-gray-500">Caricamento...</Text>
           </View>
         ) : (
           <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 120 }}>
             <View className="px-4 gap-y-4">
-              {/* Income Section */}
-              {macroCategories.filter(cat => cat.type === 'INCOME').map((category) => (
-                <Pressable
-                  key={category.id}
-                  className="flex-row justify-between items-center bg-gray-50 p-4 rounded-xl"
-                  onPress={() => setEditingCategory(category.id)}
-                >
-                  <View className="flex-row items-center gap-x-2">
-                    <Text className="text-base font-medium text-green-500">{category.icon || '💰'}</Text>
-                    <Text className="text-base font-medium text-green-500">{category.name}</Text>
-                  </View>
-                  {editingCategory === category.id ? (
-                    <TextInput
-                      className="text-base font-medium text-black text-right"
-                      keyboardType="numeric"
-                      value={budgetAmounts[category.id]?.toString() || '0'}
-                      onChangeText={(value) => handleAmountChange(category.id, value)}
-                      autoFocus
-                      onBlur={() => setEditingCategory(null)}
-                    />
-                  ) : (
-                    <Text className="text-base font-medium text-black">
-                      {formatCurrency(budgetAmounts[category.id] || 0)}
-                    </Text>
-                  )}
-                </Pressable>
-              ))}
+              {/* Monthly Total Budget Section */}
+              <Pressable
+                className="flex-row justify-between items-center bg-green-50 p-4 rounded-xl"
+                onPress={() => setEditingTotalBudget(true)}
+              >
+                <View className="flex-row items-center gap-x-2">
+                  <Text className="text-base font-medium text-green-600">💰</Text>
+                  <Text className="text-base font-medium text-green-600">Budget Mensile</Text>
+                </View>
+                {editingTotalBudget ? (
+                  <TextInput
+                    className="text-base font-medium text-black text-right"
+                    keyboardType="numeric"
+                    value={monthlyTotalBudget.toString()}
+                    onChangeText={handleTotalBudgetChange}
+                    autoFocus
+                    onBlur={() => setEditingTotalBudget(false)}
+                  />
+                ) : (
+                  <Text className="text-base font-medium text-black">
+                    {formatCurrency(monthlyTotalBudget)}
+                  </Text>
+                )}
+              </Pressable>
 
               {/* Divider */}
               <View className="h-px bg-gray-200 w-full" />
@@ -220,13 +224,13 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
                 <Text className="text-sm font-medium text-gray-500">
                   Hai ancora a disposizione
                 </Text>
-                <Text className="text-sm font-medium text-gray-500">
+                <Text className={`text-sm font-medium ${remainingAmount < 0 ? 'text-red-500' : 'text-gray-500'}`}>
                   {formatCurrency(remainingAmount)}
                 </Text>
               </View>
 
               {/* Expense Categories */}
-              {macroCategories.filter(cat => cat.type === 'EXPENSE').map((category) => (
+              {expenseCategories.map((category) => (
                 <Pressable
                   key={category.id}
                   className="flex-row justify-between items-center bg-gray-50 p-4 rounded-xl"
@@ -235,13 +239,13 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
                   <View className="flex-row items-center gap-x-2">
                     <Text
                       className="text-base font-medium"
-                      style={{ color: getCategoryColor('EXPENSE', category.name) }}
+                      style={{ color: category.color }}
                     >
                       {category.icon || '📊'}
                     </Text>
                     <Text
                       className="text-base font-medium"
-                      style={{ color: getCategoryColor('EXPENSE', category.name) }}
+                      style={{ color: category.color }}
                     >
                       {category.name}
                     </Text>
@@ -275,7 +279,7 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
             className="w-full"
             onPress={handleSave}
             isLoading={isLoading}
-            disabled={isLoadingBudgets || !macroCategories}
+            disabled={isLoadingBudgets || !expenseCategories}
           >
             <Text className="text-white font-semibold">Salva</Text>
           </Button>

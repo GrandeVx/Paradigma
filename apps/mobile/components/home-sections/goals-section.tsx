@@ -1,195 +1,211 @@
-import React from 'react';
-import { View, ScrollView } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import React, { useMemo } from 'react';
+import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { Button } from '@/components/ui';
+import { SvgIcon } from '@/components/ui/svg-icon';
 import { useRouter } from 'expo-router';
+import { api } from '@/lib/api';
+import { Decimal } from 'decimal.js';
+import { useTabBar } from '@/context/TabBarContext';
 
-interface Goal {
+// Format currency helper (Italian format)
+const formatCurrency = (amount: number) => {
+  const [integer, decimal] = amount.toFixed(2).split('.');
+  const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return {
+    integer: formattedInteger,
+    decimal: decimal
+  };
+};
+
+// Extended interface for MoneyAccount with goal fields
+interface MoneyAccountWithGoal {
   id: string;
-  title: string;
-  description: string;
-  targetAmount: number;
-  currentAmount: number;
-  deadline: Date;
-  icon: string;
-  color: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  color: string | null;
+  iconName: string | null;
+  initialBalance: Decimal;
+  default: boolean;
+  isGoalAccount: boolean;
+  targetAmount?: Decimal | null;
+  targetDate?: Date | null;
+  goalDescription?: string | null;
+  includeInTotal: boolean;
 }
 
-const GoalCard: React.FC<{ goal: Goal }> = ({ goal }) => {
-  const progress = (goal.currentAmount / goal.targetAmount) * 100;
-  const daysLeft = Math.ceil((goal.deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+// Goal Account interface
+interface GoalAccount {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  balance: number;
+  targetAmount: number;
+  progress: number;
+}
+
+// Goal Card Component
+const GoalCard: React.FC<{
+  goal: GoalAccount;
+  onPress: (id: string) => void;
+}> = ({ goal, onPress }) => {
+  const { integer, decimal } = formatCurrency(goal.balance);
+  const remaining = goal.targetAmount - goal.balance;
+  const { integer: targetInteger, decimal: targetDecimal } = formatCurrency(goal.targetAmount);
+  const { integer: remainingInteger, decimal: remainingDecimal } = formatCurrency(remaining);
 
   return (
-    <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
-      <View className="flex-row items-start justify-between mb-3">
-        <View className="flex-row items-center flex-1">
-          <View
-            className="w-12 h-12 rounded-full items-center justify-center mr-3"
-            style={{ backgroundColor: `${goal.color}20` }}
-          >
-            <FontAwesome5 name={goal.icon} size={20} color={goal.color} />
+    <Pressable
+      className="w-full rounded-3xl bg-transparent mb-2"
+      onPress={() => onPress(goal.id)}
+    >
+      <View className="w-full rounded-3xl p-6" style={{ backgroundColor: goal.color }}>
+        <View className="flex-row justify-between items-center w-full">
+          <View className="flex-row items-center gap-2 py-2">
+            <SvgIcon name="pig-money" width={20} height={20} color="#FFFFFF" />
+            <Text className="text-white font-semibold text-base">{goal.name}</Text>
           </View>
-          <View className="flex-1">
-            <Text className="font-semibold text-gray-900">{goal.title}</Text>
-            <Text className="text-sm text-gray-600">{goal.description}</Text>
-          </View>
-        </View>
-        <View className="items-end">
-          <Text className="text-xs text-gray-500">{daysLeft} giorni</Text>
-        </View>
-      </View>
 
-      <View className="mb-3">
-        <View className="flex-row justify-between mb-2">
-          <Text className="text-sm font-medium text-gray-700">
-            €{goal.currentAmount.toFixed(2)} di €{goal.targetAmount.toFixed(2)}
+          <View className="flex-row items-baseline gap-2">
+            <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>€</Text>
+            <View className="flex-row items-baseline">
+              <Text className="text-white font-medium" style={{ fontFamily: 'Apfel Grotezk', fontSize: 23 }}>{integer}</Text>
+              <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>,{decimal}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View className="mt-4 w-full">
+          <View className="h-3 w-full rounded-full overflow-hidden mb-1" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+            <View
+              className="h-full rounded-full"
+              style={{
+                backgroundColor: '#FFFFFF',
+                width: `${goal.progress}%`
+              }}
+            />
+          </View>
+          <Text className="text-white text-xs font-medium">
+            Ancora € {remainingInteger},{remainingDecimal} per completare l'obiettivo di € {targetInteger},{targetDecimal}
           </Text>
-          <Text className="text-sm font-medium" style={{ color: goal.color }}>
-            {progress.toFixed(1)}%
-          </Text>
-        </View>
-        <View className="w-full h-2 bg-gray-200 rounded-full">
-          <View
-            className="h-2 rounded-full"
-            style={{
-              width: `${Math.min(progress, 100)}%`,
-              backgroundColor: goal.color
-            }}
-          />
         </View>
       </View>
-
-      <View className="flex-row justify-between">
-        <Text className="text-xs text-gray-500">
-          Scadenza: {goal.deadline.toLocaleDateString()}
-        </Text>
-        <Text className="text-xs font-medium" style={{ color: goal.color }}>
-          Mancano €{(goal.targetAmount - goal.currentAmount).toFixed(2)}
-        </Text>
-      </View>
-    </View>
-  );
-};
-
-const SavingsOverview: React.FC = () => {
-  const totalSavings = 1254.50;
-  const monthlyTarget = 500.00;
-  const progress = (totalSavings / monthlyTarget) * 100;
-
-  return (
-    <View className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-4 mb-4">
-      <View className="flex-row items-center justify-between mb-3">
-        <View>
-          <Text className="text-white text-lg font-semibold">Risparmi Totali</Text>
-          <Text className="text-primary-100 text-sm">Questo mese</Text>
-        </View>
-        <View className="w-12 h-12 bg-white bg-opacity-20 rounded-full items-center justify-center">
-          <FontAwesome5 name="piggy-bank" size={20} color="white" />
-        </View>
-      </View>
-
-      <Text className="text-white text-2xl font-bold mb-2">€{totalSavings.toFixed(2)}</Text>
-
-      <View className="mb-2">
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-primary-100 text-sm">Obiettivo mensile</Text>
-          <Text className="text-white text-sm font-medium">{progress.toFixed(1)}%</Text>
-        </View>
-        <View className="w-full h-2 bg-white bg-opacity-20 rounded-full">
-          <View
-            className="h-2 bg-white rounded-full"
-            style={{ width: `${Math.min(progress, 100)}%` }}
-          />
-        </View>
-      </View>
-
-      <Text className="text-primary-100 text-sm">
-        Obiettivo: €{monthlyTarget.toFixed(2)} • Mancano €{(monthlyTarget - totalSavings).toFixed(2)}
-      </Text>
-    </View>
-  );
-};
-
-const QuickActions: React.FC = () => {
-  const router = useRouter();
-
-  return (
-    <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
-      <Text className="text-lg font-semibold text-gray-900 mb-4">Azioni Rapide</Text>
-
-      <View className="flex-row justify-between">
-        <Button
-          onPress={() => router.push('/(protected)/(creation-flow)/name')}
-          className="flex-1 bg-primary-500 mr-2 py-3"
-        >
-          <View className="items-center">
-            <FontAwesome5 name="plus" size={16} color="white" />
-            <Text className="text-white text-sm mt-1">Nuovo Obiettivo</Text>
-          </View>
-        </Button>
-
-        <Button
-          onPress={() => router.push('/(protected)/(transaction-flow)/value')}
-          className="flex-1 bg-green-500 ml-2 py-3"
-        >
-          <View className="items-center">
-            <FontAwesome5 name="piggy-bank" size={16} color="white" />
-            <Text className="text-white text-sm mt-1">Aggiungi Risparmio</Text>
-          </View>
-        </Button>
-      </View>
-    </View>
+    </Pressable>
   );
 };
 
 export const GoalsSection: React.FC = () => {
-  // Mock data
-  const goals: Goal[] = [
-    {
-      id: '1',
-      title: 'Vacanze Estive',
-      description: 'Viaggio in Grecia per due settimane',
-      targetAmount: 2500.00,
-      currentAmount: 1750.00,
-      deadline: new Date(2025, 6, 15), // July 15, 2025
-      icon: 'plane',
-      color: '#3B82F6'
-    },
-    {
-      id: '2',
-      title: 'Auto Nuova',
-      description: 'Anticipo per auto elettrica',
-      targetAmount: 8000.00,
-      currentAmount: 3200.00,
-      deadline: new Date(2025, 11, 31), // Dec 31, 2025
-      icon: 'car',
-      color: '#10B981'
-    },
-    {
-      id: '3',
-      title: 'Fondo Emergenza',
-      description: 'Riserva per imprevisti',
-      targetAmount: 5000.00,
-      currentAmount: 2100.00,
-      deadline: new Date(2025, 8, 30), // Sep 30, 2025
-      icon: 'shield-alt',
-      color: '#F59E0B'
+  const router = useRouter();
+  const { hideTabBar } = useTabBar();
+
+  // Fetch accounts data
+  const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({});
+
+  // Process goal accounts data
+  const goalAccounts = useMemo(() => {
+    if (!accountsData) {
+      return [];
     }
-  ];
+
+    // Filter and process goal accounts
+    const goals: GoalAccount[] = accountsData
+      .filter(item => {
+        const account = item.account as unknown as MoneyAccountWithGoal;
+        return account.isGoalAccount && account.targetAmount;
+      })
+      .map(item => {
+        const account = item.account as unknown as MoneyAccountWithGoal;
+        const accountBalance = Number(item.balance);
+        const targetAmount = Number(account.targetAmount);
+
+        // Calculate progress as percentage
+        const progress = Math.min(100, (accountBalance / targetAmount) * 100);
+
+        return {
+          id: account.id,
+          name: account.name,
+          icon: account.iconName || 'pig-money',
+          color: account.color || '#FA6B97',
+          balance: accountBalance,
+          targetAmount,
+          progress,
+        };
+      })
+      // Sort by progress (highest first)
+      .sort((a, b) => b.progress - a.progress);
+
+    return goals;
+  }, [accountsData]);
+
+  const handleGoalPress = (id: string) => {
+    hideTabBar();
+    // Navigate to goal account details
+    router.push({
+      pathname: "/(protected)/(accounts)/[id]",
+      params: { id }
+    });
+  };
+
+  const handleRefresh = () => {
+    refetchAccounts();
+  };
+
+  if (isLoading) {
+    return (
+      <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
+        <View className="items-center justify-center py-8">
+          <Text className="text-gray-500">Caricamento obiettivi...</Text>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  if (goalAccounts.length === 0) {
+    return (
+      <ScrollView
+        className="flex-1 p-4"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+          />
+        }
+      >
+        <View className="items-center justify-center py-8">
+          <Text className="text-gray-500 text-center mb-4">Nessun obiettivo di risparmio trovato</Text>
+          <Pressable
+            className="bg-blue-500 px-6 py-3 rounded-full"
+            onPress={() => router.push('/(protected)/(creation-flow)/name')}
+          >
+            <Text className="text-white font-semibold">Crea il tuo primo obiettivo</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
-    <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
-      <SavingsOverview />
-
-      <View className="mb-4">
-        <Text className="text-xl font-bold text-gray-900 mb-4">I Miei Obiettivi</Text>
-        {goals.map((goal) => (
-          <GoalCard key={goal.id} goal={goal} />
-        ))}
-      </View>
-
-      <QuickActions />
+    <ScrollView
+      className="flex-1 px-2 pt-2"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 24 }}
+      refreshControl={
+        <RefreshControl
+          refreshing={isLoading}
+          onRefresh={handleRefresh}
+        />
+      }
+    >
+      {goalAccounts.map(goal => (
+        <GoalCard
+          key={goal.id}
+          goal={goal}
+          onPress={handleGoalPress}
+        />
+      ))}
     </ScrollView>
   );
 }; 

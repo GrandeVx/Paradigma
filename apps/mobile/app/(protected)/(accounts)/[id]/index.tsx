@@ -221,7 +221,7 @@ export default function AccountDetailsScreen() {
             setAccountName(accountData.name);
             setIsDefaultAccount(accountData.default);
             setIsSavingsAccount(accountData.isGoalAccount || false);
-            setSavingTarget(accountData.targetAmount ? formatCurrency(Number(accountData.targetAmount)).integer + ',' + formatCurrency(Number(accountData.targetAmount)).decimal : '');
+            setSavingTarget(accountData.targetAmount ? accountData.targetAmount.toString() : '');
             setAccountColor(accountData.color || AccountColors[accountData.iconName as keyof typeof AccountColors] || '#409FF8');
             setAccountIcon(accountData.iconName as IconName || 'bank-card');
             setIncludeInTotal(accountData.includeInTotal || true); // This could be a field in the account model
@@ -237,7 +237,7 @@ export default function AccountDetailsScreen() {
                 accountId: id,
                 default: isDefaultAccount,
                 isGoalAccount: isSavingsAccount,
-                targetAmount: isSavingsAccount ? parseFloat(savingTarget.replace(",", ".")) : null,
+                targetAmount: isSavingsAccount ? parseFloat(savingTarget) : null,
                 color: accountColor,
                 iconName: accountIcon,
                 includeInTotal: includeInTotal,

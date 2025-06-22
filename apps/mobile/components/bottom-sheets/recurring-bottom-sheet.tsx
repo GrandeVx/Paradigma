@@ -134,7 +134,7 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
           </View>
 
           <View className="mb-6 px-2">
-            {/* @ts-expect-error TypeScript has issues with the Slider component type */}
+
             <AwesomeSlider
               minimumValue={min}
               maximumValue={max}

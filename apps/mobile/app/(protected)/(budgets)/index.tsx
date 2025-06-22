@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, RefObject, useState } from 'react';
+import React, { useRef, useCallback, RefObject, useState, useEffect } from 'react';
 import { View, SafeAreaView, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { SvgIcon } from '@/components/ui/svg-icon';
+import { budgetUtils } from '@/lib/mmkv-storage';
+import { router } from 'expo-router';
 
 // Helper function to format currency
 const formatCurrency = (amount: number) => {
@@ -25,39 +27,24 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-// Helper to get category color
-const getCategoryColor = (name: string, type: string) => {
-  if (type === 'INCOME') return '#66BD50';
-
-  switch (name) {
-    case 'Casa': return '#E81411';
-    case 'Cibo & Bevande': return '#FDAD0C';
-    case 'Benessere': return '#409FF8';
-    case 'Finanze': return '#03965E';
-    case 'Intrattenimento': return '#FA6B97';
-    case 'Trasporti': return '#7E01FB';
-    default: return '#6B7280';
-  }
+// Helper to get category background color with opacity
+const getCategoryBackgroundColor = (color: string) => {
+  // Convert hex color to rgba with low opacity for background
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  return `rgba(${r}, ${g}, ${b}, 0.1)`;
 };
 
-// Helper to get category background color
-const getCategoryBackgroundColor = (name: string) => {
-  switch (name) {
-    case 'Casa': return '#FEF6F5';
-    case 'Cibo & Bevande': return '#FFFCF5';
-    case 'Benessere': return '#F5FAFF';
-    case 'Finanze': return '#F5FFFB';
-    case 'Intrattenimento': return '#FFF5F8';
-    case 'Trasporti': return '#FAF5FF';
-    default: return '#F9FAFB';
-  }
-};
+
 
 export default function BudgetScreen() {
   // State for current month
   const [currentDate, setCurrentDate] = useState(new Date());
-  // State for optional category filtering
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[] | undefined>(undefined);
+
+  // State for monthly total budget from MMKV
+  const [monthlyTotalBudget, setMonthlyTotalBudget] = useState<number>(0);
 
   // Get API utils
   const utils = api.useContext();
@@ -90,6 +77,12 @@ export default function BudgetScreen() {
   // Check if we have budget data
   const hasBudgets = budgetSettings && budgetSettings.length > 0;
 
+  // Initialize monthly total budget from MMKV
+  useEffect(() => {
+    const storedTotalBudget = budgetUtils.getMonthlyTotalBudget();
+    setMonthlyTotalBudget(storedTotalBudget);
+  }, []);
+
   // Handle refresh
   const handleRefresh = useCallback(() => {
     refetchBudgets();
@@ -118,9 +111,14 @@ export default function BudgetScreen() {
       month: currentDate.getMonth() + 1,
       year: currentDate.getFullYear(),
       // Use current selected categories or undefined for all
-      macroCategoryIds: selectedCategoryIds
+      macroCategoryIds: budgetSettings?.map(budget => budget.macroCategoryId),
     });
   };
+
+  const handleBudgetClick = (budgetId: string) => {
+    router.push(`/(protected)/(home)/(category-transactions)/${budgetId}`);
+  };
+
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -147,9 +145,10 @@ export default function BudgetScreen() {
   const calculateBudgetSummary = () => {
     if (!budgetSettings || !transactionData) return null;
 
+    // Calculate total allocated budget from expense categories
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const totalBudget = budgetSettings.reduce((sum: number, budget: any) => {
-      // Only include expense categories in the total budget
+    const totalAllocatedBudget = budgetSettings.reduce((sum: number, budget: any) => {
+      // Only include expense categories in the allocated budget
       const category = macroCategories?.find(cat => cat.id === budget.macroCategoryId);
       if (category && category.type === 'EXPENSE') {
         return sum + Number(budget.allocatedAmount);
@@ -159,12 +158,16 @@ export default function BudgetScreen() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const totalSpent = transactionData.reduce((sum: number, item: any) => sum + Number(item.amount), 0);
-    const remainingBudget = totalBudget - Math.abs(totalSpent);
+
+    // Remaining budget is monthly total - allocated budget (not spent)
+    // This shows how much of the monthly budget is still available to allocate
+    const remainingBudget = monthlyTotalBudget - totalAllocatedBudget;
 
     return {
-      totalBudget,
+      totalBudget: totalAllocatedBudget, // This is the sum of allocated budgets
+      monthlyTotalBudget, // This is the total monthly budget from MMKV
       totalSpent: Math.abs(totalSpent),
-      remainingBudget
+      remainingBudget // This is what's left to allocate
     };
   };
 
@@ -199,21 +202,6 @@ export default function BudgetScreen() {
     return format(date, 'MMMM yyyy', { locale: it });
   };
 
-  // Helper function to filter by specific categories (for future use)
-  // Example: filterByCategories(['category-id-1', 'category-id-2'])
-  const filterByCategories = (categoryIds: string[]) => {
-    setSelectedCategoryIds(categoryIds);
-  };
-
-  // Helper function to clear category filter and show all transactions
-  // Example: clearCategoryFilter()
-  const clearCategoryFilter = () => {
-    setSelectedCategoryIds(undefined);
-  };
-
-  // Suppress unused variable warnings - these are utility functions for future features
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _unusedHelpers = { filterByCategories, clearCategoryFilter };
 
   // Determine if we're refreshing
   const isRefreshing = isRefetchingBudgets || isRefetchingTransactions;
@@ -356,7 +344,7 @@ export default function BudgetScreen() {
                                   position: 'absolute',
                                   width: `${percentage}%`,
                                   height: '100%',
-                                  backgroundColor: getCategoryColor(category.name, category.type)
+                                  backgroundColor: category.color
                                 }}
                               />
                             );
@@ -388,22 +376,22 @@ export default function BudgetScreen() {
                       const percentage = Math.min(100, (spent / budgetAmount) * 100);
 
                       return (
-                        <View key={budget.id} className="mb-4">
+                        <Pressable key={budget.id} className="mb-4" onPress={() => handleBudgetClick(budget.macroCategoryId)}>
                           {/* Category header */}
                           <View className="items-center mb-2">
                             <View
-                              style={{ backgroundColor: getCategoryBackgroundColor(category.name) }}
+                              style={{ backgroundColor: getCategoryBackgroundColor(category.color) }}
                               className="flex-row items-center py-1.5 px-3 rounded-xl"
                             >
                               <Text
                                 className="text-base font-medium mr-2"
-                                style={{ color: getCategoryColor(category.name, category.type) }}
+                                style={{ color: category.color }}
                               >
                                 {category.icon || '📊'}
                               </Text>
                               <Text
                                 className="text-sm font-semibold uppercase"
-                                style={{ color: getCategoryColor(category.name, category.type) }}
+                                style={{ color: category.color }}
                               >
                                 {category.name}
                               </Text>
@@ -416,7 +404,7 @@ export default function BudgetScreen() {
                               style={{
                                 width: `${percentage}%`,
                                 height: '100%',
-                                backgroundColor: getCategoryColor(category.name, category.type)
+                                backgroundColor: category.color
                               }}
                             />
                           </View>
@@ -451,7 +439,7 @@ export default function BudgetScreen() {
 
                           {/* Divider */}
                           <View className="h-px bg-gray-200 w-full mt-4" />
-                        </View>
+                        </Pressable>
                       );
                     })}
                 </View>

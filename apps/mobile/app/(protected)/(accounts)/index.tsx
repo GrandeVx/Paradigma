@@ -71,7 +71,7 @@ const AccountCard: React.FC<{
 
     return (
       <Pressable
-        className="w-full rounded-3xl bg-transparent mb-5"
+        className="w-full rounded-3xl bg-transparent mb-2"
         onPress={() => onPress(account.id)}
       >
         <View className="w-full rounded-3xl p-6" style={{ backgroundColor: account.color }}>
@@ -84,8 +84,8 @@ const AccountCard: React.FC<{
             <View className="flex-row items-baseline gap-2">
               <Text className="text-white text-base font-normal">€</Text>
               <View className="flex-row items-baseline">
-                <Text className="text-white text-2xl font-medium">{integer}</Text>
-                <Text className="text-white text-base font-normal">,{decimal}</Text>
+                <Text className="text-white text-2xl font-medium" style={{ fontFamily: 'Apfel Grotezk' }}>{integer}</Text>
+                <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>,{decimal}</Text>
               </View>
             </View>
           </View>
@@ -230,8 +230,8 @@ export default function AccountsScreen() {
           <View className="flex-row items-baseline justify-center gap-2 w-full">
             <Text className="text-gray-400 text-3xl font-normal">€</Text>
             <View className="flex-row items-baseline">
-              <Text className="text-black text-6xl font-medium">{isLoading ? '...' : integer}</Text>
-              <Text className="text-gray-400 text-3xl font-normal">{isLoading ? '' : `,${decimal}`}</Text>
+              <Text className="text-black  font-medium" style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 64 }}>{isLoading ? '...' : integer}</Text>
+              <Text className="text-gray-400 font-normal" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>{isLoading ? '' : `,${decimal}`}</Text>
             </View>
           </View>
 

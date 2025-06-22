@@ -1,236 +1,198 @@
-import { StyleSheet, ScrollView, Pressable, Alert, View } from "react-native";
-import { Text } from "@/components/ui/text";
-import HeaderContainer from "@/components/layouts/_header";
-import { FontAwesome6 } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useSupabase } from "@/context/supabase-provider";
-import { useTranslation } from "react-i18next";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRef } from "react";
-import BottomSheet from "@gorhom/bottom-sheet";
-import * as WebBrowser from "expo-web-browser";
-import { reloadAppAsync } from "expo";
-import { api } from "@/lib/api";
+import React from 'react';
+import { StyleSheet, ScrollView, Pressable, View, RefreshControl } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { SvgIcon } from '@/components/ui/svg-icon';
+import HeaderContainer from '@/components/layouts/_header';
+import { api } from '@/lib/api';
+import { Decimal } from 'decimal.js';
+import { useTabBar } from '@/context/TabBarContext';
 
-const LANGUAGES = [
-  { code: "en-US", flag: "🇺🇸" },
-  { code: "it-IT", flag: "🇮🇹" },
-];
-
-export default function SettingsScreen() {
-  const { signOut } = useSupabase();
-  const { mutate: deleteAccount } = api.user.deleteAccount.useMutation({
-    onSuccess: () => {
-      router.replace("/(auth)/sign-in");
-    },
-  });
-  const router = useRouter();
-  const { t, i18n: i18nInstance } = useTranslation();
-  const bottomSheetRef = useRef<BottomSheet>(null);
-
-  const handleLanguageChange = async (language: string) => {
-    try {
-      await AsyncStorage.setItem("language", language);
-      await i18nInstance.changeLanguage(language);
-      bottomSheetRef.current?.close();
-      reloadAppAsync();
-    } catch (error) {
-      console.error("Error changing language:", error);
-      Alert.alert("Error", "Failed to change language. Please try again.");
-    }
+// Types based on API response
+interface SubCategory {
+  id: string;
+  name: string;
+  icon: string;
+  macroCategory: {
+    id: string;
+    name: string;
+    type: string;
+    color: string;
+    icon: string;
   };
+}
 
-  const currentLanguage = LANGUAGES.find(
-    (lang) => lang.code === i18nInstance.language
+interface MoneyAccount {
+  id: string;
+  name: string;
+  iconName?: string | null;
+  color?: string | null;
+  default: boolean;
+}
+
+interface RecurringTransaction {
+  id: string;
+  description: string;
+  amount: Decimal;
+  type: 'INCOME' | 'EXPENSE';
+  frequencyType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  frequencyInterval: number;
+  isActive: boolean;
+  isInstallment: boolean;
+  subCategory?: SubCategory | null;
+  moneyAccount?: MoneyAccount | null;
+  notes?: string | null;
+  startDate: Date;
+  nextDueDate: Date;
+  endDate?: Date | null;
+}
+
+// Format currency helper (Italian format)
+const formatCurrency = (amount: number | Decimal) => {
+  const numAmount = typeof amount === 'number' ? amount : Number(amount);
+  const [integer, decimal] = numAmount.toFixed(2).split('.');
+  const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formattedInteger},${decimal}`;
+};
+
+// Get frequency text
+const getFrequencyText = (frequencyType: string, frequencyInterval: number) => {
+  const interval = frequencyInterval || 1;
+
+  switch (frequencyType) {
+    case 'DAILY':
+      return interval === 1 ? 'Ogni giorno' : `Ogni ${interval} giorni`;
+    case 'WEEKLY':
+      return interval === 1 ? 'Ogni settimana' : `Ogni ${interval} settimane`;
+    case 'MONTHLY':
+      return interval === 1 ? 'Ogni mese' : `Ogni ${interval} mesi`;
+    case 'YEARLY':
+      return interval === 1 ? 'Ogni anno' : `Ogni ${interval} anni`;
+    default:
+      return 'Frequenza sconosciuta';
+  }
+};
+
+// Get category display with emoji
+const getCategoryDisplay = (subCategory?: SubCategory | null) => {
+  if (!subCategory?.macroCategory) return '❓ Altro';
+
+  const { macroCategory } = subCategory;
+  return `${macroCategory.icon} ${macroCategory.name}`;
+};
+
+// Recurring Transaction Card Component
+const RecurringCard: React.FC<{
+  recurring: RecurringTransaction;
+  onEdit: (id: string) => void;
+}> = ({ recurring, onEdit }) => {
+  const isIncome = recurring.type === 'INCOME';
+  const formattedAmount = formatCurrency(Math.abs(Number(recurring.amount)));
+  const frequencyText = getFrequencyText(recurring.frequencyType, recurring.frequencyInterval);
+  const categoryText = getCategoryDisplay(recurring.subCategory);
+  const accountName = recurring.moneyAccount?.name || 'Conto non specificato';
+
+  return (
+    <View style={styles.card}>
+      {/* Header with title and edit button */}
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>{recurring.description}</Text>
+        <Pressable
+          style={styles.editButton}
+          onPress={() => onEdit(recurring.id)}
+        >
+          <SvgIcon name="edit" width={20} height={20} color="#005EFD" />
+        </Pressable>
+      </View>
+
+      {/* First row: Amount and Frequency */}
+      <View style={styles.cardRow}>
+        <View style={[styles.tag, styles.amountTag]}>
+          <Text style={[styles.tagText, { color: isIncome ? '#66BD50' : '#DE4841' }]}>
+            € {formattedAmount}
+          </Text>
+        </View>
+        <View style={[styles.tag, styles.frequencyTag]}>
+          <Text style={styles.tagText}>{frequencyText}</Text>
+        </View>
+      </View>
+
+      {/* Second row: Account and Category */}
+      <View style={styles.cardRow}>
+        <View style={[styles.tag, styles.accountTag]}>
+          <Text style={styles.accountText}>{accountName.length > 20 ? accountName.slice(0, 10) + '...' : accountName}</Text>
+        </View>
+        <View style={[styles.tag, styles.categoryTag]}>
+          <Text style={styles.tagText}>{categoryText}</Text>
+        </View>
+      </View>
+
+      {/* Status indicator for inactive rules */}
+      {!recurring.isActive && (
+        <View style={styles.inactiveIndicator}>
+          <Text style={styles.inactiveText}>⏸️ Sospesa</Text>
+        </View>
+      )}
+    </View>
   );
+};
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      t("settings.account.deleteConfirmTitle"),
-      t("settings.account.deleteConfirmMessage"),
-      [
-        {
-          text: t("settings.account.cancel"),
-          style: "cancel",
-        },
-        {
-          text: t("settings.account.delete"),
-          style: "destructive",
-          onPress: () => {
-            deleteAccount();
-          },
-        },
-      ]
-    );
+export default function RecurringTransactionsScreen() {
+  const { showTabBar } = useTabBar();
+  // Fetch recurring transactions (only non-installment ones = classic recurring)
+  const { data: recurringData, isLoading, refetch } = api.recurringRule.list.useQuery({
+    isInstallment: false, // Only classic recurring transactions, not installments
+  });
+
+  const handleEdit = (id: string) => {
+    // Navigate to edit page (to be implemented)
+    console.log('Edit recurring transaction:', id);
   };
 
-  const handleSignOut = () => {
-    Alert.alert(t("settings.signOut.title"), t("settings.signOut.message"), [
-      {
-        text: t("settings.account.cancel"),
-        style: "cancel",
-      },
-      {
-        text: t("settings.account.signOut"),
-        style: "destructive",
-        onPress: () => {
-          console.log("Starting sign out process...");
-          signOut();
-          console.log("Sign out completed");
-          router.replace("/(auth)/sign-in");
-        },
-      },
-    ]);
+  const handleRefresh = () => {
+    refetch();
   };
 
   return (
-    <HeaderContainer variant="secondary">
-      <ScrollView style={styles.container}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("settings.language.title")}
-          </Text>
-          <Pressable
-            style={styles.option}
-            onPress={() => {
-              bottomSheetRef.current?.expand();
-            }}
-          >
-            <FontAwesome6 name="globe" size={20} color="#666" />
-            <Text style={styles.optionText}>
-              {currentLanguage
-                ? `${currentLanguage.flag} ${t(`settings.language.countries.${currentLanguage.code}`)}`
-                : t("settings.language.select")}
-            </Text>
-            <FontAwesome6 name="chevron-right" size={16} color="#666" />
-          </Pressable>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("settings.account.title")}</Text>
-          <Pressable style={styles.option} onPress={() => {}}>
-            <FontAwesome6 name="user" size={20} color="#666" />
-            <Text style={styles.optionText}>
-              {t("settings.account.profileInfo")}
-            </Text>
-            <FontAwesome6 name="chevron-right" size={16} color="#666" />
-          </Pressable>
-          <Pressable style={styles.option} onPress={() => {}}>
-            <FontAwesome6 name="bell" size={20} color="#666" />
-            <Text style={styles.optionText}>
-              {t("settings.account.notifications")}
-            </Text>
-            <FontAwesome6 name="chevron-right" size={16} color="#666" />
-          </Pressable>
-          <Pressable style={styles.option} onPress={handleSignOut}>
-            <FontAwesome6 name="right-from-bracket" size={20} color="#666" />
-            <Text style={styles.optionText}>
-              {t("settings.account.signOut")}
-            </Text>
-            <FontAwesome6 name="chevron-right" size={16} color="#666" />
-          </Pressable>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("settings.privacy.title")}</Text>
-          <Pressable
-            style={styles.option}
-            onPress={() => {
-              WebBrowser.openBrowserAsync("https://www.google.com");
-            }}
-          >
-            <FontAwesome6 name="lock" size={20} color="#666" />
-            <Text style={styles.optionText}>
-              {t("settings.privacy.privacySettings")}
-            </Text>
-            <FontAwesome6 name="chevron-right" size={16} color="#666" />
-          </Pressable>
-          <Pressable
-            style={styles.option}
-            onPress={() => {
-              WebBrowser.openBrowserAsync("https://www.google.com");
-            }}
-          >
-            <FontAwesome6 name="eye" size={20} color="#666" />
-            <Text style={styles.optionText}>
-              {t("settings.privacy.visibility")}
-            </Text>
-            <FontAwesome6 name="chevron-right" size={16} color="#666" />
-          </Pressable>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("settings.support.title")}</Text>
-          <Pressable
-            style={styles.option}
-            onPress={() => {
-              WebBrowser.openBrowserAsync("https://www.google.com");
-            }}
-          >
-            <FontAwesome6 name="circle-question" size={20} color="#666" />
-            <Text style={styles.optionText}>
-              {t("settings.support.helpCenter")}
-            </Text>
-            <FontAwesome6 name="chevron-right" size={16} color="#666" />
-          </Pressable>
-          <Pressable
-            style={styles.option}
-            onPress={() => {
-              WebBrowser.openBrowserAsync("https://www.google.com");
-            }}
-          >
-            <FontAwesome6 name="envelope" size={20} color="#666" />
-            <Text style={styles.optionText}>
-              {t("settings.support.contactUs")}
-            </Text>
-            <FontAwesome6 name="chevron-right" size={16} color="#666" />
-          </Pressable>
-        </View>
-
-        <View style={styles.dangerSection}>
-          <Pressable style={styles.deleteButton} onPress={handleDeleteAccount}>
-            <FontAwesome6 name="trash" size={20} color="#FF3B30" />
-            <Text style={styles.deleteButtonText}>
-              {t("settings.account.deleteAccount")}
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-
-      <BottomSheet
-        ref={bottomSheetRef}
-        snapPoints={["40%"]}
-        index={-1}
-        enablePanDownToClose
-        onClose={() => {}}
+    <HeaderContainer variant="secondary" customTitle="RICORRENTI" onBackPress={() => {
+      showTabBar();
+    }}>
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+          />
+        }
+        contentContainerStyle={{
+          backgroundColor: '#F9FAFB',
+          height: '100%',
+        }}
       >
-        <View style={styles.bottomSheetContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              {t("settings.language.select")}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Caricamento ricorrenze...</Text>
+          </View>
+        ) : recurringData && recurringData.length > 0 ? (
+          recurringData.map((recurring) => (
+            <RecurringCard
+              key={recurring.id}
+              recurring={recurring as RecurringTransaction}
+              onEdit={handleEdit}
+            />
+          ))
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Nessuna transazione ricorrente trovata</Text>
+            <Text style={styles.emptySubtext}>
+              Le tue ricorrenze appariranno qui quando ne creerai una
             </Text>
           </View>
-          {LANGUAGES.map((language) => (
-            <Pressable
-              key={language.code}
-              style={[
-                styles.languageOption,
-                i18nInstance.language === language.code &&
-                  styles.selectedLanguage,
-              ]}
-              onPress={() => handleLanguageChange(language.code)}
-            >
-              <Text style={styles.languageText}>
-                {language.flag}{" "}
-                {t(`settings.language.countries.${language.code}`)}
-              </Text>
-              {i18nInstance.language === language.code && (
-                <FontAwesome6 name="check" size={16} color="#007AFF" />
-              )}
-            </Pressable>
-          ))}
-        </View>
-      </BottomSheet>
+        )}
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
     </HeaderContainer>
   );
 }
@@ -238,84 +200,106 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
+    padding: 16,
   },
-  section: {
-    marginBottom: 15,
-    paddingHorizontal: 16,
-    backgroundColor: "transparent",
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 8,
-    marginLeft: 16,
-    color: "#666",
-    textTransform: "uppercase",
-  },
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: "transparent",
-    marginBottom: 1,
-  },
-  optionText: {
+  loadingContainer: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 17,
-    color: "#000",
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
   },
-  dangerSection: {
-    marginTop: 0,
-    paddingHorizontal: 16,
-    backgroundColor: "transparent",
-  },
-  deleteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: "transparent",
-    borderRadius: 8,
-  },
-  deleteButtonText: {
-    marginLeft: 12,
-    fontSize: 17,
-    color: "#FF3B30",
-    fontWeight: "500",
-  },
-  bottomSheetContent: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "white",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    color: "#000",
-    fontWeight: "600",
-  },
-  languageOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-  },
-  selectedLanguage: {
-    backgroundColor: "#f0f0f0",
-  },
-  languageText: {
+  loadingText: {
     fontSize: 16,
-    color: "#000",
-    fontWeight: "500",
+    color: '#6B7280',
   },
-});
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 16,
+    gap: 8,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cardTitle: {
+    fontSize: 24,
+    fontWeight: '400',
+    color: '#000',
+    flex: 1,
+    fontFamily: 'DM Sans',
+    letterSpacing: -0.48,
+  },
+  editButton: {
+    padding: 8,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  tag: {
+    flex: 1,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  amountTag: {
+    backgroundColor: '#F9FAFB',
+  },
+  frequencyTag: {
+    backgroundColor: '#F9FAFB',
+  },
+  accountTag: {
+    backgroundColor: '#F5FAFF',
+  },
+  categoryTag: {
+    backgroundColor: '#F5FFFB',
+  },
+  tagText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000',
+    fontFamily: 'DM Sans',
+    letterSpacing: -0.16,
+  },
+  accountText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#409FF8',
+    fontFamily: 'DM Sans',
+    letterSpacing: -0.16,
+  },
+  inactiveIndicator: {
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  inactiveText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  bottomSpacer: {
+    height: 100,
+  },
+}); 

@@ -49,6 +49,7 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ApfelGrotezk: require("../assets/fonts/ApfelGrotezk-Regular.otf"),
+    ApfelGrotezkMittel: require("../assets/fonts/ApfelGrotezk-Mittel.otf"),
     DMSans: require("../assets/fonts/DMSans.ttf"),
     ...FontAwesome.font,
   });

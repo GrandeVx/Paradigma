@@ -69,4 +69,35 @@ export const cacheUtils = {
       console.error('Failed to remove cached query:', error)
     }
   }
+}
+
+// Budget utilities for managing monthly total budget
+export const budgetUtils = {
+  // Get monthly total budget (stored locally)
+  getMonthlyTotalBudget: (): number => {
+    try {
+      const budget = mmkvStorage.getNumber('monthly-total-budget')
+      return budget || 0
+    } catch {
+      return 0
+    }
+  },
+  
+  // Set monthly total budget (stored locally)
+  setMonthlyTotalBudget: (amount: number): void => {
+    try {
+      mmkvStorage.set('monthly-total-budget', amount)
+    } catch (error) {
+      console.error('Failed to set monthly budget:', error)
+    }
+  },
+  
+  // Clear monthly total budget
+  clearMonthlyTotalBudget: (): void => {
+    try {
+      mmkvStorage.delete('monthly-total-budget')
+    } catch (error) {
+      console.error('Failed to clear monthly budget:', error)
+    }
+  }
 } 

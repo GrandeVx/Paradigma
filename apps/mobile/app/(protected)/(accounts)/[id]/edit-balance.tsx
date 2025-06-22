@@ -106,7 +106,11 @@ export default function EditAccountBalance() {
 
   const handleDeletePress = () => {
     if (amount.length > 1) {
-      setAmount((prev) => prev.slice(0, -1));
+      if (amount[amount.length - 1] === '.') {
+        setAmount((prev) => prev.slice(0, -2));
+      } else {
+        setAmount((prev) => prev.slice(0, -1));
+      }
     } else {
       setAmount('0');
     }
@@ -160,10 +164,7 @@ export default function EditAccountBalance() {
   };
 
   // Format amount with currency symbol
-  const formattedAmount = `${parseFloat(amount).toLocaleString('it-IT', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).replace('.', ',')}`;
+  const formattedAmount = `${parseFloat(amount)}`;
 
   if (isLoadingAccount || isLoadingBalance) {
     return (
@@ -193,9 +194,7 @@ export default function EditAccountBalance() {
               <Text className={`text-7xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
                 {formattedAmount.split(',')[0]}
               </Text>
-              <Text className={`text-4xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
-                ,
-              </Text>
+
               <Text className={`text-4xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
                 {formattedAmount.split(',')[1]}
               </Text>

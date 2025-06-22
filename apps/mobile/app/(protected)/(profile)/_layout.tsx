@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 export default function AuthLayout() {
   const { t } = useTranslation();
   return (
-    // @ts-expect-error - Stack is not typed
+
     <Stack
       screenOptions={{
         headerShown: false,
@@ -20,16 +20,7 @@ export default function AuthLayout() {
           title: t("tab-bar.profile"),
         }}
       />
-      <Stack.Screen
-        name="(settings)"
-        initialParams={{
-          title: t("tab-bar.settings"),
-          hideTabBar: true,
-        }}
-        options={{
-          presentation: "card",
-        }}
-      />
+
     </Stack>
   );
 }

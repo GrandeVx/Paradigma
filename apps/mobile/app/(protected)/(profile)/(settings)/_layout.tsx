@@ -1,11 +1,8 @@
 import { Stack } from "expo-router";
 import { Platform } from "react-native";
-import { useTranslation } from "react-i18next";
 
-export default function AuthLayout() {
-  const { t } = useTranslation();
+export default function SettingsLayout() {
   return (
-    // @ts-expect-error - Stack is not typed
     <Stack
       screenOptions={{
         headerShown: false,
@@ -15,10 +12,16 @@ export default function AuthLayout() {
     >
       <Stack.Screen
         name="index"
-        initialParams={{
-          title: t("tab-bar.settings"),
+        options={{
+          title: "Ricorrenti",
+        }}
+      />
+      <Stack.Screen
+        name="installments"
+        options={{
+          title: "Rate",
         }}
       />
     </Stack>
   );
-}
+} 
