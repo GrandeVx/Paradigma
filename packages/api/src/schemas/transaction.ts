@@ -82,4 +82,12 @@ export const getMonthlySummarySchema = z.object({
   month: z.number().min(1).max(12),
   year: z.number().min(1900).max(2100),
   accountId: z.string().optional(),
+});
+
+// Schema for getting subcategory breakdown
+export const getSubCategoryBreakdownSchema = z.object({
+  month: z.number().min(1).max(12),
+  year: z.number().min(1900).max(2100),
+  macroCategoryId: z.string(),
+  accountId: z.string().optional(),
 }); 

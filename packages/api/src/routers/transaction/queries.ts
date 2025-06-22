@@ -4,7 +4,8 @@ import {
   listTransactionsSchema,
   getMonthlySpendingSchema,
   getCategoryBreakdownSchema,
-  getMonthlySummarySchema
+  getMonthlySummarySchema,
+  getSubCategoryBreakdownSchema
 } from "../../schemas/transaction";
 import { notFoundError } from "../../utils/errors";
 import type { Prisma } from "@paradigma/db";
@@ -322,13 +323,112 @@ export const queries = {
       const totalExpenses = Math.abs(expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0));
       const remaining = totalIncome - totalExpenses;
       
+             return {
+         month,
+         year,
+         income: totalIncome,
+         expenses: totalExpenses,
+         remaining,
+         accountId,
+       };
+     }),
+
+  getSubCategoryBreakdown: protectedProcedure
+    .input(getSubCategoryBreakdownSchema)
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { month, year, macroCategoryId, accountId } = input;
+      
+      // Create date range for the specified month
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      
+      // Build query filters
+      const filters: Prisma.TransactionWhereInput = {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        // Only expenses (negative amounts)
+        amount: { lt: 0 },
+        // Exclude transfers
+        transferId: null,
+        // Filter by macro category
+        subCategory: {
+          macroCategoryId: macroCategoryId
+        }
+      };
+      
+      // Add account filter if specified
+      if (accountId) {
+        filters.moneyAccountId = accountId;
+      }
+      
+      // Get transactions grouped by sub category
+      const transactions = await ctx.db.transaction.findMany({
+        where: filters,
+        include: {
+          subCategory: {
+            include: {
+              macroCategory: true,
+            }
+          },
+        },
+      });
+      
+      // Group transactions by sub category and calculate totals
+      const subCategoryMap = new Map<string, {
+        id: string;
+        name: string;
+        icon: string;
+        amount: number;
+        transactionCount: number;
+      }>();
+      
+      let totalAmount = 0;
+      
+      transactions.forEach(transaction => {
+        const subCategory = transaction.subCategory;
+        if (!subCategory) return;
+        
+        const amount = Math.abs(Number(transaction.amount));
+        totalAmount += amount;
+        
+        const existing = subCategoryMap.get(subCategory.id);
+        if (existing) {
+          existing.amount += amount;
+          existing.transactionCount += 1;
+        } else {
+          subCategoryMap.set(subCategory.id, {
+            id: subCategory.id,
+            name: subCategory.name,
+            icon: subCategory.icon,
+            amount: amount,
+            transactionCount: 1,
+          });
+        }
+      });
+      
+      // Convert to array and calculate percentages
+      const subCategories = Array.from(subCategoryMap.values()).map(subCategory => ({
+        id: subCategory.id,
+        name: subCategory.name,
+        amount: subCategory.amount,
+        percentage: totalAmount > 0 ? Number(((subCategory.amount / totalAmount) * 100).toFixed(1)) : 0,
+        icon: subCategory.icon,
+        macroCategoryId: macroCategoryId,
+      }));
+      
+      // Sort by amount descending
+      subCategories.sort((a, b) => b.amount - a.amount);
+      
       return {
         month,
         year,
-        income: totalIncome,
-        expenses: totalExpenses,
-        remaining,
-        accountId,
+        macroCategoryId,
+        totalAmount,
+        subCategories,
       };
     }),
 }; 
