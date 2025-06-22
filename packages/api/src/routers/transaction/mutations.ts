@@ -74,7 +74,12 @@ export const mutations = {
               }),
               ctx.db.getKey({ 
                 params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
-              })
+              }),
+              // Recurring transaction cache keys
+              ctx.db.getKey({ 
+                params: [{ prisma: 'RecurringTransaction' }, { operation: 'findMany' }, { userId: userId }] 
+              }),
+
             ],
             hasPattern: true
           }
