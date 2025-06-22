@@ -640,19 +640,20 @@ export const getCategoryTransactions = protectedProcedure
     });
 
     // Group transactions by day
-    const groupedByDay = transactions.reduce((acc, transaction) => {
-      const date = transaction.date.toISOString().split('T')[0];
-      if (!acc[date]) {
-        acc[date] = {
+    const groupedByDay: Record<string, { date: string; transactions: typeof transactions; totalAmount: number }> = {};
+    
+    transactions.forEach((transaction) => {
+      const date = transaction.date.toISOString().split('T')[0]!;
+      if (!groupedByDay[date]) {
+        groupedByDay[date] = {
           date,
           transactions: [],
           totalAmount: 0,
         };
       }
-      acc[date].transactions.push(transaction);
-      acc[date].totalAmount += Number(transaction.amount);
-      return acc;
-    }, {} as Record<string, { date: string; transactions: typeof transactions; totalAmount: number }>);
+      groupedByDay[date]!.transactions.push(transaction);
+      groupedByDay[date]!.totalAmount += Number(transaction.amount);
+    });
 
     const dailyGroups = Object.values(groupedByDay).sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
