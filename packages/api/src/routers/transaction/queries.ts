@@ -5,7 +5,8 @@ import {
   getMonthlySpendingSchema,
   getCategoryBreakdownSchema,
   getMonthlySummarySchema,
-  getSubCategoryBreakdownSchema
+  getSubCategoryBreakdownSchema,
+  getDailySpendingSchema
 } from "../../schemas/transaction";
 import { notFoundError } from "../../utils/errors";
 import type { Prisma } from "@paradigma/db";
@@ -423,12 +424,107 @@ export const queries = {
       // Sort by amount descending
       subCategories.sort((a, b) => b.amount - a.amount);
       
+             return {
+         month,
+         year,
+         macroCategoryId,
+         totalAmount,
+         subCategories,
+       };
+     }),
+
+  getDailySpending: protectedProcedure
+    .input(getDailySpendingSchema)
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { month, year, accountId } = input;
+      
+      // Create date range for the specified month
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      
+      // Build query filters
+      const filters: Prisma.TransactionWhereInput = {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        // Only expenses (negative amounts)
+        amount: { lt: 0 },
+        // Exclude transfers
+        transferId: null,
+      };
+      
+      // Add account filter if specified
+      if (accountId) {
+        filters.moneyAccountId = accountId;
+      }
+      
+      // Get all expense transactions for the month
+      const transactions = await ctx.db.transaction.findMany({
+        where: filters,
+        select: {
+          amount: true,
+          date: true,
+        },
+      });
+      
+      // Group transactions by day and calculate daily totals
+      const dailySpendingMap = new Map<string, number>();
+      
+      // Initialize all days of the month with 0
+      const daysInMonth = endDate.getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        dailySpendingMap.set(dateKey, 0);
+      }
+      
+      // Sum up expenses by day
+      transactions.forEach(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const day = transactionDate.getDate();
+        const dateKey = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        
+        const amount = Math.abs(Number(transaction.amount));
+        const currentAmount = dailySpendingMap.get(dateKey) || 0;
+        dailySpendingMap.set(dateKey, currentAmount + amount);
+      });
+      
+      // Convert to array format with intensity calculation
+      const dailySpending = Array.from(dailySpendingMap.entries()).map(([date, amount]) => {
+        let intensity: 'none' | 'low' | 'medium' | 'high' = 'none';
+        
+        if (amount === 0) {
+          intensity = 'none';
+        } else if (amount <= 50) {
+          intensity = 'low';
+        } else if (amount <= 100) {
+          intensity = 'medium';
+        } else {
+          intensity = 'high';
+        }
+        
+        return {
+          date,
+          amount,
+          intensity,
+          transactionCount: transactions.filter(t => {
+            const tDate = new Date(t.date);
+            const tDay = tDate.getDate();
+            const tDateKey = `${year}-${month.toString().padStart(2, '0')}-${tDay.toString().padStart(2, '0')}`;
+            return tDateKey === date;
+          }).length,
+        };
+      });
+      
+      // Sort by date
+      dailySpending.sort((a, b) => a.date.localeCompare(b.date));
+      
       return {
         month,
         year,
-        macroCategoryId,
-        totalAmount,
-        subCategories,
+        dailySpending,
       };
     }),
 }; 
