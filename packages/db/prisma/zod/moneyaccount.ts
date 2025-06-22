@@ -27,6 +27,7 @@ export const moneyAccountSchema = z.object({
   currency: z.string().nullish(),
   createdAt: z.date(),
   updatedAt: z.date(),
+  includeInTotal: z.boolean(),
   isGoalAccount: z.boolean(),
   targetAmount: z.number().nullish(),
   targetDate: z.date().nullish(),

@@ -40,6 +40,7 @@ interface MoneyAccountWithGoal {
   targetAmount?: Decimal | null;
   targetDate?: Date | null;
   goalDescription?: string | null;
+  includeInTotal: boolean;
 }
 
 // Unified Account interface with integrated goal functionality
@@ -52,6 +53,7 @@ interface UnifiedAccount {
   isGoalAccount: boolean;
   targetAmount?: number;
   progress?: number;
+  includeInTotal: boolean;
 }
 
 // Account Card Component
@@ -150,7 +152,9 @@ export default function AccountsScreen() {
     // Create unified accounts with integrated goal functionality
     const unifiedAccounts: UnifiedAccount[] = accountsData.map(item => {
       const accountBalance = Number(item.balance);
-      total += accountBalance;
+      if (item.account.includeInTotal) {
+        total += accountBalance;
+      }
 
       // Treat account as MoneyAccountWithGoal to access goal fields
       const account = item.account as unknown as MoneyAccountWithGoal;
@@ -171,7 +175,8 @@ export default function AccountsScreen() {
         balance: accountBalance,
         isGoalAccount: account.isGoalAccount || false,
         targetAmount: account.targetAmount ? Number(account.targetAmount) : undefined,
-        progress
+        progress,
+        includeInTotal: account.includeInTotal || true,
       };
     });
 

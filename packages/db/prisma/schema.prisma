@@ -127,6 +127,8 @@ model MoneyAccount {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  includeInTotal Boolean @default(true) @map("include_in_total_balance")
+
   isGoalAccount   Boolean   @default(false) @map("is_goal_account") // Flag per indicare se questo conto traccia un obiettivo
   targetAmount    Decimal?  @map("target_amount") // Importo target dell'obiettivo
   targetDate      DateTime? @map("target_date") // Data target dell'obiettivo

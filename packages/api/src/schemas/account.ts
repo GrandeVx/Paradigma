@@ -22,6 +22,7 @@ export const createAccountSchema = z.object({
   isGoalAccount: z.boolean().optional().default(false),
   targetAmount: z.number().optional(),
   targetDate: z.date().optional(),
+  includeInTotal: z.boolean().optional().default(true),
   goalDescription: z.string().optional(),
 });
 
@@ -38,6 +39,7 @@ export const updateAccountSchema = z.object({
   targetAmount: z.number().optional().nullable(),
   targetDate: z.date().optional().nullable(),
   goalDescription: z.string().optional().nullable(),
+  includeInTotal: z.boolean().optional().default(true),
 });
 
 // Schema for deleting an account

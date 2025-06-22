@@ -224,7 +224,7 @@ export default function AccountDetailsScreen() {
             setSavingTarget(accountData.targetAmount ? formatCurrency(Number(accountData.targetAmount)).integer + ',' + formatCurrency(Number(accountData.targetAmount)).decimal : '');
             setAccountColor(accountData.color || AccountColors[accountData.iconName as keyof typeof AccountColors] || '#409FF8');
             setAccountIcon(accountData.iconName as IconName || 'bank-card');
-            setIncludeInTotal(true); // This could be a field in the account model
+            setIncludeInTotal(accountData.includeInTotal || true); // This could be a field in the account model
         }
     }, [accountData]);
 
@@ -240,6 +240,7 @@ export default function AccountDetailsScreen() {
                 targetAmount: isSavingsAccount ? parseFloat(savingTarget.replace(",", ".")) : null,
                 color: accountColor,
                 iconName: accountIcon,
+                includeInTotal: includeInTotal,
             });
         } catch (err) {
             setError(err instanceof Error ? err.message : "Error updating account");

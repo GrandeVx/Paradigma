@@ -132,7 +132,7 @@ export const mutations = {
         if ('default' in input) updateData.default = input.default;
         if ('isGoalAccount' in input) updateData.isGoalAccount = input.isGoalAccount;
         if ('targetAmount' in input) updateData.targetAmount = input.targetAmount;
-        
+        if ('includeInTotal' in input) updateData.includeInTotal = input.includeInTotal;
         console.log(`📝 [Account] Update data prepared:`, updateData);
         console.log(`💾 [Account] Executing database update`);
         
