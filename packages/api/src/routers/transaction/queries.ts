@@ -6,7 +6,10 @@ import {
   getCategoryBreakdownSchema,
   getMonthlySummarySchema,
   getSubCategoryBreakdownSchema,
-  getDailySpendingSchema
+  getDailySpendingSchema,
+  getDailyTransactionsSchema,
+  getCategoryTransactionsSchema,
+  getBudgetInfoSchema
 } from "../../schemas/transaction";
 import { notFoundError } from "../../utils/errors";
 import type { Prisma } from "@paradigma/db";
@@ -527,4 +530,215 @@ export const queries = {
         dailySpending,
       };
     }),
+
+
 }; 
+
+// Daily transactions view
+export const getDailyTransactions = protectedProcedure
+  .input(getDailyTransactionsSchema)
+  .query(async ({ ctx, input }) => {
+    const userId = ctx.session.user.id;
+    
+    const startDate = new Date(input.date);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(input.date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const filters: Prisma.TransactionWhereInput = {
+      userId,
+      date: {
+        gte: startDate,
+        lte: endDate,
+      },
+    };
+
+    if (input.accountId) {
+      filters.moneyAccountId = input.accountId;
+    }
+
+    const transactions = await ctx.db.transaction.findMany({
+      where: filters,
+      include: {
+        subCategory: {
+          include: {
+            macroCategory: true,
+          },
+        },
+        moneyAccount: true,
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    });
+
+    const totalAmount = transactions
+      .filter(t => !t.transferId)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    return {
+      transactions,
+      totalAmount,
+      date: input.date,
+    };
+  });
+
+// Category transactions view
+export const getCategoryTransactions = protectedProcedure
+  .input(getCategoryTransactionsSchema)
+  .query(async ({ ctx, input }) => {
+    const userId = ctx.session.user.id;
+    
+    const startDate = new Date(input.year, input.month - 1, 1);
+    const endDate = new Date(input.year, input.month, 0, 23, 59, 59, 999);
+
+    // Find the macro category first
+    const macroCategory = await ctx.db.macroCategory.findFirst({
+      where: {
+        id: input.categoryId,
+      },
+      include: {
+        subCategories: true,
+      },
+    });
+
+    if (!macroCategory) {
+      throw notFoundError(ctx, 'category');
+    }
+
+    const subCategoryIds = macroCategory.subCategories.map(sc => sc.id);
+
+    const filters: Prisma.TransactionWhereInput = {
+      userId,
+      date: {
+        gte: startDate,
+        lte: endDate,
+      },
+      subCategoryId: {
+        in: subCategoryIds,
+      },
+    };
+
+    if (input.accountId) {
+      filters.moneyAccountId = input.accountId;
+    }
+
+    const transactions = await ctx.db.transaction.findMany({
+      where: filters,
+      include: {
+        subCategory: {
+          include: {
+            macroCategory: true,
+          },
+        },
+        moneyAccount: true,
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    });
+
+    // Group transactions by day
+    const groupedByDay = transactions.reduce((acc, transaction) => {
+      const date = transaction.date.toISOString().split('T')[0];
+      if (!acc[date]) {
+        acc[date] = {
+          date,
+          transactions: [],
+          totalAmount: 0,
+        };
+      }
+      acc[date].transactions.push(transaction);
+      acc[date].totalAmount += Number(transaction.amount);
+      return acc;
+    }, {} as Record<string, { date: string; transactions: typeof transactions; totalAmount: number }>);
+
+    const dailyGroups = Object.values(groupedByDay).sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const totalAmount = Math.abs(transactions.reduce((sum, t) => sum + Number(t.amount), 0));
+
+    return {
+      macroCategory,
+      dailyGroups,
+      totalAmount,
+      month: input.month,
+      year: input.year,
+    };
+  });
+
+// Budget info for category
+export const getBudgetInfo = protectedProcedure
+  .input(getBudgetInfoSchema)
+  .query(async ({ ctx, input }) => {
+    const userId = ctx.session.user.id;
+
+    // Check if budget exists for this category and month
+    const budget = await ctx.db.budget.findFirst({
+      where: {
+        userId: userId,
+        macroCategoryId: input.categoryId,
+      },
+    });
+
+    if (!budget) {
+      return null;
+    }
+
+    // Get the macro category details
+    const macroCategory = await ctx.db.macroCategory.findFirst({
+      where: {
+        id: input.categoryId,
+      },
+      include: {
+        subCategories: true,
+      },
+    });
+
+    if (!macroCategory) {
+      return null;
+    }
+
+    // Calculate spent amount for this category in this month
+    const startDate = new Date(input.year, input.month - 1, 1);
+    const endDate = new Date(input.year, input.month, 0, 23, 59, 59, 999);
+
+    const subCategoryIds = macroCategory.subCategories.map(sc => sc.id);
+
+    const spentTransactions = await ctx.db.transaction.findMany({
+      where: {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        subCategoryId: {
+          in: subCategoryIds,
+        },
+        amount: {
+          lt: 0, // Only expenses
+        },
+      },
+    });
+
+    const spentAmount = Math.abs(
+      spentTransactions.reduce((sum, t) => sum + Number(t.amount), 0)
+    );
+    
+    const budgetAmount = Number(budget.allocatedAmount);
+    const remainingAmount = budgetAmount - spentAmount;
+    const progressPercentage = Math.min((spentAmount / budgetAmount) * 100, 100);
+
+    return {
+      budget: {
+        ...budget,
+        amount: budgetAmount,
+      },
+      spentAmount,
+      remainingAmount,
+      progressPercentage,
+      macroCategory,
+    };
+  }); 
