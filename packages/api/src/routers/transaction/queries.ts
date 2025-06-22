@@ -2,7 +2,9 @@ import { protectedProcedure } from "../../trpc";
 import { 
   getTransactionByIdSchema, 
   listTransactionsSchema,
-  getMonthlySpendingSchema
+  getMonthlySpendingSchema,
+  getCategoryBreakdownSchema,
+  getMonthlySummarySchema
 } from "../../schemas/transaction";
 import { notFoundError } from "../../utils/errors";
 import type { Prisma } from "@paradigma/db";
@@ -169,5 +171,164 @@ export const queries = {
       });
       
       return transactions;
+    }),
+
+  getCategoryBreakdown: protectedProcedure
+    .input(getCategoryBreakdownSchema)
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { month, year, accountId, type } = input;
+      
+      // Create date range for the specified month
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      
+      // Build query filters
+      const filters: Prisma.TransactionWhereInput = {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        // Filter by transaction type
+        amount: type === 'expense' ? { lt: 0 } : { gt: 0 },
+        // Exclude transfers
+        transferId: null,
+      };
+      
+      // Add account filter if specified
+      if (accountId) {
+        filters.moneyAccountId = accountId;
+      }
+      
+      // Get transactions grouped by macro category
+      const transactions = await ctx.db.transaction.findMany({
+        where: filters,
+        include: {
+          subCategory: {
+            include: {
+              macroCategory: true,
+            }
+          },
+        },
+      });
+      
+      // Group transactions by macro category and calculate totals
+      const categoryMap = new Map<string, {
+        id: string;
+        name: string;
+        color: string;
+        icon: string;
+        type: 'INCOME' | 'EXPENSE';
+        amount: number;
+        transactionCount: number;
+      }>();
+      
+      let totalAmount = 0;
+      
+      transactions.forEach(transaction => {
+        const macroCategory = transaction.subCategory?.macroCategory;
+        if (!macroCategory) return;
+        
+        const amount = Math.abs(Number(transaction.amount));
+        totalAmount += amount;
+        
+        const existing = categoryMap.get(macroCategory.id);
+        if (existing) {
+          existing.amount += amount;
+          existing.transactionCount += 1;
+        } else {
+          categoryMap.set(macroCategory.id, {
+            id: macroCategory.id,
+            name: macroCategory.name,
+            color: macroCategory.color,
+            icon: macroCategory.icon,
+            type: macroCategory.type,
+            amount: amount,
+            transactionCount: 1,
+          });
+        }
+      });
+      
+      // Convert to array and calculate percentages
+      const categories = Array.from(categoryMap.values()).map(category => ({
+        id: category.id,
+        name: category.name,
+        amount: category.amount,
+        percentage: totalAmount > 0 ? Number(((category.amount / totalAmount) * 100).toFixed(1)) : 0,
+        color: category.color,
+        icon: category.icon,
+        type: category.type,
+      }));
+      
+      // Sort by amount descending
+      categories.sort((a, b) => b.amount - a.amount);
+      
+             return {
+         month,
+         year,
+         type,
+         totalAmount,
+         categories,
+       };
+     }),
+
+  getMonthlySummary: protectedProcedure
+    .input(getMonthlySummarySchema)
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { month, year, accountId } = input;
+      
+      // Create date range for the specified month
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      
+      // Build base query filters
+      const baseFilters: Prisma.TransactionWhereInput = {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        // Exclude transfers from summary
+        transferId: null,
+      };
+      
+      // Add account filter if specified
+      if (accountId) {
+        baseFilters.moneyAccountId = accountId;
+      }
+      
+      // Get income transactions (positive amounts)
+      const incomeTransactions = await ctx.db.transaction.findMany({
+        where: {
+          ...baseFilters,
+          amount: { gt: 0 },
+        },
+        select: { amount: true },
+      });
+      
+      // Get expense transactions (negative amounts)
+      const expenseTransactions = await ctx.db.transaction.findMany({
+        where: {
+          ...baseFilters,
+          amount: { lt: 0 },
+        },
+        select: { amount: true },
+      });
+      
+      // Calculate totals
+      const totalIncome = incomeTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      const totalExpenses = Math.abs(expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0));
+      const remaining = totalIncome - totalExpenses;
+      
+      return {
+        month,
+        year,
+        income: totalIncome,
+        expenses: totalExpenses,
+        remaining,
+        accountId,
+      };
     }),
 }; 

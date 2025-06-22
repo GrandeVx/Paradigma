@@ -67,4 +67,19 @@ export const getMonthlySpendingSchema = z.object({
   year: z.number().min(1900).max(2100),
   accountId: z.string().optional(),
   macroCategoryIds: z.array(z.string()).optional(),
+});
+
+// Schema for getting category breakdown for charts
+export const getCategoryBreakdownSchema = z.object({
+  month: z.number().min(1).max(12),
+  year: z.number().min(1900).max(2100),
+  accountId: z.string().optional(),
+  type: z.enum(["income", "expense"]).default("expense"),
+});
+
+// Schema for getting monthly summary
+export const getMonthlySummarySchema = z.object({
+  month: z.number().min(1).max(12),
+  year: z.number().min(1900).max(2100),
+  accountId: z.string().optional(),
 }); 
