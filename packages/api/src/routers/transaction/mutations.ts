@@ -169,7 +169,7 @@ export const mutations = {
                   { prisma: 'Transaction' }, 
                   { operation: 'getDailyTransactions' }, 
                   { userId }, 
-                  { date: input.date.toISOString().split('T')[0] },
+                  { date: input.date.toISOString().split('T')[0].toString() },
                   { accountId: 'all' }
                 ] 
               }),
@@ -178,7 +178,7 @@ export const mutations = {
                   { prisma: 'Transaction' }, 
                   { operation: 'getDailyTransactions' }, 
                   { userId }, 
-                  { date: input.date.toISOString().split('T')[0] },
+                  { date: input.date.toISOString().split('T')[0].toString() },
                   { accountId: input.accountId }
                 ] 
               }),
