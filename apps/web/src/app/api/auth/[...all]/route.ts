@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 console.log("🔄 [Auth Handler] Initializing toNextJsHandler...");
 
 // Test if toNextJsHandler works
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let authHandlers: any;
 try {
     authHandlers = toNextJsHandler(auth);
