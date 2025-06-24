@@ -41,7 +41,13 @@ const logger = pino({
 
 // Configurazione Auto-Caching
 const autoCacheConfig: AutoCacheConfig = {
-  excludedModels: ['Session', 'Account', 'Verification', 'MoneyAccount'], // Escluso MoneyAccount per usare solo chiavi custom
+  excludedModels: [
+    'Session', 'Account', 'Verification', // Better Auth - esclusi per sicurezza
+    'MoneyAccount', // Gestione custom per calcolo balance con transactions
+    'Transaction', // Gestione custom per tutte le operazioni (troppo dinamico)
+    'Budget', // Gestione custom per settings e progress calculation
+    'RecurringTransactionRule' // Gestione custom per scheduling logic
+  ],
   excludedOperations: [], // Nessuna operazione esclusa globalmente per ora
   models: [
     {
@@ -51,36 +57,12 @@ const autoCacheConfig: AutoCacheConfig = {
       excludedOperations: ['count'], // Il count degli utenti totali non è rilevante per la cache per-utente
     },
     {
-      model: 'Transaction',
-      ttl: 0, // TTL 0 significa che le query dirette su Transaction (es. findMany) NON verranno cachate di default.
-               // Questo è generalmente buono perché le liste di transazioni sono molto dinamiche.
-               // Le query 'aggregate' su Transaction (per il saldo) SARANNO cachate se non escluse qui
-               // e useranno il TTL di default (vedi sotto).
-      // Le MUTAZIONI su Transaction (create, update, delete) sono i trigger per invalidare MANUALMENTE
-      // la cache del saldo del MoneyAccount associato.
-    },
-    {
-      model: 'Goal',
-      ttl: 1800, // 30 minuti per la lista e i dettagli degli obiettivi
-      stale: 300, // 5 minuti
-    },
-    // {
-    //   model: 'Budget', // Le impostazioni di budget (fisse per utente/macro)
-    //   ttl: 3600, // 1 ora, non cambiano molto frequentemente
-    //   stale: 600, // 10 minuti
-    // },
-    {
-      model: 'RecurringTransactionRule',
-      ttl: 1800, // 30 minuti
-      stale: 300, // 5 minuti
-    },
-    {
-      model: 'MacroCategory', // Cambiano raramente (solo da seed/admin)
+      model: 'MacroCategory', // Seed data, cambiano raramente (solo da seed/admin)
       ttl: 86400, // 1 giorno
       stale: 3600, // 1 ora
     },
     {
-      model: 'SubCategory', // Cambiano raramente
+      model: 'SubCategory', // Seed data, cambiano raramente
       ttl: 86400, // 1 giorno
       stale: 3600, // 1 ora
     },

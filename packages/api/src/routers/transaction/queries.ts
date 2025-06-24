@@ -135,9 +135,7 @@ export const queries = {
           gte: startDate,
           lte: endDate,
         },
-        // Only include expenses (negative amounts)
-        amount: { lt: 0 },
-        // Exclude transfers
+        // Exclude transfers from monthly spending but include ALL transactions (income + expense)
         transferId: null,
       };
       
@@ -155,7 +153,7 @@ export const queries = {
         };
       }
       
-      // Get all expense transactions for the month
+      // Get ALL transactions for the month (income + expenses)
       const transactions = await ctx.db.transaction.findMany({
         where: filters,
         include: {
@@ -188,6 +186,18 @@ export const queries = {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
       
+      // Create custom cache key for category breakdown
+      const cacheKey = ctx.db.getKey({ 
+        params: [
+          { prisma: 'Transaction' }, 
+          { operation: 'getCategoryBreakdown' }, 
+          { userId }, 
+          { month: month.toString(), year: year.toString() },
+          { type },
+          { accountId: accountId || 'all' }
+        ] 
+      });
+      
       // Build query filters
       const filters: Prisma.TransactionWhereInput = {
         userId,
@@ -216,6 +226,10 @@ export const queries = {
             }
           },
         },
+        cache: { 
+          ttl: 300, // 5 minutes TTL for category breakdown
+          key: cacheKey 
+        }
       });
       
       // Group transactions by macro category and calculate totals
@@ -288,6 +302,17 @@ export const queries = {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
       
+      // Create custom cache key for monthly summary
+      const cacheKey = ctx.db.getKey({ 
+        params: [
+          { prisma: 'Transaction' }, 
+          { operation: 'getMonthlySummary' }, 
+          { userId }, 
+          { month: month.toString(), year: year.toString() },
+          { accountId: accountId || 'all' }
+        ] 
+      });
+      
       // Build base query filters
       const baseFilters: Prisma.TransactionWhereInput = {
         userId,
@@ -311,6 +336,10 @@ export const queries = {
           amount: { gt: 0 },
         },
         select: { amount: true },
+        cache: { 
+          ttl: 300, // 5 minutes TTL for monthly summary
+          key: `${cacheKey}:income` 
+        }
       });
       
       // Get expense transactions (negative amounts)
@@ -320,6 +349,10 @@ export const queries = {
           amount: { lt: 0 },
         },
         select: { amount: true },
+        cache: { 
+          ttl: 300, // 5 minutes TTL for monthly summary
+          key: `${cacheKey}:expenses` 
+        }
       });
       
       // Calculate totals
@@ -346,6 +379,18 @@ export const queries = {
       // Create date range for the specified month
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
+      
+      // Create custom cache key for sub-category breakdown
+      const cacheKey = ctx.db.getKey({ 
+        params: [
+          { prisma: 'Transaction' }, 
+          { operation: 'getSubCategoryBreakdown' }, 
+          { userId }, 
+          { month: month.toString(), year: year.toString() },
+          { macroCategoryId },
+          { accountId: accountId || 'all' }
+        ] 
+      });
       
       // Build query filters
       const filters: Prisma.TransactionWhereInput = {
@@ -379,6 +424,10 @@ export const queries = {
             }
           },
         },
+        cache: { 
+          ttl: 300, // 5 minutes TTL for sub-category breakdown
+          key: cacheKey 
+        }
       });
       
       // Group transactions by sub category and calculate totals
@@ -446,6 +495,17 @@ export const queries = {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
       
+      // Create custom cache key for daily spending
+      const cacheKey = ctx.db.getKey({ 
+        params: [
+          { prisma: 'Transaction' }, 
+          { operation: 'getDailySpending' }, 
+          { userId }, 
+          { month: month.toString(), year: year.toString() },
+          { accountId: accountId || 'all' }
+        ] 
+      });
+      
       // Build query filters
       const filters: Prisma.TransactionWhereInput = {
         userId,
@@ -471,6 +531,10 @@ export const queries = {
           amount: true,
           date: true,
         },
+        cache: { 
+          ttl: 300, // 5 minutes TTL for daily spending
+          key: cacheKey 
+        }
       });
       
       // Group transactions by day and calculate daily totals
@@ -540,6 +604,17 @@ export const getDailyTransactions = protectedProcedure
   .query(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
     
+    // Create custom cache key for daily transactions
+    const cacheKey = ctx.db.getKey({ 
+      params: [
+        { prisma: 'Transaction' }, 
+        { operation: 'getDailyTransactions' }, 
+        { userId }, 
+        { date: input.date },
+        { accountId: input.accountId || 'all' }
+      ] 
+    });
+    
     const startDate = new Date(input.date);
     startDate.setHours(0, 0, 0, 0);
     
@@ -571,6 +646,10 @@ export const getDailyTransactions = protectedProcedure
       orderBy: {
         date: 'desc',
       },
+      cache: { 
+        ttl: 180, // 3 minutes TTL for daily transactions (more dynamic)
+        key: cacheKey 
+      }
     });
 
     const totalAmount = transactions
@@ -590,6 +669,18 @@ export const getCategoryTransactions = protectedProcedure
   .query(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
     
+    // Create custom cache key for category transactions
+    const cacheKey = ctx.db.getKey({ 
+      params: [
+        { prisma: 'Transaction' }, 
+        { operation: 'getCategoryTransactions' }, 
+        { userId }, 
+        { categoryId: input.categoryId },
+        { month: input.month.toString(), year: input.year.toString() },
+        { accountId: input.accountId || 'all' }
+      ] 
+    });
+    
     const startDate = new Date(input.year, input.month - 1, 1);
     const endDate = new Date(input.year, input.month, 0, 23, 59, 59, 999);
 
@@ -601,6 +692,10 @@ export const getCategoryTransactions = protectedProcedure
       include: {
         subCategories: true,
       },
+      cache: { 
+        ttl: 86400, // 1 day TTL for macro category (rarely changes)
+        key: `${cacheKey}:macroCategory` 
+      }
     });
 
     if (!macroCategory) {
@@ -637,6 +732,10 @@ export const getCategoryTransactions = protectedProcedure
       orderBy: {
         date: 'desc',
       },
+      cache: { 
+        ttl: 300, // 5 minutes TTL for category transactions
+        key: `${cacheKey}:transactions` 
+      }
     });
 
     // Group transactions by day
@@ -676,12 +775,27 @@ export const getBudgetInfo = protectedProcedure
   .query(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
 
+    // Create custom cache key for budget info
+    const cacheKey = ctx.db.getKey({ 
+      params: [
+        { prisma: 'Transaction' }, 
+        { operation: 'getBudgetInfo' }, 
+        { userId }, 
+        { categoryId: input.categoryId },
+        { month: input.month.toString(), year: input.year.toString() }
+      ] 
+    });
+
     // Check if budget exists for this category and month
     const budget = await ctx.db.budget.findFirst({
       where: {
         userId: userId,
         macroCategoryId: input.categoryId,
       },
+      cache: { 
+        ttl: 600, // 10 minutes TTL for budget settings
+        key: `${cacheKey}:budget` 
+      }
     });
 
     if (!budget) {
@@ -696,6 +810,10 @@ export const getBudgetInfo = protectedProcedure
       include: {
         subCategories: true,
       },
+      cache: { 
+        ttl: 86400, // 1 day TTL for macro category (rarely changes)
+        key: `${cacheKey}:macroCategory` 
+      }
     });
 
     if (!macroCategory) {
@@ -722,6 +840,10 @@ export const getBudgetInfo = protectedProcedure
           lt: 0, // Only expenses
         },
       },
+      cache: { 
+        ttl: 300, // 5 minutes TTL for spent amount calculation
+        key: `${cacheKey}:spentTransactions` 
+      }
     });
 
     const spentAmount = Math.abs(
