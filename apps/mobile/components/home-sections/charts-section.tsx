@@ -1,13 +1,100 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, ActivityIndicator, TouchableOpacity, Pressable } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOutUp,
+  Layout,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  runOnJS
+} from 'react-native-reanimated';
 import { Text } from '@/components/ui/text';
 import { LeftIcon, RightIcon, DownIcon, UpIcon } from '@/components/ui/svg-icons';
 import { DonutChart, HeatmapCalendar } from '@/components/charts';
 import type { CategoryData, SubCategoryBreakdown, CalendarDay } from '@/types/charts';
 import { api } from '@/lib/api';
 import { useRouter } from 'expo-router';
+import { chartsUtils } from '@/lib/mmkv-storage';
 
+// Loading skeleton for charts section
+const ChartsLoadingSkeleton = ({ categoriesCount = 4 }: { categoriesCount?: number }) => {
+  const shimmerOpacity = useSharedValue(0.3);
 
+  useEffect(() => {
+    const animate = () => {
+      shimmerOpacity.value = withTiming(1, { duration: 800 }, () => {
+        shimmerOpacity.value = withTiming(0.3, { duration: 800 }, () => {
+          runOnJS(animate)();
+        });
+      });
+    };
+    animate();
+  }, [shimmerOpacity]);
+
+  const shimmerStyle = useAnimatedStyle(() => ({
+    opacity: shimmerOpacity.value,
+  }));
+
+  const skeletonCategories = Array.from({ length: Math.max(1, categoriesCount) }, (_, index) => index);
+
+  return (
+    <ScrollView className="flex-1 p-4 pb-48 bg-white" showsVerticalScrollIndicator={false}>
+      {/* Summary skeleton */}
+      <Animated.View
+        entering={FadeIn.duration(300)}
+        style={shimmerStyle}
+        className="bg-gray-200 rounded-3xl h-24 mb-4"
+      />
+
+      {/* Chart skeleton */}
+      <Animated.View
+        entering={FadeInDown.delay(100).duration(400)}
+        className="items-center mb-4"
+      >
+        <Animated.View
+          style={shimmerStyle}
+          className="w-80 h-80 bg-gray-200 rounded-full"
+        />
+      </Animated.View>
+
+      {/* Categories skeleton */}
+      <View className="flex-col gap-1">
+        {skeletonCategories.map((index) => (
+          <Animated.View
+            key={index}
+            entering={FadeInDown.delay(200 + index * 100).duration(400)}
+            style={shimmerStyle}
+            className="flex-row items-center justify-between py-3"
+          >
+            <View className="flex-row items-center gap-3">
+              <View className="w-2 h-2 bg-gray-300 rounded-full" />
+              <View className="bg-gray-300 rounded h-4 w-20" />
+            </View>
+            <View className="flex-row items-center gap-4">
+              <View className="bg-gray-300 rounded h-4 w-12" />
+              <View className="bg-gray-300 rounded h-4 w-16" />
+              <View className="w-8 h-8 bg-gray-300 rounded" />
+            </View>
+          </Animated.View>
+        ))}
+      </View>
+
+      {/* Heatmap skeleton */}
+      <Animated.View
+        entering={FadeInDown.delay(600).duration(400)}
+        className="bg-gray-50 rounded-xl p-4 mt-10"
+      >
+        <Animated.View
+          style={shimmerStyle}
+          className="bg-gray-200 rounded h-40 w-full"
+        />
+      </Animated.View>
+    </ScrollView>
+  );
+};
 
 const MonthSelector: React.FC<{
   currentMonth: number;
@@ -142,21 +229,45 @@ const SubCategoryItem: React.FC<{ subCategory: SubCategoryBreakdown }> = ({ subC
   );
 };
 
-const CategoryLegendItem: React.FC<{
+// Animated version of CategoryLegendItem
+const AnimatedCategoryLegendItem: React.FC<{
   category: CategoryData;
+  index: number;
   isExpanded: boolean;
   subCategories?: SubCategoryBreakdown[];
   isLoadingSubCategories?: boolean;
   onToggleExpand: () => void;
   onCategoryPress: (categoryId: string) => void;
-}> = ({ category, isExpanded, subCategories, isLoadingSubCategories, onToggleExpand, onCategoryPress }) => {
+}> = ({ category, index, isExpanded, subCategories, isLoadingSubCategories, onToggleExpand, onCategoryPress }) => {
+  const itemScale = useSharedValue(1);
+
+  const handlePressIn = () => {
+    itemScale.value = withSpring(0.98);
+  };
+
+  const handlePressOut = () => {
+    itemScale.value = withSpring(1);
+  };
+
+  const itemStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: itemScale.value }],
+  }));
+
   return (
-    <View className="flex-col">
+    <Animated.View
+      entering={FadeInDown.delay(300 + index * 100).duration(500).springify()}
+      exiting={FadeOutUp.duration(300)}
+      layout={Layout.springify().damping(15).stiffness(100)}
+      style={itemStyle}
+      className="flex-col"
+    >
       {/* Main category row */}
       <View className="flex-row items-center justify-between py-2">
         {/* Clickable area for navigation (most of the row) */}
         <TouchableOpacity
           onPress={() => onCategoryPress(category.id)}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
           className="flex-row items-center flex-1 gap-3 pr-4"
           activeOpacity={0.7}
         >
@@ -216,18 +327,24 @@ const CategoryLegendItem: React.FC<{
 
       {/* Sub-categories (when expanded) */}
       {isExpanded && (
-        <View className="flex-col">
+        <Animated.View
+          entering={FadeInDown.duration(300)}
+          exiting={FadeOutUp.duration(200)}
+          className="flex-col"
+        >
           {isLoadingSubCategories ? (
             <View className="py-4 items-center">
               <ActivityIndicator size="small" color="#6B7280" />
             </View>
           ) : subCategories && subCategories.length > 0 ? (
             <>
-              {subCategories.map((subCategory) => (
-                <SubCategoryItem
+              {subCategories.map((subCategory, subIndex) => (
+                <Animated.View
                   key={subCategory.id}
-                  subCategory={subCategory}
-                />
+                  entering={FadeInDown.delay(subIndex * 50).duration(300)}
+                >
+                  <SubCategoryItem subCategory={subCategory} />
+                </Animated.View>
               ))}
               {/* Separator line */}
               <View className="h-px bg-gray-200 mx-4 mt-2 mb-2" />
@@ -239,17 +356,27 @@ const CategoryLegendItem: React.FC<{
               </Text>
             </View>
           )}
-        </View>
+        </Animated.View>
       )}
-    </View>
+    </Animated.View>
   );
 };
+
+
 
 export const ChartsSection: React.FC = () => {
   const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+
+  // Cache state
+  const [cachedCategoriesCount, setCachedCategoriesCount] = useState<number>(0);
+  const [hasChartsInCache, setHasChartsInCache] = useState<boolean>(false);
+
+  // Animation values
+  const contentOpacity = useSharedValue(0);
+  const summaryScale = useSharedValue(0.9);
 
   // Real API calls
   const {
@@ -290,7 +417,49 @@ export const ChartsSection: React.FC = () => {
     year: currentYear,
   });
 
+  // Initialize cache data on component mount
+  useEffect(() => {
+    const cachedCount = chartsUtils.getCategoriesCountFromCache(currentMonth, currentYear);
+    const hasCache = chartsUtils.hasChartsInCache(currentMonth, currentYear);
+
+    setCachedCategoriesCount(cachedCount);
+    setHasChartsInCache(hasCache);
+  }, [currentMonth, currentYear]);
+
+  // Update cache when new data loads
+  useEffect(() => {
+    if (categoryData?.categories && categoryData.categories.length > 0) {
+      chartsUtils.setChartsCacheData(
+        categoryData.categories,
+        !!(dailySpendingData?.dailySpending?.length),
+        currentMonth,
+        currentYear
+      );
+
+      // Update local cache state
+      const categoriesCount = chartsUtils.getCategoriesCountFromCache(currentMonth, currentYear);
+      setCachedCategoriesCount(categoriesCount);
+      setHasChartsInCache(true);
+    }
+  }, [categoryData, dailySpendingData, currentMonth, currentYear]);
+
+  // Animate content when data loads
+  useEffect(() => {
+    if (!isSummaryLoading && !isCategoryLoading) {
+      contentOpacity.value = withTiming(1, { duration: 600 });
+      summaryScale.value = withSpring(1, {
+        damping: 15,
+        stiffness: 100,
+      });
+    }
+  }, [isSummaryLoading, isCategoryLoading, contentOpacity, summaryScale]);
+
   const handleMonthChange = (month: number, year: number) => {
+    // Animate transition
+    summaryScale.value = withSpring(0.95, { duration: 200 }, () => {
+      summaryScale.value = withSpring(1, { duration: 300 });
+    });
+
     setCurrentMonth(month);
     setCurrentYear(year);
     setExpandedCategoryId(null); // Reset expansion when month changes
@@ -309,15 +478,24 @@ export const ChartsSection: React.FC = () => {
     router.push(`/(protected)/(home)/(category-transactions)/${categoryId}`);
   };
 
-  // Show loading state (only for critical data)
-  if (isSummaryLoading || isCategoryLoading) {
+  // Determine loading states
+  const isInitialLoading = isSummaryLoading || isCategoryLoading;
+  const shouldShowSkeleton = isInitialLoading && hasChartsInCache;
+  const shouldShowEmptyState = !isInitialLoading && (!categoryData?.categories || categoryData.categories.length === 0) && !hasChartsInCache;
+  const shouldShowContent = !isInitialLoading && categoryData?.categories && categoryData.categories.length > 0;
+
+  if (shouldShowSkeleton) {
+    return <ChartsLoadingSkeleton categoriesCount={cachedCategoriesCount} />;
+  }
+
+  if (shouldShowEmptyState) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#000" />
-        <Text className="mt-2 text-gray-500" style={{ fontFamily: 'DM Sans' }}>
-          Caricamento dati...
-        </Text>
-      </View>
+      <Animated.View
+        entering={FadeIn.duration(400)}
+        className="flex-1 items-center justify-center p-4"
+      >
+        <Text className="text-center text-gray-500">Nessun dato disponibile per questo mese</Text>
+      </Animated.View>
     );
   }
 
@@ -326,77 +504,114 @@ export const ChartsSection: React.FC = () => {
   const categories: CategoryData[] = categoryData?.categories || [];
   const totalExpenses = categoryData?.totalAmount || 0;
 
+  if (!shouldShowContent) {
+    return (
+      <Animated.View
+        entering={FadeIn.duration(400)}
+        className="flex-1 items-center justify-center"
+      >
+        <ActivityIndicator size="large" color="#000" />
+        <Text className="mt-2 text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+          Caricamento dati...
+        </Text>
+      </Animated.View>
+    );
+  }
+
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+  }));
+
+  const summaryStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: summaryScale.value }],
+  }));
+
 
   return (
-    <ScrollView className="flex-1 p-4 pb-24 bg-white" showsVerticalScrollIndicator={false}>
-      {/* Summary Container */}
-      <SummaryContainer
-        income={summary.income}
-        expenses={summary.expenses}
-        remaining={summary.remaining}
-        currentMonth={currentMonth}
-        currentYear={currentYear}
-        onMonthChange={handleMonthChange}
-      />
+    <Animated.View style={contentStyle} className="flex-1">
+      <ScrollView className="flex-1 p-4  bg-white" showsVerticalScrollIndicator={false}>
+        {/* Summary Container */}
+        <Animated.View style={summaryStyle}>
+          <SummaryContainer
+            income={summary.income}
+            expenses={summary.expenses}
+            remaining={summary.remaining}
+            currentMonth={currentMonth}
+            currentYear={currentYear}
+            onMonthChange={handleMonthChange}
+          />
+        </Animated.View>
 
-      {/* Charts & Analysis Section */}
-      <View className="flex-col gap-10">
-        {/* Chart and Legend Row */}
-        <View className="flex-col gap-4">
-          {/* Donut Chart */}
-          <View className="items-center">
-            <DonutChart
-              data={categories}
-              totalAmount={totalExpenses}
-              size={350}
-              strokeWidth={50}
-              showLabels={false}
-            />
+        {/* Charts & Analysis Section */}
+        <View className="flex-col gap-10">
+          {/* Chart and Legend Row */}
+          <View className="flex-col gap-4">
+            {/* Donut Chart */}
+            <Animated.View
+              entering={FadeInDown.delay(200).duration(600).springify()}
+              className="items-center"
+            >
+              <DonutChart
+                data={categories}
+                totalAmount={totalExpenses}
+                size={350}
+                strokeWidth={50}
+                showLabels={false}
+              />
+            </Animated.View>
+
+            {/* Category Legend */}
+            <View className="flex-col gap-1">
+              {categories.length > 0 ? (
+                categories.map((category, index) => (
+                  <AnimatedCategoryLegendItem
+                    key={category.id}
+                    category={category}
+                    index={index}
+                    isExpanded={expandedCategoryId === category.id}
+                    subCategories={expandedCategoryId === category.id ? subCategoryData?.subCategories : undefined}
+                    isLoadingSubCategories={expandedCategoryId === category.id ? isSubCategoryLoading : false}
+                    onToggleExpand={() => handleToggleExpand(category.id)}
+                    onCategoryPress={handleCategoryPress}
+                  />
+                ))
+              ) : (
+                <Animated.View
+                  entering={FadeIn.delay(400).duration(600)}
+                  className="py-8 items-center"
+                >
+                  <Text className="text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+                    Nessuna spesa registrata questo mese
+                  </Text>
+                </Animated.View>
+              )}
+            </View>
           </View>
 
-          {/* Category Legend */}
-          <View className="flex-col gap-1">
-            {categories.length > 0 ? (
-              categories.map((category) => (
-                <CategoryLegendItem
-                  key={category.id}
-                  category={category}
-                  isExpanded={expandedCategoryId === category.id}
-                  subCategories={expandedCategoryId === category.id ? subCategoryData?.subCategories : undefined}
-                  isLoadingSubCategories={expandedCategoryId === category.id ? isSubCategoryLoading : false}
-                  onToggleExpand={() => handleToggleExpand(category.id)}
-                  onCategoryPress={handleCategoryPress}
-                />
-              ))
-            ) : (
-              <View className="py-8 items-center">
-                <Text className="text-gray-500" style={{ fontFamily: 'DM Sans' }}>
-                  Nessuna spesa registrata questo mese
+          {/* Heatmap Calendar */}
+          <Animated.View
+            entering={FadeInDown.delay(600).duration(600).springify()}
+            className="bg-gray-50 rounded-xl p-4"
+          >
+            {isDailySpendingLoading ? (
+              <View className="h-40 items-center justify-center">
+                <ActivityIndicator size="small" color="#6B7280" />
+                <Text className="mt-2 text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+                  Caricamento calendario...
                 </Text>
               </View>
+            ) : (
+              <HeatmapCalendar
+                data={dailySpendingData?.dailySpending || []}
+                month={currentMonth}
+                year={currentYear}
+                onDayPress={handleDayPress}
+              />
             )}
-          </View>
+          </Animated.View>
+          <View className="h-24" />
         </View>
-
-        {/* Heatmap Calendar */}
-        <View className="bg-gray-50 rounded-xl p-4">
-          {isDailySpendingLoading ? (
-            <View className="h-40 items-center justify-center">
-              <ActivityIndicator size="small" color="#6B7280" />
-              <Text className="mt-2 text-gray-500" style={{ fontFamily: 'DM Sans' }}>
-                Caricamento calendario...
-              </Text>
-            </View>
-          ) : (
-            <HeatmapCalendar
-              data={dailySpendingData?.dailySpending || []}
-              month={currentMonth}
-              year={currentYear}
-              onDayPress={handleDayPress}
-            />
-          )}
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </Animated.View>
   );
 }; 

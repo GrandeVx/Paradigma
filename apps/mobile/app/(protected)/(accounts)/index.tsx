@@ -9,8 +9,6 @@ import HeaderContainer from '@/components/layouts/_header';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
-import { useTabBar } from '@/context/TabBarContext';
-
 
 // Format currency helper
 const formatCurrency = (amount: number) => {
@@ -56,11 +54,11 @@ interface UnifiedAccount {
   includeInTotal: boolean;
 }
 
-// Account Card Component
+// Account Card Component - MEMOIZED for performance
 const AccountCard: React.FC<{
   account: UnifiedAccount;
   onPress: (id: string) => void;
-}> = ({ account, onPress }) => {
+}> = React.memo(({ account, onPress }) => {
   const { integer, decimal } = formatCurrency(account.balance);
 
   // Savings account with progress display
@@ -132,13 +130,19 @@ const AccountCard: React.FC<{
       </View>
     </Pressable>
   );
-};
+});
 
 export default function AccountsScreen() {
   const router = useRouter();
-  const { hideTabBar } = useTabBar();
-  // Fetch accounts data
-  const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({});
+
+  // Fetch accounts data with controlled refetching - OPTIMIZED
+  const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({}, {
+    refetchOnWindowFocus: false, // Prevent automatic refetch on focus
+    refetchOnMount: true, // Keep refetch on mount
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    cacheTime: 300000, // Keep in cache for 5 minutes
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  });
 
   // Process accounts data with integrated goal functionality
   const { accounts, totalBalance } = useMemo(() => {
@@ -197,7 +201,6 @@ export default function AccountsScreen() {
   const { integer, decimal } = formatCurrency(totalBalance);
 
   const handleAccountPress = (id: string) => {
-    hideTabBar();
     // Navigate to account details using the id parameter
     router.push({
       pathname: "/(protected)/(accounts)/[id]",
@@ -211,8 +214,8 @@ export default function AccountsScreen() {
 
   const rightActions = [
     {
-      icon: <FontAwesome5 name="cog" size={24} color="black" />,
-      onPress: () => router.push("/(protected)/(accounts)"),
+      icon: <FontAwesome5 name="plus" size={16} color="black" />,
+      onPress: () => router.push("/(protected)/(creation-flow)/name"),
     },
   ];
 
@@ -226,12 +229,26 @@ export default function AccountsScreen() {
         <StatusBar style="dark" />
 
         {/* Top Section with Balance */}
-        <View className=" pb-10 items-center justify-center px-6">
-          <View className="flex-row items-baseline justify-center gap-2 w-full">
+        <View className="pb-10 items-center justify-center px-6">
+          <View className="flex-row items-baseline justify-center w-full max-w-sm">
             <Text className="text-gray-400 text-3xl font-normal">€</Text>
-            <View className="flex-row items-baseline">
-              <Text className="text-black  font-medium" style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 64 }}>{isLoading ? '...' : integer}</Text>
-              <Text className="text-gray-400 font-normal" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>{isLoading ? '' : `,${decimal}`}</Text>
+            <View className="flex-row items-baseline flex-shrink">
+              <Text
+                className="text-black font-medium flex-shrink-0"
+                style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 64 }}
+                numberOfLines={1}
+                adjustsFontSizeToFit={true}
+                minimumFontScale={0.7}
+              >
+                {isLoading ? '...' : integer}
+              </Text>
+              <Text
+                className="text-gray-400 font-normal flex-shrink-0"
+                style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}
+                numberOfLines={1}
+              >
+                {isLoading ? '' : `,${decimal}`}
+              </Text>
             </View>
           </View>
 

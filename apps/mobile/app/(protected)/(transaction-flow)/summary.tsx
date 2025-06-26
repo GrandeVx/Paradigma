@@ -3,9 +3,7 @@ import { View, TextInput, Pressable, Switch, SafeAreaView } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import HeaderContainer from "@/components/layouts/_header";
-import { RelativePathString, useLocalSearchParams, useRouter } from "expo-router";
-import { StackActions } from '@react-navigation/native';
-import { useNavigationContainerRef } from 'expo-router';
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { SvgIcon } from "@/components/ui/svg-icon";
 import * as Haptics from 'expo-haptics';
@@ -23,6 +21,7 @@ import { RecurrencePickerBottomSheet, RecurrenceOption } from "@/components/bott
 
 import { api } from "@/lib/api";
 import { IconName } from "@/components/ui/icons";
+// Removed StackActions import - using normal router navigation instead
 
 type TransactionType = 'income' | 'expense' | 'transfer';
 
@@ -76,7 +75,9 @@ export default function SummaryScreen() {
       await queryClient.recurringRule.list.invalidate();
       await queryClient.transaction.list.invalidate();
       await queryClient.account.listWithBalances.invalidate();
-      navigate("/(protected)");
+      await queryClient.transaction.getMonthlySpending.invalidate();
+      await queryClient.budget.getCurrentSettings.invalidate();
+      router.back();
     }
   });
   const incomeMutation = api.transaction.createIncome.useMutation({
@@ -84,7 +85,9 @@ export default function SummaryScreen() {
       await queryClient.recurringRule.list.invalidate();
       await queryClient.transaction.list.invalidate();
       await queryClient.account.listWithBalances.invalidate();
-      navigate("/(protected)");
+      await queryClient.transaction.getMonthlySpending.invalidate();
+      await queryClient.budget.getCurrentSettings.invalidate();
+      router.back();
     }
   });
   const transferMutation = api.transaction.createTransfer.useMutation({
@@ -92,7 +95,9 @@ export default function SummaryScreen() {
       await queryClient.recurringRule.list.invalidate();
       await queryClient.transaction.list.invalidate();
       await queryClient.account.listWithBalances.invalidate();
-      navigate("/(protected)");
+      await queryClient.transaction.getMonthlySpending.invalidate();
+      await queryClient.budget.getCurrentSettings.invalidate();
+      router.back();
     }
   });
   const recurringRuleMutation = api.recurringRule.create.useMutation({
@@ -100,7 +105,9 @@ export default function SummaryScreen() {
       await queryClient.recurringRule.list.invalidate();
       await queryClient.transaction.list.invalidate();
       await queryClient.account.listWithBalances.invalidate();
-      navigate("/(protected)");
+      await queryClient.transaction.getMonthlySpending.invalidate();
+      await queryClient.budget.getCurrentSettings.invalidate();
+      router.back();
     }
   });
   const convertFrequencyMutation = api.recurringRule.convertFrequency.useMutation();
@@ -170,12 +177,10 @@ export default function SummaryScreen() {
     []
   );
 
-  const rootNavigation = useNavigationContainerRef();
 
-  const navigate = (newPath: string) => {
-    rootNavigation.dispatch(StackActions.popToTop());
-    router.replace(newPath as RelativePathString);
-  }
+  // Removed problematic navigation override - use normal router.back() instead
+
+
 
   // Handle recurrence option change
   const handleRecurrenceChange = (option: RecurrenceOption) => {
@@ -233,29 +238,84 @@ export default function SummaryScreen() {
       // Handle recurring rule if isRecurring is true
       if (isRecurring) {
         try {
-
           // Convert UI frequency to API frequency type and interval
           const { frequencyType, frequencyInterval } = await convertFrequencyMutation.mutateAsync({
             frequencyDays
           });
 
-          // Create recurring rule through the API
-          await recurringRuleMutation.mutateAsync({
-            accountId: selectedAccountId,
-            description,
-            amount: parseFloat(amount),
-            type: transactionType === "income" ? "INCOME" : "EXPENSE",
-            subCategoryId: selectedCategoryId || undefined,
-            startDate: selectedDate,
-            frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
-            frequencyInterval,
-            isInstallment: true,
-            totalOccurrences: numInstallments,
-            notes: note || undefined
-          });
+          // First, create the immediate transaction for the first installment
+          const singleInstallmentAmount = parseFloat(amount) / numInstallments;
+
+          switch (transactionType) {
+            case 'expense':
+              await expenseMutation.mutateAsync({
+                accountId: selectedAccountId,
+                description: `${description} (1/${numInstallments})`,
+                amount: singleInstallmentAmount,
+                date: selectedDate,
+                subCategoryId: selectedCategoryId || undefined,
+                notes: note ? `${note} - Prima rata` : `Prima rata di ${numInstallments}`
+              });
+              break;
+
+            case 'income':
+              await incomeMutation.mutateAsync({
+                accountId: selectedAccountId,
+                description: `${description} (1/${numInstallments})`,
+                amount: singleInstallmentAmount,
+                date: selectedDate,
+                subCategoryId: selectedCategoryId || undefined,
+                notes: note ? `${note} - Prima rata` : `Prima rata di ${numInstallments}`
+              });
+              break;
+
+            case 'transfer':
+              if (!selectedTransferAccountId) {
+                throw new Error("Seleziona un conto di destinazione per il trasferimento");
+              }
+              await transferMutation.mutateAsync({
+                fromAccountId: selectedAccountId,
+                toAccountId: selectedTransferAccountId,
+                amount: singleInstallmentAmount,
+                date: selectedDate,
+                description: `${description} (1/${numInstallments})`,
+                notes: note ? `${note} - Prima rata` : `Prima rata di ${numInstallments}`
+              });
+              break;
+
+            default:
+              throw new Error("Tipo di transazione non supportato per le rate");
+          }
+
+          // Then create the recurring rule for the remaining installments (if more than 1)
+          if (numInstallments > 1) {
+            // Calculate next occurrence date
+            const nextOccurrenceDate = new Date(selectedDate);
+            nextOccurrenceDate.setDate(nextOccurrenceDate.getDate() + frequencyDays);
+
+            // Skip recurring rules for transfers as they require special handling
+            if (transactionType !== 'transfer') {
+              await recurringRuleMutation.mutateAsync({
+                accountId: selectedAccountId,
+                description: `${description} (rate rimanenti)`,
+                amount: singleInstallmentAmount,
+                type: transactionType === "income" ? "INCOME" : "EXPENSE",
+                subCategoryId: selectedCategoryId || undefined,
+                startDate: nextOccurrenceDate,
+                frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
+                frequencyInterval,
+                isInstallment: true,
+                totalOccurrences: numInstallments - 1, // Minus the first one we already created
+                notes: note ? `${note} - Rate automatiche` : `Rate automatiche (${numInstallments - 1} rimanenti)`
+              });
+            } else {
+              // For transfers, we show a warning that only the first installment was created
+              console.warn('Le rate automatiche per i trasferimenti non sono ancora supportate. È stata creata solo la prima rata.');
+            }
+          }
 
         } catch (apiError) {
-          throw new Error("Si è verificato un errore nel creare la transazione ricorrente. Verifica che il conto esista.");
+          throw new Error("Si è verificato un errore nel creare la transazione a rate. Verifica che il conto esista.");
         }
       } else {
         // Handle single transactions
@@ -370,6 +430,8 @@ export default function SummaryScreen() {
 
       // Success feedback
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+
 
       // Navigation happens in the onSuccess handlers of the mutations
       // No need to navigate here as it would create a duplicate navigation

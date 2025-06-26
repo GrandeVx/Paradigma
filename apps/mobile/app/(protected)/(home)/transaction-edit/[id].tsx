@@ -3,10 +3,7 @@ import { View, TextInput, Pressable, SafeAreaView, Alert } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import HeaderContainer from "@/components/layouts/_header";
-import { RelativePathString, useLocalSearchParams, useRouter } from "expo-router";
-import { StackActions } from '@react-navigation/native';
-import { useTabBar } from '@/context/TabBarContext';
-import { useNavigationContainerRef } from 'expo-router';
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { SvgIcon } from "@/components/ui/svg-icon";
 import * as Haptics from 'expo-haptics';
@@ -39,7 +36,6 @@ export default function TransactionEditScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
   const queryClient = api.useContext();
-  const { showTabBar } = useTabBar();
   const transactionId = params.id;
 
   const [note, setNote] = useState('');
@@ -79,8 +75,7 @@ export default function TransactionEditScreen() {
       await queryClient.transaction.list.invalidate();
       await queryClient.transaction.getMonthlySpending.invalidate();
       await queryClient.account.listWithBalances.invalidate();
-      showTabBar();
-      navigate("/(protected)");
+      router.back();
     }
   });
 
@@ -89,8 +84,7 @@ export default function TransactionEditScreen() {
       await queryClient.transaction.list.invalidate();
       await queryClient.transaction.getMonthlySpending.invalidate();
       await queryClient.account.listWithBalances.invalidate();
-      showTabBar();
-      navigate("/(protected)");
+      router.back();
     }
   });
 
@@ -173,12 +167,7 @@ export default function TransactionEditScreen() {
     []
   );
 
-  const rootNavigation = useNavigationContainerRef();
 
-  const navigate = (newPath: string) => {
-    rootNavigation.dispatch(StackActions.popToTop());
-    router.replace(newPath as RelativePathString);
-  }
 
   // Handle recurrence option change
   const handleRecurrenceChange = (option: RecurrenceOption) => {
@@ -230,7 +219,6 @@ export default function TransactionEditScreen() {
 
       // Success feedback
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showTabBar();
 
     } catch (err) {
       // Error feedback
@@ -353,7 +341,7 @@ export default function TransactionEditScreen() {
 
   if (isLoadingTransaction) {
     return (
-      <HeaderContainer variant="secondary" customTitle="TRANSAZIONE">
+      <HeaderContainer variant="secondary" customTitle="TRANSAZIONE" tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white w-screen">
           <View className="flex-1 items-center justify-center">
             <Text className="text-center text-gray-500">Caricamento...</Text>
@@ -365,7 +353,7 @@ export default function TransactionEditScreen() {
 
   if (transactionError || !transaction) {
     return (
-      <HeaderContainer variant="secondary" customTitle="TRANSAZIONE">
+      <HeaderContainer variant="secondary" customTitle="TRANSAZIONE" tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white w-screen">
           <View className="flex-1 items-center justify-center">
             <Text className="text-center text-red-500">Errore nel caricamento della transazione</Text>
@@ -380,9 +368,7 @@ export default function TransactionEditScreen() {
       <HeaderContainer
         variant="secondary"
         customTitle="TRANSAZIONE"
-        onBackPress={() => {
-          showTabBar();
-        }}
+        tabBarHidden={true}
         rightActions={[{
           icon: <SvgIcon name="delete" size={20} color="#DE4841" />,
           onPress: handleDelete

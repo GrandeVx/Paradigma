@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 export default function AuthLayout() {
   const { t } = useTranslation();
   return (
-    // @ts-expect-error - Stack is not typed
+
     <Stack
       screenOptions={{
         headerShown: false,

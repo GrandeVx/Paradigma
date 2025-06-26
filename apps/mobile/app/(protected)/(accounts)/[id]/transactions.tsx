@@ -68,7 +68,7 @@ export default function AccountTransactionsScreen() {
     { enabled: !!id }
   );
 
-  // Get transactions with infinite scroll
+  // Get transactions with infinite scroll - OPTIMIZED
   const {
     data,
     fetchNextPage,
@@ -85,12 +85,17 @@ export default function AccountTransactionsScreen() {
     {
       enabled: !!id,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      staleTime: 30000, // Consider data fresh for 30 seconds
+      cacheTime: 300000, // Keep in cache for 5 minutes
+      refetchOnWindowFocus: false, // Prevent unnecessary refetches
     }
   );
 
-  // Flatten all transactions from all pages
+  // Flatten all transactions from all pages - MEMORY OPTIMIZED
   const allTransactions = useMemo(() => {
-    return data?.pages.flatMap(page => page.items) ?? [];
+    const flattened = data?.pages.flatMap(page => page.items) ?? [];
+    // Limit to max 100 transactions in memory to prevent RAM bloat
+    return flattened.slice(0, 100);
   }, [data]);
 
   // Group transactions by date
@@ -132,8 +137,8 @@ export default function AccountTransactionsScreen() {
     }
   };
 
-  // Render transaction item
-  const renderTransaction = (transaction: Transaction) => {
+  // Memoized Transaction Item Component - PERFORMANCE OPTIMIZED
+  const TransactionItem = React.memo(({ transaction }: { transaction: Transaction }) => {
     const amount = parseFloat(transaction.amount.toString());
     const isNegative = amount < 0;
     const { integer, decimal } = formatCurrency(amount);
@@ -141,7 +146,6 @@ export default function AccountTransactionsScreen() {
 
     return (
       <Pressable
-        key={transaction.id}
         className="bg-white mx-4 mb-3 p-4 rounded-xl"
         onPress={() => {
           // Navigate to transaction details if needed
@@ -203,9 +207,9 @@ export default function AccountTransactionsScreen() {
         </View>
       </Pressable>
     );
-  };
+  });
 
-  // Render grouped section
+  // Render grouped section - OPTIMIZED with memoized TransactionItem
   const renderGroupedSection = ({ item }: { item: GroupedTransaction }) => (
     <View className="mb-6">
       {/* Date Header */}
@@ -217,7 +221,9 @@ export default function AccountTransactionsScreen() {
 
       {/* Transactions for this date */}
       <View>
-        {item.transactions.map(transaction => renderTransaction(transaction))}
+        {item.transactions.map(transaction => (
+          <TransactionItem key={transaction.id} transaction={transaction} />
+        ))}
       </View>
     </View>
   );
@@ -276,6 +282,7 @@ export default function AccountTransactionsScreen() {
       <HeaderContainer
         variant="secondary"
         customTitle={accountData?.name || t("transaction.list.title", "Transazioni")}
+        tabBarHidden={true}
       >
         <View className="flex-1 bg-gray-100 items-center justify-center">
           <Text className="text-gray-500">
@@ -290,6 +297,7 @@ export default function AccountTransactionsScreen() {
     <HeaderContainer
       variant="secondary"
       customTitle={accountData?.name || t("transaction.list.title", "Transazioni")}
+      tabBarHidden={true}
     >
       <View className="flex-1 bg-gray-100">
         {/* Filter Tabs */}
@@ -325,7 +333,7 @@ export default function AccountTransactionsScreen() {
           </ScrollView>
         </View>
 
-        {/* Transaction List */}
+        {/* Transaction List - VIRTUALIZED for performance */}
         {groupedTransactions.length > 0 ? (
           <FlatList
             data={groupedTransactions}
@@ -341,6 +349,17 @@ export default function AccountTransactionsScreen() {
               />
             }
             showsVerticalScrollIndicator={false}
+            // PERFORMANCE OPTIMIZATIONS
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={5}
+            windowSize={10}
+            initialNumToRender={3}
+            getItemLayout={(data, index) => ({
+              length: 120, // Estimated height per group
+              offset: 120 * index,
+              index,
+            })}
+            keyboardShouldPersistTaps="handled"
           />
         ) : (
           <ScrollView

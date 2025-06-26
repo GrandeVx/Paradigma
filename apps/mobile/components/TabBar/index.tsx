@@ -2,6 +2,7 @@ import * as React from "react";
 import { StyleSheet, View, Pressable, Text, Animated } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useTabBar } from "@/context/TabBarContext";
+import { useRouter } from "expo-router";
 
 export default function TabBar({
   state,
@@ -10,6 +11,7 @@ export default function TabBar({
   descriptors,
 }: BottomTabBarProps) {
   const { isTabBarVisible, tabBarAnimation } = useTabBar();
+  const router = useRouter();
 
   const Flows = ["(creation-flow)", "(transaction-flow)"];
   // check if the creation flow is the active route
@@ -31,13 +33,17 @@ export default function TabBar({
               outputRange: [100, 0], // Slide up from below
             })
           }],
-          opacity: tabBarAnimation
+          opacity: tabBarAnimation.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 1],
+          })
         }
       ]}
     >
       <View style={styles.container}>
         <View style={styles.tab_bar_container}>
-          {state.routes.filter((route) => route.params?.href !== null).map((route, index) => {
+          {/* Questo strano filtraggio permette di nascondere le tab settando href a null */}
+          {state.routes.filter((route) => (route?.params as { href?: string })?.href !== null || false).map((route, index) => {
             const { options } = descriptors[route.key];
             const isFocused = state.index === index;
 
@@ -49,7 +55,13 @@ export default function TabBar({
               });
 
               if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name);
+                // Special handling for transaction-flow to always reset to value screen
+                if (route.name === "(transaction-flow)") {
+                  // Force complete reset to value screen, clearing navigation stack
+                  router.replace("/(protected)/(transaction-flow)/value");
+                } else {
+                  navigation.navigate(route.name);
+                }
               }
             };
 

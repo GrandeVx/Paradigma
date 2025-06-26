@@ -5,7 +5,7 @@ import { SvgIcon } from '@/components/ui/svg-icon';
 import HeaderContainer from '@/components/layouts/_header';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
-import { useTabBar } from '@/context/TabBarContext';
+
 
 // Types based on API response
 interface SubCategory {
@@ -137,7 +137,6 @@ const RecurringCard: React.FC<{
 };
 
 export default function RecurringTransactionsScreen() {
-  const { showTabBar } = useTabBar();
   // Fetch recurring transactions (only non-installment ones = classic recurring)
   const { data: recurringData, isLoading, refetch } = api.recurringRule.list.useQuery({
     isInstallment: false, // Only classic recurring transactions, not installments
@@ -153,9 +152,7 @@ export default function RecurringTransactionsScreen() {
   };
 
   return (
-    <HeaderContainer variant="secondary" customTitle="RICORRENTI" onBackPress={() => {
-      showTabBar();
-    }}>
+    <HeaderContainer variant="secondary" customTitle="RICORRENTI" tabBarHidden={true}>
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}

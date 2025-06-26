@@ -57,20 +57,33 @@ export default function IconStepFlow(
                   columnWrapperStyle={{ justifyContent: 'space-evenly', gap: 20, marginBottom: 20 }}
                   renderItem={({ item }) => (
                     <Pressable onPress={() => setIcon(item.toString())}>
-                      <View className="w-20 h-20 border border-gray-200 rounded-xl flex items-center justify-center">
-                        <SvgIcon name={item as IconName} width={24} height={24} color={icon === item.toString() ? "#000000" : "#9CA3AF"} />
+                      <View className={`w-20 h-20 border rounded-xl flex items-center justify-center ${icon === item.toString() ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                        }`}>
+                        <SvgIcon
+                          name={item as IconName}
+                          width={24}
+                          height={24}
+                          color={icon === item.toString() ? "#3B82F6" : "#9CA3AF"}
+                        />
                       </View>
                     </Pressable>
                   )}
+                  keyExtractor={(item) => item}
+                  removeClippedSubviews={true}
+                  initialNumToRender={9}
+                  maxToRenderPerBatch={6}
+                  windowSize={5}
+                  getItemLayout={(data, index) => ({
+                    length: 100, // height + margin
+                    offset: 100 * Math.floor(index / 3),
+                    index,
+                  })}
                 />
-
-                {/* Optional: Add an animated cursor or indicator if needed */}
               </View>
             </Pressable>
           </View>
 
           {/* Floating Button at the bottom */}
-          {/* @ts-expect-error - Known issue with Reanimated v3 types in certain contexts */}
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <Button
               variant="primary"

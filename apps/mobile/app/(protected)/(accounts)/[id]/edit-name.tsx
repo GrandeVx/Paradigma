@@ -67,7 +67,7 @@ export default function EditAccountName() {
 
   if (isLoadingAccount) {
     return (
-      <HeaderContainer variant="secondary" customTitle={t("account.edit_name.title", "MODIFICA NOME")}>
+      <HeaderContainer variant="secondary" customTitle={t("account.edit_name.title", "MODIFICA NOME")} tabBarHidden={true}>
         <View className="flex-1 bg-white items-center justify-center">
           <Text className="text-gray-500">{t("common.loading", "Caricamento...")}</Text>
         </View>
@@ -76,7 +76,7 @@ export default function EditAccountName() {
   }
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t("account.edit_name.title", "MODIFICA NOME")}>
+    <HeaderContainer variant="secondary" customTitle={t("account.edit_name.title", "MODIFICA NOME")} tabBarHidden={true}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"

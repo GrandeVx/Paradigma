@@ -17,9 +17,12 @@ export default function ValueScreen() {
   // Reset state when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      // Resetta gli state quando la pagina diventa attiva
+      // Resetta completamente gli state quando la pagina diventa attiva
+      // Questo previene il problema di parametri rimasti in memoria
       setAmount('0');
       setTransactionType('expense');
+      setIsAnimating(false);
+
       return () => {
         // Cleanup se necessario
       };
@@ -76,8 +79,23 @@ export default function ValueScreen() {
     maximumFractionDigits: 2,
   })}`;
 
+  const handleBackPress = () => {
+    // Se non possiamo tornare indietro nello stack, vai alla home
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      // Flow aperto direttamente dalla tab bar - vai alla home
+      router.replace("/(protected)/(home)");
+    }
+  };
+
   return (
-    <HeaderContainer variant="secondary" customTitle="NUOVA TRANSAZIONE">
+    <HeaderContainer
+      variant="secondary"
+      customTitle="NUOVA TRANSAZIONE"
+      onBackPress={handleBackPress}
+      hideBackButton={false} // Forza la visualizzazione del back button
+    >
       <View className="flex-1 bg-white">
 
 

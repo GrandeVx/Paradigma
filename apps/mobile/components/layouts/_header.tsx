@@ -1,19 +1,13 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useSegments, useLocalSearchParams } from "expo-router";
+import { useSegments, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { getTitle } from "@/lib/utils";
-import React, { ReactNode, useEffect } from "react";
+import React, { ReactNode, useCallback } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { Href, Router, useRouter } from "expo-router";
 import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-  useSharedValue,
-  withTiming,
-  withSequence,
-} from "react-native-reanimated";
+import { useTabBar } from "@/context/TabBarContext";
 
 interface HeaderAction {
   icon: ReactNode;
@@ -30,6 +24,7 @@ interface ContainerWithChildrenProps {
   variant?: "main" | "secondary";
   hideBackButton?: boolean;
   onBackPress?: () => void;
+  tabBarHidden?: boolean;
 }
 
 const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
@@ -42,11 +37,37 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   variant = "main",
   hideBackButton = false,
   onBackPress,
+  tabBarHidden = false,
 }) => {
   const segments = useSegments();
   const searchParams = useLocalSearchParams<{
     title?: string;
+    referrer?: string;
   }>();
+
+  const { hideTabBar, showTabBar } = useTabBar();
+
+  // Use useFocusEffect to manage tab bar visibility only when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      // When screen comes into focus, apply tab bar visibility
+      if (tabBarHidden) {
+        hideTabBar();
+      } else {
+        showTabBar();
+      }
+
+      // Cleanup: only show tab bar when leaving this screen if it was hidden
+      return () => {
+        if (tabBarHidden) {
+          // Shorter delay to reduce flash during navigation
+          setTimeout(() => {
+            showTabBar();
+          }, 50); // 50ms delay to allow next screen to take control
+        }
+      };
+    }, [tabBarHidden]) // Remove hideTabBar and showTabBar from dependencies to prevent infinite loop
+  );
 
   // Derive route name from the last segment of the path
   const currentRouteName = segments[segments.length - 1] ?? "";
@@ -54,109 +75,76 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   const insets = useSafeAreaInsets();
   const windowHeight = Dimensions.get("window").height;
 
-  const titleOpacity = useSharedValue(0);
-  const titleTranslateY = useSharedValue(20);
-  const rightComponentsOpacity = useSharedValue(0);
-  const rightComponentsTranslateX = useSharedValue(20);
-  const leftComponentOpacity = useSharedValue(0);
-  const leftComponentTranslateX = useSharedValue(-20);
-  const contentOpacity = useSharedValue(0);
-  const contentTranslateY = useSharedValue(20);
-
   const headerHeight = Math.max(insets.top + 44, 0.16 * windowHeight);
 
-  // Get user data
+  // Improved back navigation logic - tab bar is now managed automatically via focus
+  const handleBackNavigation = () => {
+    // Execute custom onBackPress if provided
+    onBackPress?.();
 
-  const animateElements = () => {
-    titleOpacity.value = withSequence(
-      withTiming(0, { duration: 0 }),
-      withTiming(1, { duration: 300 })
-    );
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
 
-    titleTranslateY.value = withSequence(
-      withTiming(20, { duration: 0 }),
-      withSpring(0, {
-        damping: 15,
-        stiffness: 150,
-      })
-    );
+    // If a specific backRoute is provided, use it
+    if (backRoute) {
+      router.navigate(backRoute as Href);
+      return;
+    }
 
-    rightComponentsOpacity.value = withSequence(
-      withTiming(0, { duration: 0 }),
-      withTiming(1, { duration: 300 })
-    );
+    // Intelligent back navigation based on current route context
+    const currentPath = segments.join('/');
 
-    rightComponentsTranslateX.value = withSequence(
-      withTiming(20, { duration: 0 }),
-      withSpring(0, {
-        damping: 15,
-        stiffness: 150,
-      })
-    );
+    // Special handling for cross-tab navigation issues
+    if (currentPath.includes('(home)/(category-transactions)')) {
+      const referrer = searchParams.referrer;
 
-    leftComponentOpacity.value = withSequence(
-      withTiming(0, { duration: 0 }),
-      withTiming(1, { duration: 300 })
-    );
+      if (referrer === 'budgets') {
+        // Navigate back to budgets instead of home
+        router.navigate('/(protected)/(budgets)/' as Href);
+        return;
+      }
+    }
 
-    leftComponentTranslateX.value = withSequence(
-      withTiming(-20, { duration: 0 }),
-      withSpring(0, {
-        damping: 15,
-        stiffness: 150,
-      })
-    );
+    if (currentPath.includes('(home)/(daily-transactions)')) {
+      // Use normal back navigation for daily transactions
+      router.back();
+      return;
+    }
 
-    contentOpacity.value = withSequence(
-      withTiming(0, { duration: 0 }),
-      withTiming(1, { duration: 300 })
-    );
+    // For transaction edit, use normal back navigation instead of forcing home
+    // This allows proper stack navigation in flows
+    if (currentPath.includes('transaction-edit')) {
+      router.back();
+      return;
+    }
 
-    contentTranslateY.value = withSequence(
-      withTiming(20, { duration: 0 }),
-      withSpring(0, {
-        damping: 15,
-        stiffness: 150,
-      })
-    );
+    // Try standard back navigation first
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      // Fallback: navigate to appropriate tab home based on current context
+      const currentTab = segments.find(segment =>
+        ['(home)', '(budgets)', '(accounts)', '(profile)'].includes(segment)
+      );
+
+      if (currentTab) {
+        router.navigate(`/(protected)/${currentTab}/` as Href);
+      } else {
+        // Ultimate fallback: go to home
+        router.navigate('/(protected)/(home)/' as Href);
+      }
+    }
   };
 
-  useEffect(() => {
-    animateElements();
-  }, [currentRouteName]);
-
-  const titleAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: titleOpacity.value,
-    fontSize: 16,
-    transform: [{ translateY: titleTranslateY.value }],
-  }));
-
-  const rightComponentsAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: rightComponentsOpacity.value,
-    transform: [{ translateX: rightComponentsTranslateX.value }],
-  }));
-
-  const leftComponentAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: leftComponentOpacity.value,
-    transform: [{ translateX: leftComponentTranslateX.value }],
-  }));
-
-  const contentAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-    transform: [{ translateY: contentTranslateY.value }],
-  }));
-
   const renderLeftComponent = () => {
-    if (variant === "secondary" && router?.canGoBack() && !modal && router && !hideBackButton) {
+    if (variant === "secondary" && (router?.canGoBack() || backRoute || onBackPress) && !modal && router && !hideBackButton) {
       return (
         <View>
-          <Animated.View style={[leftComponentAnimatedStyle]}>
+          <View>
             <Pressable
-              onPress={() => {
-                onBackPress?.();
-                backRoute ? router.navigate(backRoute) : router.back();
-
-              }}
+              onPress={handleBackNavigation}
               style={{
                 width: 40,
                 height: 40,
@@ -168,7 +156,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
             >
               <FontAwesome name="angle-left" size={24} color="black" />
             </Pressable>
-          </Animated.View>
+          </View>
         </View>
       );
     }
@@ -176,13 +164,12 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
     if (variant === "main") {
       return (
         <View>
-          <Animated.View style={[leftComponentAnimatedStyle]}>
+          <View>
             <View
               style={{
                 width: 30,
                 height: 30,
                 borderRadius: 20,
-
                 overflow: "hidden",
                 justifyContent: "center",
                 alignItems: "center",
@@ -193,7 +180,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
                 JD
               </Text>
             </View>
-          </Animated.View>
+          </View>
         </View>
       );
     }
@@ -250,17 +237,15 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
                 paddingHorizontal: variant === "secondary" ? 40 : 0,
               }}
             >
-              <Animated.Text
+              <Text
                 className="text-black font-sans font-medium"
-                style={[
-                  titleAnimatedStyle,
-                ]}
+                style={{ fontSize: 16 }}
               >
                 {customTitle ||
                   getTitle({
                     name: searchParams.title ?? (currentRouteName as string),
                   })}
-              </Animated.Text>
+              </Text>
             </View>
           </View>
 
@@ -277,15 +262,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
               {rightActions?.map((action, index) => (
                 <View key={index}>
                   <View>
-                    <Animated.View
-                      style={[
-                        {
-                          opacity: 0,
-                          transform: [{ translateX: 20 }],
-                        },
-                        rightComponentsAnimatedStyle,
-                      ]}
-                    >
+                    <View>
                       <Pressable
                         onPress={action.onPress}
                         style={{
@@ -297,7 +274,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
                       >
                         {action.icon}
                       </Pressable>
-                    </Animated.View>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -309,16 +286,9 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
       <StatusBar style={Platform.OS === "ios" ? "auto" : "auto"} />
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
-          <Animated.View
-            style={[
-              {
-                flex: 1,
-              },
-              contentAnimatedStyle,
-            ]}
-          >
+          <View style={{ flex: 1 }}>
             {children}
-          </Animated.View>
+          </View>
         </View>
       </View>
     </View>

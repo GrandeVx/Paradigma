@@ -15,7 +15,7 @@ export default function AuthIndex() {
   const router = useRouter();
 
   return (
-    // @ts-expect-error - SafeAreaView is not typed
+
     <SafeAreaView className="flex-1 bg-black px-6 ">
       <View className="flex-1 justify-end gap-52 ">
         <View className="flex-col items-start justify-end w-full gap-4">

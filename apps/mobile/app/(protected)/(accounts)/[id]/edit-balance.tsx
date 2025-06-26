@@ -168,7 +168,7 @@ export default function EditAccountBalance() {
 
   if (isLoadingAccount || isLoadingBalance) {
     return (
-      <HeaderContainer variant="secondary" customTitle={t("account.edit_balance.title", "MODIFICA BILANCIO")}>
+      <HeaderContainer variant="secondary" customTitle={t("account.edit_balance.title", "MODIFICA BILANCIO")} tabBarHidden={true}>
         <View className="flex-1 bg-white items-center justify-center">
           <Text className="text-gray-500">{t("common.loading", "Caricamento...")}</Text>
         </View>
@@ -177,7 +177,7 @@ export default function EditAccountBalance() {
   }
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t("account.edit_balance.title", "MODIFICA BILANCIO")}>
+    <HeaderContainer variant="secondary" customTitle={t("account.edit_balance.title", "MODIFICA BILANCIO")} tabBarHidden={true}>
       <View className="flex-1 bg-white">
         <View className="flex-1 justify-center items-center px-4">
           <View className="w-full justify-center text-center flex flex-row items-center gap-2 mb-2">

@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { Platform } from "react-native";
+
 
 export default function AuthLayout() {
 
@@ -7,8 +7,7 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: Platform.OS === "ios" ? "slide_from_right" : "fade",
-        animationDuration: 200,
+        animation: 'slide_from_right',
       }}
       initialRouteName="index"
     >
@@ -19,15 +18,7 @@ export default function AuthLayout() {
         }}
       />
 
-      <Stack.Screen
-        name="[id]"
-        options={{
-          animation: Platform.OS === "ios" ? "slide_from_right" : "fade",
-        }}
-        initialParams={{
-          title: "account",
-        }}
-      />
+
 
 
     </Stack>

@@ -26,6 +26,10 @@ import {
 } from 'react-native-reanimated';
 import { TabBarProvider } from "@/context/TabBarContext";
 
+// Import per Expo Updates
+import { useExpoUpdates } from "@/hooks/use-expo-updates";
+import { UpdateModal } from "@/components/ui/update-modal";
+
 // This is the default configuration
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -81,6 +85,9 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
+  // Integrazione Expo Updates
+  const { updateInfo, downloadAndRestart, dismissUpdate } = useExpoUpdates();
+
   return (
     <SupabaseProvider>
       {/* API System */}
@@ -91,7 +98,7 @@ function RootLayoutNav() {
           <ThemeProvider
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
-            <GestureHandlerRootView style={{ flex: 1, zIndex: 20 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
+            <GestureHandlerRootView style={{ flex: 1 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
               <TabBarProvider>
                 <Stack>
                   <Stack.Screen
@@ -114,6 +121,15 @@ function RootLayoutNav() {
                 </Stack>
               </TabBarProvider>
             </GestureHandlerRootView>
+
+            {/* Update Modal - Outside GestureHandler for proper z-index */}
+            <UpdateModal
+              visible={updateInfo.isAvailable}
+              updateInfo={updateInfo}
+              onUpdatePress={downloadAndRestart}
+              onDismiss={dismissUpdate}
+              onCancel={dismissUpdate}
+            />
           </ThemeProvider>
         </SafeAreaProvider>
       </TRPCProvider>

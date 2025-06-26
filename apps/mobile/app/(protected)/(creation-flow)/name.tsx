@@ -47,19 +47,20 @@ export default function NameStepFlow(
                 <TextInput
                   autoFocus
                   ref={nameInputRef}
-                  className="font-sans text-black"
+                  className="font-sans text-black text-center"
                   style={{ fontSize: 34 }}
                   placeholder={t("flow.name.placeholder", "Nuovo Conto")}
-                  placeholderTextColor="text-gray-400" // Use Tailwind class if possible or direct color
+                  placeholderTextColor="#9CA3AF"
                   value={name}
                   onChangeText={setName}
-                  autoCapitalize="none"
+                  autoCapitalize="words"
                   keyboardType="default"
-                  returnKeyType="next" // Or "done" if this is the last step initially
-                  onSubmitEditing={handleContinue} // Submit on pressing return/next
+                  returnKeyType="next"
+                  onSubmitEditing={handleContinue}
                   autoComplete="name"
                   spellCheck={false}
-
+                  multiline={false}
+                  numberOfLines={1}
                 />
                 {/* Optional: Add an animated cursor or indicator if needed */}
               </View>

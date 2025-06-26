@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
 import { Animated } from 'react-native';
 
 interface TabBarContextType {
@@ -19,32 +19,32 @@ export const TabBarProvider: React.FC<TabBarProviderProps> = ({ children }) => {
   const [isTabBarVisible, setIsTabBarVisible] = useState(true);
   const tabBarAnimation = React.useRef(new Animated.Value(1)).current;
 
-  const hideTabBar = () => {
+  const hideTabBar = useCallback(() => {
     Animated.timing(tabBarAnimation, {
       toValue: 0,
-      duration: 200,
+      duration: 150,
       useNativeDriver: true,
     }).start(() => {
       setIsTabBarVisible(false);
     });
-  };
+  }, [tabBarAnimation]);
 
-  const showTabBar = () => {
+  const showTabBar = useCallback(() => {
     setIsTabBarVisible(true);
     Animated.timing(tabBarAnimation, {
       toValue: 1,
-      duration: 200,
+      duration: 150,
       useNativeDriver: true,
     }).start();
-  };
+  }, [tabBarAnimation]);
 
-  const toggleTabBar = () => {
+  const toggleTabBar = useCallback(() => {
     if (isTabBarVisible) {
       hideTabBar();
     } else {
       showTabBar();
     }
-  };
+  }, [isTabBarVisible, hideTabBar, showTabBar]);
 
   return (
     <TabBarContext.Provider

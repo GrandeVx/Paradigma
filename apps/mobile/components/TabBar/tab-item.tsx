@@ -1,9 +1,10 @@
 import { StyleSheet, TouchableOpacity, TouchableOpacityProps } from 'react-native';
-import { BottomTabDescriptor } from '@react-navigation/bottom-tabs/src/types';
+
 import { Ionicons } from '@expo/vector-icons';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 interface Props extends Omit<TouchableOpacityProps, 'children'> {
-  descriptor: BottomTabDescriptor;
+  descriptor: BottomTabBarProps['descriptors'][string];
   activeIndex: number;
   index: number;
 }
@@ -17,7 +18,7 @@ export function TabItem({ descriptor, activeIndex, index, ...other }: Props) {
         size: 27
       })
     ) : (
-      // @ts-expect-error - Ionicons is not typed
+
       <Ionicons name="flask" size={27} color={isFocused ? '#704f37' : '#c4c4c6'} />
     );
 

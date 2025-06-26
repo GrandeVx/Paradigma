@@ -1,11 +1,62 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOutUp,
+  Layout,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  runOnJS
+} from 'react-native-reanimated';
 import { Text } from '@/components/ui/text';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { useRouter } from 'expo-router';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
 import { useTabBar } from '@/context/TabBarContext';
+import { goalsUtils } from '@/lib/mmkv-storage';
+
+// Loading skeleton for goals section
+const GoalsLoadingSkeleton = ({ goalsCount = 3 }: { goalsCount?: number }) => {
+  const shimmerOpacity = useSharedValue(0.3);
+
+  useEffect(() => {
+    const animate = () => {
+      shimmerOpacity.value = withTiming(1, { duration: 800 }, () => {
+        shimmerOpacity.value = withTiming(0.3, { duration: 800 }, () => {
+          runOnJS(animate)();
+        });
+      });
+    };
+    animate();
+  }, [shimmerOpacity]);
+
+  const shimmerStyle = useAnimatedStyle(() => ({
+    opacity: shimmerOpacity.value,
+  }));
+
+  const skeletonGoals = Array.from({ length: Math.max(1, goalsCount) }, (_, index) => index);
+
+  return (
+    <ScrollView
+      className="flex-1 px-2 pt-2"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 24 }}
+    >
+      {skeletonGoals.map((index) => (
+        <Animated.View
+          key={index}
+          entering={FadeInDown.delay(index * 150).duration(500)}
+          style={shimmerStyle}
+          className="w-full rounded-3xl bg-gray-200 mb-2 h-32"
+        />
+      ))}
+    </ScrollView>
+  );
+};
 
 // Format currency helper (Italian format)
 const formatCurrency = (amount: number) => {
@@ -46,62 +97,119 @@ interface GoalAccount {
   progress: number;
 }
 
-// Goal Card Component
-const GoalCard: React.FC<{
+// Animated Goal Card Component
+const AnimatedGoalCard: React.FC<{
   goal: GoalAccount;
+  index: number;
   onPress: (id: string) => void;
-}> = ({ goal, onPress }) => {
+}> = ({ goal, index, onPress }) => {
   const { integer, decimal } = formatCurrency(goal.balance);
   const remaining = goal.targetAmount - goal.balance;
   const { integer: targetInteger, decimal: targetDecimal } = formatCurrency(goal.targetAmount);
   const { integer: remainingInteger, decimal: remainingDecimal } = formatCurrency(remaining);
 
-  return (
-    <Pressable
-      className="w-full rounded-3xl bg-transparent mb-2"
-      onPress={() => onPress(goal.id)}
-    >
-      <View className="w-full rounded-3xl p-6" style={{ backgroundColor: goal.color }}>
-        <View className="flex-row justify-between items-center w-full">
-          <View className="flex-row items-center gap-2 py-2">
-            <SvgIcon name="pig-money" width={20} height={20} color="#FFFFFF" />
-            <Text className="text-white font-semibold text-base">{goal.name}</Text>
-          </View>
+  const progressWidth = useSharedValue(0);
+  const cardScale = useSharedValue(1);
 
-          <View className="flex-row items-baseline gap-2">
-            <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>€</Text>
-            <View className="flex-row items-baseline">
-              <Text className="text-white font-medium" style={{ fontFamily: 'Apfel Grotezk', fontSize: 23 }}>{integer}</Text>
-              <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>,{decimal}</Text>
+  useEffect(() => {
+    progressWidth.value = withSpring(goal.progress, {
+      damping: 15,
+      stiffness: 100,
+    });
+  }, [goal.progress]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: cardScale.value }],
+  }));
+
+  const handlePressIn = () => {
+    cardScale.value = withSpring(0.98);
+  };
+
+  const handlePressOut = () => {
+    cardScale.value = withSpring(1);
+  };
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(index * 150).duration(500).springify()}
+      exiting={FadeOutUp.duration(300)}
+      layout={Layout.springify().damping(15).stiffness(100)}
+      style={cardStyle}
+      className="w-full rounded-3xl bg-transparent mb-2"
+    >
+      <Pressable
+        onPress={() => onPress(goal.id)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        <View className="w-full rounded-3xl p-6" style={{ backgroundColor: goal.color }}>
+          <View className="flex-row justify-between items-center w-full">
+            <View className="flex-row items-center gap-2 py-2">
+              <SvgIcon name="pig-money" width={20} height={20} color="#FFFFFF" />
+              <Text className="text-white font-semibold text-base">{goal.name}</Text>
+            </View>
+
+            <View className="flex-row items-baseline gap-2">
+              <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>€</Text>
+              <View className="flex-row items-baseline">
+                <Text className="text-white font-medium" style={{ fontFamily: 'Apfel Grotezk', fontSize: 23 }}>{integer}</Text>
+                <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>,{decimal}</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        <View className="mt-4 w-full">
-          <View className="h-3 w-full rounded-full overflow-hidden mb-1" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-            <View
-              className="h-full rounded-full"
-              style={{
-                backgroundColor: '#FFFFFF',
-                width: `${goal.progress}%`
-              }}
-            />
+          <View className="mt-4 w-full">
+            <View className="h-3 w-full rounded-full overflow-hidden mb-1" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+              <Animated.View
+                style={[
+                  progressStyle,
+                  {
+                    height: '100%',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 6,
+                  }
+                ]}
+              />
+            </View>
+            <Text className="text-white text-xs font-medium">
+              Ancora € {remainingInteger},{remainingDecimal} per completare l'obiettivo di € {targetInteger},{targetDecimal}
+            </Text>
           </View>
-          <Text className="text-white text-xs font-medium">
-            Ancora € {remainingInteger},{remainingDecimal} per completare l'obiettivo di € {targetInteger},{targetDecimal}
-          </Text>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 };
+
+
 
 export const GoalsSection: React.FC = () => {
   const router = useRouter();
   const { hideTabBar } = useTabBar();
 
+  // Cache state
+  const [cachedGoalsCount, setCachedGoalsCount] = useState<number>(0);
+  const [hasGoalsInCache, setHasGoalsInCache] = useState<boolean>(false);
+
+  // Animation values
+  const contentOpacity = useSharedValue(0);
+
   // Fetch accounts data
   const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({});
+
+  // Initialize cache data on component mount
+  useEffect(() => {
+    const cachedCount = goalsUtils.getGoalsCountFromCache();
+    const hasCache = goalsUtils.hasGoalsInCache();
+
+    setCachedGoalsCount(cachedCount);
+    setHasGoalsInCache(hasCache);
+  }, []);
 
   // Process goal accounts data
   const goalAccounts = useMemo(() => {
@@ -139,6 +247,25 @@ export const GoalsSection: React.FC = () => {
     return goals;
   }, [accountsData]);
 
+  // Update cache when new data loads
+  useEffect(() => {
+    if (goalAccounts && goalAccounts.length > 0) {
+      goalsUtils.setGoalsCacheData(goalAccounts);
+
+      // Update local cache state
+      const goalsCount = goalsUtils.getGoalsCountFromCache();
+      setCachedGoalsCount(goalsCount);
+      setHasGoalsInCache(true);
+    }
+  }, [goalAccounts]);
+
+  // Animate content when data loads
+  useEffect(() => {
+    if (!isLoading) {
+      contentOpacity.value = withTiming(1, { duration: 600 });
+    }
+  }, [isLoading, contentOpacity]);
+
   const handleGoalPress = (id: string) => {
     hideTabBar();
     // Navigate to goal account details
@@ -152,21 +279,71 @@ export const GoalsSection: React.FC = () => {
     refetchAccounts();
   };
 
-  if (isLoading) {
+  // Determine loading states
+  const isInitialLoading = isLoading;
+  const shouldShowSkeleton = isInitialLoading && hasGoalsInCache;
+  const shouldShowEmptyState = !isInitialLoading && goalAccounts.length === 0 && !hasGoalsInCache;
+  const shouldShowContent = !isInitialLoading && goalAccounts.length > 0;
+
+  if (shouldShowSkeleton) {
+    return <GoalsLoadingSkeleton goalsCount={cachedGoalsCount} />;
+  }
+
+  if (shouldShowEmptyState) {
     return (
-      <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
-        <View className="items-center justify-center py-8">
-          <Text className="text-gray-500">Caricamento obiettivi...</Text>
-        </View>
-      </ScrollView>
+      <Animated.View
+        entering={FadeIn.duration(400)}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1 p-4"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={handleRefresh}
+            />
+          }
+        >
+          <View className="items-center justify-center py-8">
+            <Text className="text-gray-500 text-center mb-4">Nessun obiettivo di risparmio trovato</Text>
+            <Pressable
+              className="bg-blue-500 px-6 py-3 rounded-full"
+              onPress={() => router.push('/(protected)/(creation-flow)/name')}
+            >
+              <Text className="text-white font-semibold">Crea il tuo primo obiettivo</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </Animated.View>
     );
   }
 
-  if (goalAccounts.length === 0) {
+  if (!shouldShowContent) {
     return (
+      <Animated.View
+        entering={FadeIn.duration(400)}
+        className="flex-1"
+      >
+        <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
+          <View className="items-center justify-center py-8">
+            <Text className="text-gray-500">Caricamento obiettivi...</Text>
+          </View>
+        </ScrollView>
+      </Animated.View>
+    );
+  }
+
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+  }));
+
+  return (
+    <Animated.View style={contentStyle} className="flex-1">
       <ScrollView
-        className="flex-1 p-4"
+        className="flex-1 px-2 pt-2"
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -174,38 +351,15 @@ export const GoalsSection: React.FC = () => {
           />
         }
       >
-        <View className="items-center justify-center py-8">
-          <Text className="text-gray-500 text-center mb-4">Nessun obiettivo di risparmio trovato</Text>
-          <Pressable
-            className="bg-blue-500 px-6 py-3 rounded-full"
-            onPress={() => router.push('/(protected)/(creation-flow)/name')}
-          >
-            <Text className="text-white font-semibold">Crea il tuo primo obiettivo</Text>
-          </Pressable>
-        </View>
+        {goalAccounts.map((goal, index) => (
+          <AnimatedGoalCard
+            key={goal.id}
+            goal={goal}
+            index={index}
+            onPress={handleGoalPress}
+          />
+        ))}
       </ScrollView>
-    );
-  }
-
-  return (
-    <ScrollView
-      className="flex-1 px-2 pt-2"
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 24 }}
-      refreshControl={
-        <RefreshControl
-          refreshing={isLoading}
-          onRefresh={handleRefresh}
-        />
-      }
-    >
-      {goalAccounts.map(goal => (
-        <GoalCard
-          key={goal.id}
-          goal={goal}
-          onPress={handleGoalPress}
-        />
-      ))}
-    </ScrollView>
+    </Animated.View>
   );
 }; 

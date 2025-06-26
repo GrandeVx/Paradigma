@@ -8,4 +8,13 @@ export type { IconProps } from "./icon";
 export * from "./icons";
 
 // Text components (if they exist)
-export { TextClassContext } from "./text"; 
+export { TextClassContext } from "./text";
+
+// Update components
+export { UpdateModal } from "./update-modal";
+export { ManualUpdateChecker } from "./manual-update-checker";
+
+// Gesture components
+export { SwipeableTransactionItem } from "./swipeable-transaction-item";
+export { CustomRefreshControl, useCustomRefreshControl } from "./custom-refresh-control";
+ 

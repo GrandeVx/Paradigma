@@ -5,7 +5,7 @@ import { SvgIcon } from '@/components/ui/svg-icon';
 import HeaderContainer from '@/components/layouts/_header';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
-import { useTabBar } from '@/context/TabBarContext';
+
 
 // Types based on actual API response
 type InstallmentTransaction = {
@@ -35,10 +35,9 @@ type InstallmentTransaction = {
     default: boolean;
   } | null;
   isActive: boolean;
-  nextExecutionDate?: Date | string;
-  installmentAmount?: number | string | Decimal;
-  installmentCurrent?: number;
-  installmentTotal?: number;
+  nextDueDate?: Date | string | null; // From database field
+  totalOccurrences?: number | null; // From database field
+  occurrencesGenerated?: number | null; // From database field
   isInstallment: boolean;
 }
 
@@ -84,49 +83,139 @@ const getDaysUntilNext = (nextDate?: Date | string) => {
   return null;
 };
 
+// Calculate future installment dates based on frequency
+const calculateFutureDates = (
+  startDate: Date | string,
+  frequencyType: string,
+  frequencyInterval: number,
+  totalOccurrences: number,
+  currentOccurrence: number
+): Date[] => {
+  const dates: Date[] = [];
+  const baseDate = new Date(startDate);
+
+  // Generate dates for remaining occurrences
+  for (let i = currentOccurrence; i < totalOccurrences; i++) {
+    const futureDate = new Date(baseDate);
+
+    switch (frequencyType) {
+      case 'DAILY':
+        futureDate.setDate(baseDate.getDate() + (i * frequencyInterval));
+        break;
+      case 'WEEKLY':
+        futureDate.setDate(baseDate.getDate() + (i * frequencyInterval * 7));
+        break;
+      case 'MONTHLY':
+        futureDate.setMonth(baseDate.getMonth() + (i * frequencyInterval));
+        break;
+      case 'YEARLY':
+        futureDate.setFullYear(baseDate.getFullYear() + (i * frequencyInterval));
+        break;
+    }
+
+    dates.push(futureDate);
+  }
+
+  return dates;
+};
+
+// Format date for progress components (Italian format)
+const formatProgressDate = (date: Date) => {
+  const options: Intl.DateTimeFormatOptions = {
+    day: 'numeric',
+    month: 'short'
+  };
+
+  return date.toLocaleDateString('it-IT', options);
+};
+
+// Safe format date for progress components (handles null/undefined)
+const formatProgressDateSafe = (nextDate?: Date | string | null) => {
+  if (!nextDate) return 'N/A';
+
+  const date = new Date(nextDate);
+  return formatProgressDate(date);
+};
+
 // Progress visualization components
-const CheckIconsGrid = ({ current, total }: { current: number; total: number }) => {
+const CheckIconsGrid = ({
+  current,
+  total,
+  nextDueDate,
+  frequencyType,
+  frequencyInterval
+}: {
+  current: number;
+  total: number;
+  nextDueDate?: Date | string | null;
+  frequencyType: string;
+  frequencyInterval: number;
+}) => {
+  // Calculate future dates if we have nextDueDate
+  const futureDates = nextDueDate
+    ? calculateFutureDates(nextDueDate, frequencyType, frequencyInterval, total, current)
+    : [];
+
   const items = Array.from({ length: total }, (_, i) => i + 1);
 
   return (
     <View style={styles.progressContainer}>
       <View style={styles.checkGrid}>
-        {items.map((item, index) => (
-          <View
-            key={index}
-            style={[
-              styles.checkIcon,
-              { backgroundColor: index < current ? '#66BD50' : '#F3F4F6' }
-            ]}
-          >
-            <SvgIcon
-              name="checks"
-              size={14}
-              color={index < current ? '#FFFFFF' : '#6B7280'}
-            />
-          </View>
-        ))}
+        {items.map((item, index) => {
+          const isPaid = index < current;
+          const isFuture = index >= current;
+          const futureDateIndex = index - current;
+
+          if (isPaid) {
+            // Green check icon for paid installments
+            return (
+              <View
+                key={index}
+                style={[styles.checkIcon, { backgroundColor: '#66BD50' }]}
+              >
+                <SvgIcon
+                  name="checks"
+                  size={14}
+                  color="#FFFFFF"
+                />
+              </View>
+            );
+          } else if (isFuture && futureDateIndex < futureDates.length) {
+            // Gray frame with specific date for future installments
+            return (
+              <View
+                key={index}
+                style={styles.dateFrame}
+              >
+                <Text style={styles.dateText}>
+                  {formatProgressDate(futureDates[futureDateIndex])}
+                </Text>
+              </View>
+            );
+          } else {
+            // Fallback gray frame
+            return (
+              <View
+                key={index}
+                style={styles.dateFrame}
+              >
+                <Text style={styles.dateText}>N/A</Text>
+              </View>
+            );
+          }
+        })}
       </View>
-      <View style={styles.progressInfo}>
-        <View style={styles.progressItem}>
-          <SvgIcon name="checks" size={16} color="#66BD50" />
-          <Text style={styles.progressText}>{current}/{total}</Text>
-        </View>
-        <View style={styles.progressItem}>
-          <SvgIcon name="calendar" size={16} color="#6B7280" />
-          <Text style={styles.progressText}>19 Apr</Text>
-        </View>
-      </View>
+      {/* No progress info section for ≤5 installments */}
     </View>
   );
 };
 
-const DotsGrid = ({ current, total }: { current: number; total: number }) => {
+const DotsGrid = ({ current, total, nextDueDate }: { current: number; total: number; nextDueDate?: Date | string | null }) => {
   const items = Array.from({ length: total }, (_, i) => i + 1);
 
   return (
     <View style={styles.progressContainer}>
-      <View style={styles.dotsContainer}>
+      <View className='flex-row items-center justify-between w-full '>
         <View style={styles.dotsGrid}>
           {items.map((item, index) => (
             <View
@@ -138,14 +227,14 @@ const DotsGrid = ({ current, total }: { current: number; total: number }) => {
             />
           ))}
         </View>
-        <View style={styles.progressInfo}>
+        <View className='flex-row gap-4 max-w-[100px]'>
           <View style={styles.progressItem}>
             <SvgIcon name="checks" size={16} color="#66BD50" />
             <Text style={styles.progressText}>{current}/{total}</Text>
           </View>
           <View style={styles.progressItem}>
             <SvgIcon name="calendar" size={16} color="#6B7280" />
-            <Text style={styles.progressText}>19 Apr</Text>
+            <Text style={styles.progressText}>{formatProgressDateSafe(nextDueDate)}</Text>
           </View>
         </View>
       </View>
@@ -153,25 +242,31 @@ const DotsGrid = ({ current, total }: { current: number; total: number }) => {
   );
 };
 
-const ProgressBar = ({ current, total }: { current: number; total: number }) => {
+const ProgressBar = ({ current, total, nextDueDate }: { current: number; total: number; nextDueDate?: Date | string | null }) => {
   const percentage = Math.round((current / total) * 100);
   const progressWidth = (current / total) * 188; // 188px total width
 
   return (
-    <View style={styles.progressContainer}>
+    <View className='flex-row items-center justify-between w-full'>
       <View style={styles.progressBarContainer}>
         <View style={styles.progressBarBackground} />
         <View style={[styles.progressBarFill, { width: progressWidth }]} />
-        <Text style={styles.progressPercentage}>{percentage}%</Text>
+        {
+          percentage > 20 && (
+            <Text style={styles.progressPercentageMoreThan20}>{percentage}%</Text>
+          ) || (
+            <Text style={styles.progressPercentageLessThan20}>{percentage}%</Text>
+          )
+        }
       </View>
-      <View style={styles.progressInfo}>
+      <View className='flex-row gap-4 max-w-[100px]'>
         <View style={styles.progressItem}>
           <SvgIcon name="checks" size={16} color="#66BD50" />
           <Text style={styles.progressText}>{current}/{total}</Text>
         </View>
         <View style={styles.progressItem}>
           <SvgIcon name="calendar" size={16} color="#6B7280" />
-          <Text style={styles.progressText}>19 Giu</Text>
+          <Text style={styles.progressText}>{formatProgressDateSafe(nextDueDate)}</Text>
         </View>
       </View>
     </View>
@@ -180,7 +275,6 @@ const ProgressBar = ({ current, total }: { current: number; total: number }) => 
 
 // Main component
 export default function InstallmentsScreen() {
-  const { showTabBar } = useTabBar();
   // Fetch installment transactions
   const { data: installmentData, isLoading, refetch } = api.recurringRule.list.useQuery({
     isInstallment: true, // Only installments
@@ -197,28 +291,27 @@ export default function InstallmentsScreen() {
 
   // Render installment card based on remaining installments
   const renderInstallmentCard = (installment: InstallmentTransaction) => {
-    const current = installment.installmentCurrent || 0;
-    const total = installment.installmentTotal || 0;
-    const remaining = total - current;
+    const current = installment.occurrencesGenerated || 0;
+    const total = installment.totalOccurrences || 0;
     const totalAmount = typeof installment.amount === 'string' ? parseFloat(installment.amount) :
       installment.amount instanceof Decimal ? installment.amount.toNumber() : installment.amount;
-    const installmentAmountNum = typeof installment.installmentAmount === 'string' ? parseFloat(installment.installmentAmount) :
-      installment.installmentAmount instanceof Decimal ? installment.installmentAmount.toNumber() : installment.installmentAmount || 0;
+    // Calculate installment amount by dividing total amount by number of occurrences
+    const installmentAmountNum = total > 0 ? totalAmount / total : totalAmount;
 
-    const isUpcoming = getDaysUntilNext(installment.nextExecutionDate);
+    const isUpcoming = getDaysUntilNext(installment.nextDueDate || undefined);
     const accountName = installment.moneyAccount?.name || 'Account';
     const categoryName = installment.subCategory ?
       `${installment.subCategory.icon} ${installment.subCategory.name}` :
       'Categoria';
 
-    // Determine which progress type to show
+    // Determine which progress type to show based on total occurrences (not remaining)
     let progressComponent;
-    if (remaining <= 5) {
-      progressComponent = <CheckIconsGrid current={current} total={total} />;
-    } else if (remaining <= 24) {
-      progressComponent = <DotsGrid current={current} total={total} />;
+    if (total <= 5) {
+      progressComponent = <CheckIconsGrid current={current} total={total} nextDueDate={installment.nextDueDate} frequencyType={installment.frequencyType} frequencyInterval={installment.frequencyInterval} />;
+    } else if (total <= 24) {
+      progressComponent = <DotsGrid current={current} total={total} nextDueDate={installment.nextDueDate} />;
     } else {
-      progressComponent = <ProgressBar current={current} total={total} />;
+      progressComponent = <ProgressBar current={current} total={total} nextDueDate={installment.nextDueDate} />;
     }
 
     return (
@@ -276,9 +369,7 @@ export default function InstallmentsScreen() {
   };
 
   return (
-    <HeaderContainer variant="secondary" customTitle="RATE" onBackPress={() => {
-      showTabBar();
-    }}>
+    <HeaderContainer variant="secondary" customTitle="RATE" tabBarHidden={true}>
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
@@ -362,9 +453,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 8,
+    width: 'auto',
   },
   progressContainer: {
     gap: 8,
+    width: '100%',
   },
   checkGrid: {
     flexDirection: 'row',
@@ -380,7 +473,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dotsContainer: {
-    gap: 8,
+    gap: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   dotsGrid: {
     flexDirection: 'row',
@@ -411,15 +507,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#66BD50',
     borderRadius: 6,
   },
-  progressPercentage: {
+  progressPercentageMoreThan20: {
     position: 'absolute',
-    right: 0,
+    left: 0,
     top: 0,
     width: 24,
     height: 12,
     fontSize: 11,
     fontWeight: '400',
     color: '#FFFFFF',
+    textAlign: 'right',
+    fontFamily: 'Apfel Grotezk',
+    lineHeight: 12,
+  },
+  progressPercentageLessThan20: {
+    position: 'absolute',
+    right: 10,
+    top: 0,
+    width: 24,
+    height: 12,
+    fontSize: 11,
+    fontWeight: '400',
+    color: '#000000',
     textAlign: 'right',
     fontFamily: 'Apfel Grotezk',
     lineHeight: 12,
@@ -471,7 +580,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 12,
-    height: 44,
+    height: 'auto',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -480,7 +589,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#000000',
     fontFamily: 'DM Sans',
-    letterSpacing: -0.16,
+    lineHeight: 24,
   },
   cardRow: {
     flexDirection: 'row',
@@ -550,5 +659,21 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  dateFrame: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 8,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
+  dateText: {
+    fontSize: 11,
+    fontWeight: '400',
+    color: '#6B7280',
+    fontFamily: 'Apfel Grotezk',
+    textAlign: 'center',
   },
 }); 

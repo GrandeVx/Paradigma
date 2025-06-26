@@ -49,9 +49,9 @@ export const AtIcon = createIconComponent("at");
 export const AccountIcons = {
   "1": "bank",
   "2": "pig-money",
-  "3": "box",
+  "3": "target",
   "4": "calendar",
-  "5": "checks",
+  "5": "bank-card",
 }
 
 export const AccountColors = {

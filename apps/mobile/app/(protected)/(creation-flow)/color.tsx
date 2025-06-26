@@ -65,20 +65,32 @@ export default function ColorStepFlow(
                   columnWrapperStyle={{ justifyContent: 'space-evenly', gap: 20, marginBottom: 20 }}
                   renderItem={({ item }) => (
                     <Pressable onPress={() => setColor(item.toString())}>
-                      <View className="w-20 h-20 border border-gray-200 rounded-xl flex items-center justify-center">
-                        <View className={`w-6 h-6 rounded-full`} style={{ backgroundColor: item.toString() }} />
+                      <View className={`w-20 h-20 border rounded-xl flex items-center justify-center ${color === item.toString() ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                        }`}>
+                        <View
+                          className={`w-8 h-8 rounded-full ${color === item.toString() ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+                            }`}
+                          style={{ backgroundColor: item.toString() }}
+                        />
                       </View>
                     </Pressable>
                   )}
+                  keyExtractor={(item) => item.toString()}
+                  removeClippedSubviews={true}
+                  initialNumToRender={9}
+                  maxToRenderPerBatch={6}
+                  windowSize={5}
+                  getItemLayout={(data, index) => ({
+                    length: 100, // height + margin
+                    offset: 100 * Math.floor(index / 3),
+                    index,
+                  })}
                 />
-
-                {/* Optional: Add an animated cursor or indicator if needed */}
               </View>
             </Pressable>
           </View>
 
           {/* Floating Button at the bottom */}
-          {/* @ts-expect-error - Known issue with Reanimated v3 types in certain contexts */}
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <Button
               variant="primary"

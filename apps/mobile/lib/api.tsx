@@ -1,13 +1,17 @@
 import React, { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { type AppRouter } from "@paradigma/api";
 import Constants from "expo-constants";
 import superjson from "superjson";
 
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
+import { MMKV } from "react-native-mmkv"
+
 import { authClient } from "./auth-client";
 import { useAutoQuerySync } from "./cache-hooks";
+import { Persister, PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 
 const transformer = superjson;
 /**
@@ -46,6 +50,24 @@ export const getBaseUrl = () => {
     : `http://${localhost}:3000`;
 
   return baseUrl;
+};
+
+/**
+ * Persister for the query client - used to persist the query client in the MMKV storage
+ */
+const storage = new MMKV(); // MMKV storage for the query client
+
+const clientStorage = {
+  setItem: (key: string, value: string) => {
+    storage.set(key, value);
+  },
+  getItem: (key: string) => {
+    const value = storage.getString(key);
+    return value === undefined ? null : value;
+  },
+  removeItem: (key: string) => {
+    storage.delete(key);
+  },
 };
 
 /**
@@ -118,11 +140,14 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
     })
   );
 
+  const persister = createSyncStoragePersister({ storage: clientStorage });
+
   return (
     <api.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
+      {/* Persist the query client in the MMKV storage */}
+      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: persister as Persister }}>
         <CacheProvider>{children}</CacheProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </api.Provider>
   );
 }

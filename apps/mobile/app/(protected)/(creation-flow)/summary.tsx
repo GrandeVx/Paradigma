@@ -1,11 +1,14 @@
-import React, { useState, useRef, useEffect } from "react";
-import { View, TextInput, Switch } from "react-native";
+import React, { useState } from "react";
+import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "@/lib/api";
+
+// Import modular component for better performance
+import { CreationSummaryForm } from './components/creation-summary-form';
 
 export default function SummaryScreen() {
   const { t } = useTranslation();
@@ -17,27 +20,23 @@ export default function SummaryScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const nameInputRef = useRef<TextInput>(null);
   const params = useLocalSearchParams<{ name: string, icon: string, color: string, value: string, firstAccount: string }>();
 
   const queryClient = api.useContext();
 
-  // Account creation mutation
+  // Account creation mutation - OPTIMIZED invalidation and navigation
   const { mutate: createAccount, isLoading: isCreatingAccount } = api.account.create.useMutation({
     onSuccess: async () => {
+      // Only invalidate account list, no need for other queries
       await queryClient.account.listWithBalances.invalidate();
-      router.dismissAll();
-      router.navigate("/(protected)");
+      // Navigate to home after successful account creation
+      router.replace("/(protected)/(home)");
     },
     onError: (error) => {
       setError(error.message);
       setIsLoading(false);
     }
   });
-
-  useEffect(() => {
-    nameInputRef.current?.focus();
-  }, []);
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -82,65 +81,15 @@ export default function SummaryScreen() {
     <HeaderContainer variant="secondary" customTitle={t("flow.summary.title", "NUOVO CONTO")}>
       <View className="flex-1 bg-white">
         <View className="flex-1 px-4 pt-4 pb-0">
-          {/* Account Settings */}
-          <View className="flex-col gap-4">
-            {/* Default Account Toggle */}
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1 mr-10">
-                <Text className="text-base font-semibold text-black">
-                  {t("flow.summary.default_account", "Conto predefinito")}
-                </Text>
-                <Text className="text-sm text-gray-500">
-                  {t("flow.summary.default_account_desc", "Imposta questo conto preselezionato quando crei una nuova transazione")}
-                </Text>
-              </View>
-              <Switch
-                value={defaultAccount}
-                onValueChange={setDefaultAccount}
-                trackColor={{ false: "#F3F4F6", true: "#005EFD" }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
-
-            {/* Savings Account Toggle */}
-            <View className="flex-col gap-2">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1 mr-10">
-                  <Text className="text-base font-semibold text-black">
-                    {t("flow.summary.savings_account", "Conto di risparmio")}
-                  </Text>
-                  <Text className="text-sm text-gray-500">
-                    {t("flow.summary.savings_account_desc", "Abilitando questa impostazione potrai aggiungere un obiettivo di risparmio")}
-                  </Text>
-                </View>
-                <Switch
-                  value={savingsAccount}
-                  onValueChange={setSavingsAccount}
-                  trackColor={{ false: "#F3F4F6", true: "#005EFD" }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
-
-              {/* Saving Target Input - Only visible when savings is enabled */}
-              {savingsAccount && (
-                <View className="flex-row items-center justify-between bg-gray-50 px-4 py-4 rounded-xl">
-                  <Text className="text-base font-semibold text-gray-500">
-                    {t("flow.summary.saving_target", "Obiettivo di risparmio")}
-                  </Text>
-                  <View className="flex-row items-start justify-start gap-2 mx-4">
-                    <Text className="text-base font-sans font-semibold text-black leading-tight">€</Text>
-                    <TextInput
-                      value={savingTarget}
-                      onChangeText={setSavingTarget}
-                      keyboardType="numeric"
-                      className="text-base font-sans font-semibold text-black leading-tight"
-                      textAlign="center"
-                    />
-                  </View>
-                </View>
-              )}
-            </View>
-          </View>
+          {/* Account Settings - MODULARIZED for performance */}
+          <CreationSummaryForm
+            defaultAccount={defaultAccount}
+            savingsAccount={savingsAccount}
+            savingTarget={savingTarget}
+            onDefaultAccountChange={setDefaultAccount}
+            onSavingsAccountChange={setSavingsAccount}
+            onSavingTargetChange={setSavingTarget}
+          />
         </View>
 
         {/* Error message */}

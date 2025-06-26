@@ -141,5 +141,45 @@
     "title": "LA TUA EMAIL",
     "prompt": "Inserisci la tua email",
     "placeholder": "Email"
+  },
+  "update": {
+    "available": {
+      "title": "Aggiornamento disponibile",
+      "message": "È disponibile una nuova versione dell'app con miglioramenti e correzioni. Vuoi aggiornarla ora?"
+    },
+    "downloading": {
+      "title": "Download in corso...",
+      "message": "Stiamo scaricando l'aggiornamento. Questo potrebbe richiedere qualche minuto..."
+    },
+    "restarting": {
+      "title": "Riavvio in corso...",
+      "message": "L'app si riavvierà tra qualche istante per applicare l'aggiornamento."
+    },
+    "error": {
+      "title": "Errore aggiornamento",
+      "message": "Si è verificato un errore durante l'aggiornamento: {{error}}"
+    },
+    "install": "Aggiorna ora",
+    "later": "Più tardi",
+    "close": "Chiudi",
+    "version": "Versione",
+    "checking": "Controllo in corso...",
+    "noUpdates": {
+      "title": "App aggiornata",
+      "message": "Stai già utilizzando la versione più recente dell'app."
+    },
+    "checkError": {
+      "message": "Impossibile controllare gli aggiornamenti. Verifica la connessione internet."
+    },
+    "downloadError": {
+      "message": "Impossibile scaricare l'aggiornamento. Riprova più tardi."
+    },
+    "manual": {
+      "title": "Aggiornamenti app",
+      "description": "Controlla manualmente se sono disponibili aggiornamenti dell'app. Gli aggiornamenti vengono solitamente controllati automaticamente all'avvio.",
+      "available": "È disponibile una nuova versione dell'app.",
+      "check": "Controlla aggiornamenti",
+      "info": "Gli aggiornamenti over-the-air permettono di ricevere nuove funzionalità senza dover scaricare l'app dallo store."
+    }
   }
 }

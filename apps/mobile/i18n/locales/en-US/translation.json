@@ -116,5 +116,45 @@
   },
   "header": {
     "sign-in": "Welcome"
+  },
+  "update": {
+    "available": {
+      "title": "Update available",
+      "message": "A new version of the app is available with improvements and fixes. Would you like to update now?"
+    },
+    "downloading": {
+      "title": "Downloading...",
+      "message": "We're downloading the update. This might take a few minutes..."
+    },
+    "restarting": {
+      "title": "Restarting...",
+      "message": "The app will restart in a moment to apply the update."
+    },
+    "error": {
+      "title": "Update error",
+      "message": "An error occurred during the update: {{error}}"
+    },
+    "install": "Update now",
+    "later": "Later",
+    "close": "Close",
+    "version": "Version",
+    "checking": "Checking...",
+    "noUpdates": {
+      "title": "App up to date",
+      "message": "You're already using the latest version of the app."
+    },
+    "checkError": {
+      "message": "Unable to check for updates. Please verify your internet connection and try again."
+    },
+    "downloadError": {
+      "message": "Unable to download the update. Please try again later."
+    },
+    "manual": {
+      "title": "App updates",
+      "description": "Manually check if app updates are available. Updates are usually checked automatically at startup.",
+      "available": "A new version of the app is available.",
+      "check": "Check for updates",
+      "info": "Over-the-air updates allow you to receive new features without having to download the app from the store."
+    }
   }
 }

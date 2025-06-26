@@ -2,7 +2,7 @@
   "expo": {
     "name": "Balance",
     "slug": "balance",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "balance",
@@ -44,8 +44,12 @@
       [
         "expo-build-properties",
         {
+          "ios": {
+            "newArchEnabled": true
+          },
           "android": {
-            "minSdkVersion": 26
+            "minSdkVersion": 26,
+            "newArchEnabled": true
           }
         }
       ],
@@ -63,6 +67,12 @@
       "eas": {
         "projectId": "680ac63d-08e7-4607-8083-ee064a9bdeea"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/680ac63d-08e7-4607-8083-ee064a9bdeea"
     }
   }
 }

@@ -14,6 +14,7 @@ import { reloadAppAsync } from "expo";
 import { api } from "@/lib/api";
 import { useTabBar } from "@/context/TabBarContext";
 import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
+import { ManualUpdateChecker } from "@/components/ui";
 
 const LANGUAGES = [
   { code: "en-US", flag: "🇺🇸", name: "English" },
@@ -209,6 +210,8 @@ export default function ProfileScreen() {
             />
           </Section>
 
+
+
           {/* PAGAMENTI */}
           <Section title="PAGAMENTI">
             <CategoryItem
@@ -250,6 +253,17 @@ export default function ProfileScreen() {
               onPress={() => WebBrowser.openBrowserAsync("https://www.google.com")}
             />
           </Section>
+
+          {/* AGGIORNAMENTI */}
+          <Section title="AGGIORNAMENTI">
+            <View style={styles.updateSection}>
+              <ManualUpdateChecker />
+            </View>
+            <View style={[styles.updateSection, { marginTop: 8 }]}>
+
+            </View>
+          </Section>
+
 
           {/* AZIONI */}
           <Section title="">
@@ -342,6 +356,11 @@ const styles = StyleSheet.create({
   sectionContainer: {
     paddingHorizontal: 16,
     gap: 8,
+  },
+  updateSection: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 16,
   },
   profileContainer: {
     alignItems: "center",

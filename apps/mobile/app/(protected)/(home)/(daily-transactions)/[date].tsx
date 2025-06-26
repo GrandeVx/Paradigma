@@ -3,7 +3,6 @@ import { View, SafeAreaView, Pressable, FlatList } from 'react-native';
 import { Text } from '@/components/ui/text';
 import HeaderContainer from '@/components/layouts/_header';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useTabBar } from '@/context/TabBarContext';
 import { api } from '@/lib/api';
 
 interface TransactionItemProps {
@@ -50,7 +49,6 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, onPress 
 export default function DailyTransactionsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ date: string }>();
-  const { showTabBar } = useTabBar();
   const dateParam = params.date;
 
   const { data: dailyData, isLoading, error } = api.transaction.getDailyTransactions.useQuery({
@@ -98,7 +96,7 @@ export default function DailyTransactionsScreen() {
 
   if (isLoading) {
     return (
-      <HeaderContainer variant="secondary" customTitle="ULTIME TRANSAZIONI">
+      <HeaderContainer variant="secondary" customTitle="ULTIME TRANSAZIONI" tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white">
           <View className="flex-1 items-center justify-center">
             <Text className="text-center text-gray-500">Caricamento...</Text>
@@ -110,7 +108,7 @@ export default function DailyTransactionsScreen() {
 
   if (error || !dailyData) {
     return (
-      <HeaderContainer variant="secondary" customTitle="ULTIME TRANSAZIONI">
+      <HeaderContainer variant="secondary" customTitle="ULTIME TRANSAZIONI" tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white">
           <View className="flex-1 items-center justify-center">
             <Text className="text-center text-red-500">Errore nel caricamento</Text>
@@ -124,9 +122,7 @@ export default function DailyTransactionsScreen() {
     <HeaderContainer
       variant="secondary"
       customTitle="ULTIME TRANSAZIONI"
-      onBackPress={() => {
-        showTabBar();
-      }}
+      tabBarHidden={true}
     >
       <SafeAreaView className="flex-1 bg-gray-50">
         <View className="flex-1">
