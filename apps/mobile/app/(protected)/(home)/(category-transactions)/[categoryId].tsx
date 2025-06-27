@@ -5,6 +5,7 @@ import HeaderContainer from '@/components/layouts/_header';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { api } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface TransactionItemProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,6 +117,7 @@ const DayGroup: React.FC<DayGroupProps> = ({ dayGroup, onTransactionPress }) => 
 };
 
 export default function CategoryTransactionsScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ categoryId: string }>();
   const categoryId = params.categoryId;
@@ -173,7 +175,7 @@ export default function CategoryTransactionsScreen() {
 
   if (isLoadingCategory) {
     return (
-      <HeaderContainer variant="secondary" customTitle="ULTIME TRANSAZIONI" tabBarHidden={true}>
+      <HeaderContainer variant="secondary" customTitle={t('transaction.list.title')} tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white">
           <View className="flex-1 items-center justify-center">
             <Text className="text-center text-gray-500">Caricamento...</Text>
@@ -185,7 +187,7 @@ export default function CategoryTransactionsScreen() {
 
   if (categoryError || !categoryData) {
     return (
-      <HeaderContainer variant="secondary" customTitle="ULTIME TRANSAZIONI" tabBarHidden={true}>
+      <HeaderContainer variant="secondary" customTitle={t('transaction.list.title')} tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white">
           <View className="flex-1 items-center justify-center">
             <Text className="text-center text-red-500">Errore nel caricamento</Text>
@@ -198,7 +200,7 @@ export default function CategoryTransactionsScreen() {
   return (
     <HeaderContainer
       variant="secondary"
-      customTitle="ULTIME TRANSAZIONI"
+      customTitle={t('transaction.list.title')}
       tabBarHidden={true}
     >
       <SafeAreaView className="flex-1 bg-gray-50">

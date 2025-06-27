@@ -20,6 +20,7 @@ import { InvalidationUtils } from '@/lib/invalidation-utils';
 import * as Haptics from 'expo-haptics';
 import { useCurrency } from '@/hooks/use-currency';
 import { useMonth } from '@/context/month-context';
+import { useTranslation } from 'react-i18next';
 
 interface TransactionGroup {
   date: string;
@@ -177,9 +178,15 @@ const MonthSelector: React.FC<{
   currentYear: number;
   onMonthChange: (month: number, year: number) => void;
 }> = ({ currentMonth, currentYear, onMonthChange }) => {
+  const { t } = useTranslation();
+
   const monthNames = [
-    'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-    'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+    t('home.transactions.months.january'), t('home.transactions.months.february'),
+    t('home.transactions.months.march'), t('home.transactions.months.april'),
+    t('home.transactions.months.may'), t('home.transactions.months.june'),
+    t('home.transactions.months.july'), t('home.transactions.months.august'),
+    t('home.transactions.months.september'), t('home.transactions.months.october'),
+    t('home.transactions.months.november'), t('home.transactions.months.december')
   ];
 
   const goToPreviousMonth = () => {
@@ -234,6 +241,8 @@ const SummaryContainer: React.FC<{
   onMonthChange: (month: number, year: number) => void;
   formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
 }> = ({ income, expenses, remaining, currentMonth, currentYear, onMonthChange, formatCurrency }) => {
+  const { t } = useTranslation();
+
   return (
     <View className="bg-gray-50 rounded-3xl p-4 mb-4">
       <MonthSelector
@@ -245,7 +254,7 @@ const SummaryContainer: React.FC<{
       <View className="flex-row justify-between mt-2">
         <View className="flex-1 items-center">
           <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
-            Entrate
+            {t('home.transactions.income')}
           </Text>
           <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
             {formatCurrency(income)}
@@ -254,7 +263,7 @@ const SummaryContainer: React.FC<{
 
         <View className="flex-1 items-center">
           <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
-            Uscite
+            {t('home.transactions.expenses')}
           </Text>
           <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
             {formatCurrency(expenses)}
@@ -263,7 +272,7 @@ const SummaryContainer: React.FC<{
 
         <View className="flex-1 items-center">
           <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
-            Rimanente
+            {t('home.transactions.remaining')}
           </Text>
           <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk' }}>
             {formatCurrency(remaining)}
@@ -364,6 +373,9 @@ export const TransactionsSection: React.FC = () => {
 
   // Currency hook
   const { formatCurrency } = useCurrency();
+
+  // Translation hook
+  const { t } = useTranslation();
 
   // Cache state
   const [cachedDailyGroupsCount, setCachedDailyGroupsCount] = useState<number>(0);
@@ -473,15 +485,26 @@ export const TransactionsSection: React.FC = () => {
     const isToday = date.toDateString() === now.toDateString();
 
     if (isToday) {
-      return 'OGGI';
+      return t('home.transactions.today');
     }
 
-    const dayNames = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];
-    const monthNames = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU',
-      'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC'];
+    const dayNames = [
+      t('home.transactions.days.sun'), t('home.transactions.days.mon'),
+      t('home.transactions.days.tue'), t('home.transactions.days.wed'),
+      t('home.transactions.days.thu'), t('home.transactions.days.fri'),
+      t('home.transactions.days.sat')
+    ];
+    const monthNames = [
+      t('home.transactions.monthsAbbr.jan'), t('home.transactions.monthsAbbr.feb'),
+      t('home.transactions.monthsAbbr.mar'), t('home.transactions.monthsAbbr.apr'),
+      t('home.transactions.monthsAbbr.may'), t('home.transactions.monthsAbbr.jun'),
+      t('home.transactions.monthsAbbr.jul'), t('home.transactions.monthsAbbr.aug'),
+      t('home.transactions.monthsAbbr.sep'), t('home.transactions.monthsAbbr.oct'),
+      t('home.transactions.monthsAbbr.nov'), t('home.transactions.monthsAbbr.dec')
+    ];
 
     return `${dayNames[date.getDay()]}, ${date.getDate()} ${monthNames[date.getMonth()]}`;
-  }, []);
+  }, [t]);
 
   // Process and group transactions by day, then convert to FlatList format
   const { summary, flatListData } = useMemo(() => {

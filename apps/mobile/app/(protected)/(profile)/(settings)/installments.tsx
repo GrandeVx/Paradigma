@@ -6,6 +6,7 @@ import HeaderContainer from '@/components/layouts/_header';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
 import { useCurrency } from '@/hooks/use-currency';
+import { useTranslation } from 'react-i18next';
 
 
 // Types based on actual API response
@@ -276,6 +277,9 @@ const ProgressBar = ({ current, total, nextDueDate }: { current: number; total: 
 
 // Main component
 export default function InstallmentsScreen() {
+  // Translation hook
+  const { t } = useTranslation();
+
   // Currency hook
   const { formatCurrency } = useCurrency();
 
@@ -373,7 +377,7 @@ export default function InstallmentsScreen() {
   };
 
   return (
-    <HeaderContainer variant="secondary" customTitle="RATE" tabBarHidden={true}>
+    <HeaderContainer variant="secondary" customTitle={t('installments.title')} tabBarHidden={true}>
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}

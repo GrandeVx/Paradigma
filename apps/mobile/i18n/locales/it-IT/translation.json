@@ -17,7 +17,58 @@
     "exploringLanguagesDescription": "Clicca sulle bandiere dei paesi per esplorare i contenuti dell'app in diverse lingue.",
     "learnMore": "Vuoi Saperne di Più?",
     "repositoryLinkText": "Repository del progetto su GitHub",
-    "articlesLinkText": "Altri articoli"
+    "articlesLinkText": "Altri articoli",
+    "tabs": {
+      "transactions": "Transazioni",
+      "charts": "Grafici",
+      "goals": "Obiettivi"
+    },
+    "transactions": {
+      "income": "Entrate",
+      "expenses": "Uscite",
+      "remaining": "Rimanente",
+      "today": "OGGI",
+      "months": {
+        "january": "Gennaio",
+        "february": "Febbraio",
+        "march": "Marzo",
+        "april": "Aprile",
+        "may": "Maggio",
+        "june": "Giugno",
+        "july": "Luglio",
+        "august": "Agosto",
+        "september": "Settembre",
+        "october": "Ottobre",
+        "november": "Novembre",
+        "december": "Dicembre"
+      },
+      "days": {
+        "sun": "DOM",
+        "mon": "LUN",
+        "tue": "MAR",
+        "wed": "MER",
+        "thu": "GIO",
+        "fri": "VEN",
+        "sat": "SAB"
+      },
+      "monthsAbbr": {
+        "jan": "GEN",
+        "feb": "FEB",
+        "mar": "MAR",
+        "apr": "APR",
+        "may": "MAG",
+        "jun": "GIU",
+        "jul": "LUG",
+        "aug": "AGO",
+        "sep": "SET",
+        "oct": "OTT",
+        "nov": "NOV",
+        "dec": "DIC"
+      }
+    },
+    "charts": {
+      "noSubcategoriesFound": "Nessuna sottocategoria trovata"
+    }
   },
   "features": {
     "title": "Funzionalità",
@@ -99,7 +150,8 @@
       "loading": "Accedi...",
       "cancel": "Annulla",
       "send": "Invia",
-      "sending": "Invio..."
+      "sending": "Invio...",
+      "continue": "Continua"
     },
     "placeholders": {
       "email": "Email",
@@ -130,17 +182,20 @@
       "and": "e",
       "terms-2": "riconosci di aver letto e compreso la",
       "terms-2-link": "Privacy Policy"
+    },
+    "email": {
+      "title": "LA TUA EMAIL",
+      "prompt": "Inserisci la tua email",
+      "placeholder": "Email"
+    },
+    "name": {
+      "title": "IL TUO NOME"
     }
   },
   "header": {
     "sign-in": "BENVENUTO",
     "sign-up": "BENTORNATO",
     "index": "HOME"
-  },
-  "email": {
-    "title": "LA TUA EMAIL",
-    "prompt": "Inserisci la tua email",
-    "placeholder": "Email"
   },
   "update": {
     "available": {
@@ -181,5 +236,126 @@
       "check": "Controlla aggiornamenti",
       "info": "Gli aggiornamenti over-the-air permettono di ricevere nuove funzionalità senza dover scaricare l'app dallo store."
     }
+  },
+  "accounts": {
+    "title": "Conti",
+    "goalProgress": "Ancora {{amount}} per completare l'obiettivo di {{symbol}} {{target}}",
+    "goalCompleted": "Obiettivo raggiunto!",
+    "budgetForecast": "Il tuo budget tra 90 giorni?",
+    "noAccountsFound": "Nessun conto trovato",
+    "comingSoon": "Prossimamente"
+  },
+  "onboarding": {
+    "final": {
+      "title": "Inizia a Sviluppare Oggi",
+      "description": "Sei pronto a creare la tua prossima grande app. Inizia ora e risparmia settimane di sviluppo!",
+      "benefits": {
+        "launchFaster": "Lancia più velocemente",
+        "professionalDesign": "Design professionale",
+        "readyMonetization": "Pronto per la monetizzazione"
+      },
+      "getStarted": "Inizia Ora"
+    }
+  },
+  "notFound": {
+    "title": "Pagina Non Trovata",
+    "message": "Questa schermata non esiste.",
+    "goHome": "Vai alla schermata principale!"
+  },
+  "editScreen": {
+    "codePrompt": "Apri il codice per questa schermata:",
+    "changePrompt": "Modifica qualsiasi testo, salva il file e l'app si aggiornerà automaticamente.",
+    "troubleshoot": "Tocca qui se l'app non si aggiorna automaticamente dopo le modifiche"
+  },
+  "common": {
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "confirm": "Conferma",
+    "success": "Successo"
+  },
+  "budgets": {
+    "title": "Budget",
+    "budget": "Budget",
+    "spent": "Speso",
+    "remaining": "Rimanente",
+    "alreadySpent": "Speso già"
+  },
+  "profile": {
+    "accountSettings": "IMPOSTAZIONI ACCOUNT",
+    "preferences": "PREFERENZE",
+    "payments": "PAGAMENTI",
+    "help": "AIUTO",
+    "updates": "AGGIORNAMENTI",
+    "name": "Nome",
+    "email": "Email",
+    "faceIdLogin": "Accedi con Face ID",
+    "language": "Lingua",
+    "currency": "Valuta",
+    "notifications": "Notifiche",
+    "recurring": "Ricorrenti",
+    "installments": "Rate",
+    "requestFeatures": "Richiedi & Vota nuove feature",
+    "support": "Supporto",
+    "helpCenter": "Centro Assistenza",
+    "signOut": "Disconnettiti",
+    "deleteAccount": "Elimina Account",
+    "selectCurrency": "Seleziona Valuta",
+    "selectIcon": "Seleziona Icona",
+    "currencyUpdated": "Valuta aggiornata",
+    "currencyUpdatedMessage": "La valuta è stata cambiata in {{currency}}, l'app si riavvierà in un momento per applicare la nuova valuta.",
+    "iconUpdated": "Icona aggiornata",
+    "iconUpdatedMessage": "Per applicare la nuova icona, è necessario riavviare l'app.",
+    "restart": "Riavvia",
+    "errorChangingCurrency": "Impossibile cambiare la valuta. Riprova.",
+    "errorChangingIcon": "Impossibile cambiare l'icona. Riprova.",
+    "user": "Utente"
+  },
+  "flow": {
+    "name": {
+      "title": "NUOVO CONTO",
+      "firstAccount": "PRIMO CONTO",
+      "prompt": "Assegna un nome per il tuo conto",
+      "placeholder": "Nuovo Conto"
+    },
+    "summary": {
+      "title": "NUOVO CONTO"
+    }
+  },
+  "transaction": {
+    "new": {
+      "title": "NUOVA TRANSAZIONE"
+    },
+    "edit": {
+      "title": "TRANSAZIONE"
+    },
+    "list": {
+      "title": "ULTIME TRANSAZIONI"
+    },
+    "types": {
+      "income": "Entrata",
+      "expense": "Uscita",
+      "transfer": "Trasferimento"
+    }
+  },
+  "account": {
+    "details": {
+      "title": "MODIFICA CONTO"
+    },
+    "edit_name": {
+      "title": "MODIFICA NOME"
+    },
+    "edit_balance": {
+      "title": "MODIFICA BILANCIO"
+    }
+  },
+  "recurring": {
+    "title": "RICORRENTI"
+  },
+  "installments": {
+    "title": "RATE"
   }
 }

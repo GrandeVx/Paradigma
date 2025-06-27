@@ -4,7 +4,6 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import TabBar from "@/components/TabBar";
 import { theme } from "@/lib/constants";
 
-import { useTranslation } from "react-i18next";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { View, Text } from "react-native";
 import { useProfileIcon } from "@/hooks/use-profile-icon";
@@ -18,8 +17,6 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-
-  const { t } = useTranslation();
   const { icon, isIconReady } = useProfileIcon();
 
 
@@ -43,19 +40,17 @@ export default function TabLayout() {
         initialParams={{}}
         options={{
           // This title is used to set the title of the bottom tab
-          title: t("tab-bar.home"),
+          title: "Home",
           tabBarIcon: ({ color }) => <SvgIcon name="chart-vertical" color={color} />,
         }}
       />
 
       <Tabs.Screen
         name="(budgets)"
-        initialParams={{
-          title: t("tab-bar.budgets"),
-        }}
+        initialParams={{}}
         options={{
           // This title is used to set the title of the bottom tab
-          title: t("tab-bar.budgets"),
+          title: "Budgets",
           tabBarIcon: ({ color }) => <SvgIcon name="document" color={color} />,
         }}
       />
@@ -78,12 +73,10 @@ export default function TabLayout() {
 
       <Tabs.Screen
         name="(accounts)"
-        initialParams={{
-          title: t("tab-bar.accounts"),
-        }}
+        initialParams={{}}
         options={{
           // This title is used to set the title of the bottom tab
-          title: t("tab-bar.accounts"),
+          title: "Accounts",
           tabBarIcon: ({ color }) => <SvgIcon name="pig-money" color={color} />,
         }}
       />
@@ -91,12 +84,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="(profile)"
         // This title is used to set the title of the header
-        initialParams={{
-          title: t("tab-bar.profile"),
-        }}
+        initialParams={{}}
         options={{
           // This title is used to set the title of the bottom tab
-          title: t("tab-bar.profile"),
+          title: "Profile",
           tabBarIcon: ({ color }) =>
             isIconReady ? (
               <Text style={{ fontSize: 28, marginBottom: -3 }}>{icon}</Text>

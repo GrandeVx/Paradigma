@@ -91,10 +91,17 @@ export default function ProfileScreen() {
     try {
       await setCurrency(selectedCurrency);
       currencyBottomSheetRef.current?.close();
-      Alert.alert("Valuta aggiornata", `La valuta è stata cambiata in ${selectedCurrency.name}`);
+      Alert.alert(t('profile.currencyUpdated'), t('profile.currencyUpdatedMessage', { currency: selectedCurrency.name }), [
+        {
+          text: t('profile.restart'),
+          onPress: () => {
+            reloadAppAsync();
+          }
+        }
+      ]);
     } catch (error) {
       console.error("Error changing currency:", error);
-      Alert.alert("Errore", "Impossibile cambiare la valuta. Riprova.");
+      Alert.alert(t('common.error'), t('profile.errorChangingCurrency'));
     }
   };
 
@@ -103,9 +110,9 @@ export default function ProfileScreen() {
       await setIcon(selectedIcon);
       profileIconBottomSheetRef.current?.close();
       // generate an alert to tell the user that we need to restart the app to see the new icon
-      Alert.alert("Icona aggiornata", "Per applicare la nuova icona, è necessario riavviare l'app.", [
+      Alert.alert(t('profile.iconUpdated'), t('profile.iconUpdatedMessage'), [
         {
-          text: "Riavvia",
+          text: t('profile.restart'),
           onPress: () => {
             reloadAppAsync();
           }
@@ -114,7 +121,7 @@ export default function ProfileScreen() {
 
     } catch (error) {
       console.error("Error changing icon:", error);
-      Alert.alert("Errore", "Impossibile cambiare l'icona. Riprova.");
+      Alert.alert(t('common.error'), t('profile.errorChangingIcon'));
     }
   };
 
@@ -169,7 +176,7 @@ export default function ProfileScreen() {
     if (user?.email) {
       return user.email.split('@')[0];
     }
-    return "Utente";
+    return t('profile.user');
   };
 
   const renderBackdrop = useCallback(
@@ -195,10 +202,10 @@ export default function ProfileScreen() {
   const profileIconBottomSheetRef = useRef<BottomSheet>(null);
   return (
     <>
-      <HeaderContainer variant="secondary" hideBackButton={true}>
+      <HeaderContainer variant="secondary" hideBackButton={true} customTitle={t('tab-bar.profile')}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
           {/* IMPOSTAZIONI ACCOUNT */}
-          <Section title="IMPOSTAZIONI ACCOUNT">
+          <Section title={t('profile.accountSettings')}>
             {/* Profile Picture */}
             <Pressable style={styles.profileContainer} onPress={() => profileIconBottomSheetRef.current?.expand()}>
               <View style={styles.profilePic}>
@@ -207,43 +214,43 @@ export default function ProfileScreen() {
             </Pressable>
 
             <CategoryItem
-              label="Nome"
+              label={t('profile.name')}
               value={getUserDisplayName()}
             />
 
             <CategoryItem
-              label="Email"
+              label={t('profile.email')}
               value={user?.email || ""}
             />
 
             <CategoryItem
-              label="Accedi con Face ID"
+              label={t('profile.faceIdLogin')}
               isToggle={true}
               toggleValue={false}
               onPress={() => {
-                Alert.alert("Coming soon")
+                Alert.alert(t('accounts.comingSoon'))
               }}
             />
           </Section>
 
           {/* PREFERENZE */}
-          <Section title="PREFERENZE">
+          <Section title={t('profile.preferences')}>
             <CategoryItem
-              label="Lingua"
-              value={currentLanguage ? `${currentLanguage.flag} ${currentLanguage.name}` : "Seleziona"}
+              label={t('profile.language')}
+              value={currentLanguage ? `${currentLanguage.flag} ${currentLanguage.name}` : t('settings.language.select')}
               hasArrow={true}
               onPress={() => languageBottomSheetRef.current?.expand()}
             />
 
             <CategoryItem
-              label="Valuta"
+              label={t('profile.currency')}
               value={`${currency.symbol} ${currency.name}`}
               hasArrow={true}
               onPress={() => currencyBottomSheetRef.current?.expand()}
             />
 
             <CategoryItem
-              label="Notifiche"
+              label={t('profile.notifications')}
               hasArrow={true}
               onPress={() => { }}
             />
@@ -252,9 +259,9 @@ export default function ProfileScreen() {
 
 
           {/* PAGAMENTI */}
-          <Section title="PAGAMENTI">
+          <Section title={t('profile.payments')}>
             <CategoryItem
-              label="Ricorrenti"
+              label={t('profile.recurring')}
               hasArrow={true}
               onPress={() => {
                 hideTabBar();
@@ -263,7 +270,7 @@ export default function ProfileScreen() {
             />
 
             <CategoryItem
-              label="Rate"
+              label={t('profile.installments')}
               hasArrow={true}
               onPress={() => {
                 hideTabBar();
@@ -273,28 +280,28 @@ export default function ProfileScreen() {
           </Section>
 
           {/* AIUTO */}
-          <Section title="AIUTO">
+          <Section title={t('profile.help')}>
             <CategoryItem
-              label="Richiedi & Vota nuove feature"
+              label={t('profile.requestFeatures')}
               hasArrow={true}
               onPress={() => WebBrowser.openBrowserAsync("https://www.google.com")}
             />
 
             <CategoryItem
-              label="Supporto"
+              label={t('profile.support')}
               hasArrow={true}
               onPress={() => WebBrowser.openBrowserAsync("https://www.google.com")}
             />
 
             <CategoryItem
-              label="Centro Assistenza"
+              label={t('profile.helpCenter')}
               hasArrow={true}
               onPress={() => WebBrowser.openBrowserAsync("https://www.google.com")}
             />
           </Section>
 
           {/* AGGIORNAMENTI */}
-          <Section title="AGGIORNAMENTI">
+          <Section title={t('profile.updates')}>
             <View style={styles.updateSection}>
               <ManualUpdateChecker />
             </View>
@@ -307,13 +314,13 @@ export default function ProfileScreen() {
           {/* AZIONI */}
           <Section title="">
             <CategoryItem
-              label="Disconnettiti"
+              label={t('profile.signOut')}
               textColor="#DE4841"
               onPress={handleSignOut}
             />
 
             <CategoryItem
-              label="Elimina Account"
+              label={t('profile.deleteAccount')}
               textColor="#DE4841"
               onPress={handleDeleteAccount}
             />
@@ -398,7 +405,7 @@ export default function ProfileScreen() {
       >
         <View style={styles.bottomSheetContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Seleziona Valuta</Text>
+            <Text style={styles.modalTitle}>{t('profile.selectCurrency')}</Text>
           </View>
           <ScrollView showsVerticalScrollIndicator={false}>
             {supportedCurrencies.map((currencyOption) => (
@@ -447,7 +454,7 @@ export default function ProfileScreen() {
       >
         <View style={styles.bottomSheetContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Seleziona Icona</Text>
+            <Text style={styles.modalTitle}>{t('profile.selectIcon')}</Text>
           </View>
           <View style={styles.iconGrid}>
             {supportedIcons.map((iconOption) => (

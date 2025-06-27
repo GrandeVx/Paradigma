@@ -10,6 +10,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
 import { useCurrency } from '@/hooks/use-currency';
+import { useTranslation } from 'react-i18next';
 
 // Extended interface for MoneyAccount with goal fields
 interface MoneyAccountWithGoal {
@@ -49,7 +50,8 @@ const AccountCard: React.FC<{
   formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
   getCurrencySymbol: () => string;
   isLast: boolean;
-}> = React.memo(({ account, onPress, formatCurrency, getCurrencySymbol, isLast }) => {
+  t: (key: string, options?: Record<string, string | number>) => string;
+}> = React.memo(({ account, onPress, formatCurrency, getCurrencySymbol, isLast, t }) => {
   // Custom formatter for the display format used in this screen
   const formatDisplayCurrency = (amount: number) => {
     const [integer, decimal] = amount.toFixed(2).split('.');
@@ -102,7 +104,11 @@ const AccountCard: React.FC<{
               />
             </View>
             <Text className="text-white text-xs font-medium">
-              Ancora {remainingFormatted} per completare l'obiettivo di {currencySymbol} {targetInteger},{targetDecimal}
+              {t('accounts.goalProgress', {
+                amount: remainingFormatted,
+                symbol: currencySymbol,
+                target: `${targetInteger},${targetDecimal}`
+              })}
             </Text>
           </View>
         </View>
@@ -137,6 +143,7 @@ const AccountCard: React.FC<{
 
 export default function AccountsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Currency hook
   const { formatCurrency, getCurrencySymbol } = useCurrency();
@@ -227,7 +234,7 @@ export default function AccountsScreen() {
   };
 
   const handleBudgetForecastPress = () => {
-    alert("Coming soon");
+    alert(t('accounts.comingSoon'));
   };
 
   const rightActions = [
@@ -275,7 +282,7 @@ export default function AccountsScreen() {
             className="mt-2 px-4 py-2 rounded-lg flex-row items-center gap-2 bg-gray-800"
             onPress={handleBudgetForecastPress}
           >
-            <Text className="text-white text-sm font-semibold">Il tuo budget tra 90gg?</Text>
+            <Text className="text-white text-sm font-semibold">{t('accounts.budgetForecast')}</Text>
             <Text className="text-green-500 text-sm font-semibold">+2.5%</Text>
           </Pressable>
         </View>
@@ -294,7 +301,7 @@ export default function AccountsScreen() {
         >
           {accounts.length === 0 ? (
             <View className="items-center justify-center py-8">
-              <Text className="text-gray-500">Nessun conto trovato</Text>
+              <Text className="text-gray-500">{t('accounts.noAccountsFound')}</Text>
             </View>
           ) : (
             accounts.map((account, index) => (
@@ -305,6 +312,7 @@ export default function AccountsScreen() {
                 formatCurrency={formatCurrency}
                 getCurrencySymbol={getCurrencySymbol}
                 isLast={index === accounts.length - 1}
+                t={t}
               />
             ))
           )}

@@ -30,6 +30,7 @@ import { SvgIcon } from '@/components/ui/svg-icon';
 import { budgetUtils } from '@/lib/mmkv-storage';
 import { router } from 'expo-router';
 import { useCurrency } from '@/hooks/use-currency';
+import { useTranslation } from 'react-i18next';
 
 // Legacy helper function to format currency - now using global currency hook in components
 // const formatCurrency = (amount: number) => {
@@ -123,6 +124,7 @@ const BudgetItem = React.memo<{
   index,
   formatCurrency
 }) => {
+  const { t } = useTranslation();
   // Memoize calculations to avoid recalculation on every render
   const calculations = useMemo(() => {
     const budgetAmount = Number(budget.allocatedAmount);
@@ -225,19 +227,19 @@ const BudgetItem = React.memo<{
         {/* Details */}
         <View className="flex-row justify-between px-6">
           <View className="items-center">
-            <Text className="text-gray-400 text-sm">Budget</Text>
+            <Text className="text-gray-400 text-sm">{t('budgets.budget')}</Text>
             <Text className="text-gray-700 text-base font-medium">
               {formatCurrency(calculations.budgetAmount)}
             </Text>
           </View>
           <View className="items-center">
-            <Text className="text-gray-400 text-sm">Speso già</Text>
+            <Text className="text-gray-400 text-sm">{t('budgets.alreadySpent')}</Text>
             <Text className="text-gray-700 text-base font-medium">
               {formatCurrency(calculations.spent)}
             </Text>
           </View>
           <View className="items-center">
-            <Text className="text-gray-400 text-sm">Rimanente</Text>
+            <Text className="text-gray-400 text-sm">{t('budgets.remaining')}</Text>
             <Text
               className="text-base font-medium"
               style={{ color: remainingAmountColor }}
@@ -258,6 +260,7 @@ BudgetItem.displayName = 'BudgetItem';
 
 export default function BudgetScreen() {
   const { formatCurrency, getCurrencySymbol } = useCurrency();
+  const { t } = useTranslation();
 
   // State for current month
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -506,7 +509,7 @@ export default function BudgetScreen() {
 
   return (
     <>
-      <HeaderContainer variant="secondary" customTitle="BUDGET" rightActions={rightActions} modal>
+      <HeaderContainer variant="secondary" customTitle={t('budgets.title')} rightActions={rightActions} modal>
         <SafeAreaView className="flex-1 bg-white">
           {contentStates.shouldShowSkeleton ? (
             <LoadingSkeleton budgetCount={cachedBudgetCount} />

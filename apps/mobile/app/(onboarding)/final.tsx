@@ -7,10 +7,12 @@ import { SUPERWALL_TRIGGERS } from "@/config/superwall";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "@/components/ui/text";
+import { useTranslation } from "react-i18next";
 
 export default function FinalScreen() {
   const { showPaywall } = useSuperwall();
   const { setIsOnboarded } = useSupabase();
+  const { t } = useTranslation();
 
   const handleGetStarted = async () => {
     try {
@@ -30,22 +32,21 @@ export default function FinalScreen() {
         >
           <View style={styles.header}>
             <Ionicons name="rocket-outline" size={48} color="#0A7EA4" />
-            <Text style={styles.title}>Start Building Today</Text>
+            <Text style={styles.title}>{t('onboarding.final.title')}</Text>
             <Text style={styles.description}>
-              You're all set to create your next great app. Get started now and
-              save weeks of development time!
+              {t('onboarding.final.description')}
             </Text>
           </View>
 
           <View style={styles.benefits}>
-            <Benefit icon="rocket-outline" text="Launch faster" />
-            <Benefit icon="flower-outline" text="Professional design" />
-            <Benefit icon="cash-outline" text="Ready for monetization" />
+            <Benefit icon="rocket-outline" text={t('onboarding.final.benefits.launchFaster')} />
+            <Benefit icon="flower-outline" text={t('onboarding.final.benefits.professionalDesign')} />
+            <Benefit icon="cash-outline" text={t('onboarding.final.benefits.readyMonetization')} />
           </View>
         </ScrollView>
 
         <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
-          <Text style={styles.buttonText}>Get Started Now</Text>
+          <Text style={styles.buttonText}>{t('onboarding.final.getStarted')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     </View>

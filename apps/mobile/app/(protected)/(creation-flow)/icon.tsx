@@ -37,7 +37,7 @@ export default function IconStepFlow(
   const isButtonDisabled = !icon; // Basic check, enhance with validation
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t("auth.email.title", "NUOVO CONTO")}>
+    <HeaderContainer variant="secondary" customTitle={t("flow.name.title")}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"

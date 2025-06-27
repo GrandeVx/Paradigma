@@ -16,7 +16,58 @@
     "exploringLanguagesDescription": "Click on country flags to explore the app's content in different languages.",
     "learnMore": "Want to Learn More?",
     "repositoryLinkText": "Project repository on GitHub",
-    "articlesLinkText": "More articles"
+    "articlesLinkText": "More articles",
+    "tabs": {
+      "transactions": "Transactions",
+      "charts": "Charts",
+      "goals": "Goals"
+    },
+    "transactions": {
+      "income": "Income",
+      "expenses": "Expenses",
+      "remaining": "Remaining",
+      "today": "TODAY",
+      "months": {
+        "january": "January",
+        "february": "February",
+        "march": "March",
+        "april": "April",
+        "may": "May",
+        "june": "June",
+        "july": "July",
+        "august": "August",
+        "september": "September",
+        "october": "October",
+        "november": "November",
+        "december": "December"
+      },
+      "days": {
+        "sun": "SUN",
+        "mon": "MON",
+        "tue": "TUE",
+        "wed": "WED",
+        "thu": "THU",
+        "fri": "FRI",
+        "sat": "SAT"
+      },
+      "monthsAbbr": {
+        "jan": "JAN",
+        "feb": "FEB",
+        "mar": "MAR",
+        "apr": "APR",
+        "may": "MAY",
+        "jun": "JUN",
+        "jul": "JUL",
+        "aug": "AUG",
+        "sep": "SEP",
+        "oct": "OCT",
+        "nov": "NOV",
+        "dec": "DEC"
+      }
+    },
+    "charts": {
+      "noSubcategoriesFound": "No subcategories found"
+    }
   },
   "features": {
     "title": "Features",
@@ -89,7 +140,8 @@
       "loading": "Signing in...",
       "cancel": "Cancel",
       "send": "Send",
-      "sending": "Sending..."
+      "sending": "Sending...",
+      "continue": "Continue"
     },
     "placeholders": {
       "email": "Email",
@@ -110,8 +162,12 @@
       "genericError": "An error occurred while sending the email"
     },
     "email": {
+      "title": "YOUR EMAIL",
       "prompt": "Enter your email",
       "placeholder": "Email"
+    },
+    "name": {
+      "title": "YOUR NAME"
     }
   },
   "header": {
@@ -156,5 +212,126 @@
       "check": "Check for updates",
       "info": "Over-the-air updates allow you to receive new features without having to download the app from the store."
     }
+  },
+  "accounts": {
+    "title": "Accounts",
+    "goalProgress": "Still {{amount}} to complete the goal of {{symbol}} {{target}}",
+    "goalCompleted": "Goal achieved!",
+    "budgetForecast": "Your budget in 90 days?",
+    "noAccountsFound": "No accounts found",
+    "comingSoon": "Coming soon"
+  },
+  "onboarding": {
+    "final": {
+      "title": "Start Building Today",
+      "description": "You're all set to create your next great app. Get started now and save weeks of development time!",
+      "benefits": {
+        "launchFaster": "Launch faster",
+        "professionalDesign": "Professional design",
+        "readyMonetization": "Ready for monetization"
+      },
+      "getStarted": "Get Started Now"
+    }
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "message": "This screen doesn't exist.",
+    "goHome": "Go to home screen!"
+  },
+  "editScreen": {
+    "codePrompt": "Open up the code for this screen:",
+    "changePrompt": "Change any of the text, save the file, and your app will automatically update.",
+    "troubleshoot": "Tap here if your app doesn't automatically update after making changes"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "success": "Success"
+  },
+  "budgets": {
+    "title": "Budgets",
+    "budget": "Budget",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "alreadySpent": "Already spent"
+  },
+  "profile": {
+    "accountSettings": "ACCOUNT SETTINGS",
+    "preferences": "PREFERENCES",
+    "payments": "PAYMENTS",
+    "help": "HELP",
+    "updates": "UPDATES",
+    "name": "Name",
+    "email": "Email",
+    "faceIdLogin": "Login with Face ID",
+    "language": "Language",
+    "currency": "Currency",
+    "notifications": "Notifications",
+    "recurring": "Recurring",
+    "installments": "Installments",
+    "requestFeatures": "Request & Vote new features",
+    "support": "Support",
+    "helpCenter": "Help Center",
+    "signOut": "Sign Out",
+    "deleteAccount": "Delete Account",
+    "selectCurrency": "Select Currency",
+    "selectIcon": "Select Icon",
+    "currencyUpdated": "Currency updated",
+    "currencyUpdatedMessage": "Currency has been changed to {{currency}}, the app will restart in a moment to apply the new currency.",
+    "iconUpdated": "Icon updated",
+    "iconUpdatedMessage": "To apply the new icon, you need to restart the app.",
+    "restart": "Restart",
+    "errorChangingCurrency": "Unable to change currency. Please try again.",
+    "errorChangingIcon": "Unable to change icon. Please try again.",
+    "user": "User"
+  },
+  "flow": {
+    "name": {
+      "title": "NEW ACCOUNT",
+      "firstAccount": "FIRST ACCOUNT",
+      "prompt": "Assign a name for your account",
+      "placeholder": "New Account"
+    },
+    "summary": {
+      "title": "NEW ACCOUNT"
+    }
+  },
+  "transaction": {
+    "new": {
+      "title": "NEW TRANSACTION"
+    },
+    "edit": {
+      "title": "TRANSACTION"
+    },
+    "list": {
+      "title": "RECENT TRANSACTIONS"
+    },
+    "types": {
+      "income": "Income",
+      "expense": "Expense",
+      "transfer": "Transfer"
+    }
+  },
+  "account": {
+    "details": {
+      "title": "EDIT ACCOUNT"
+    },
+    "edit_name": {
+      "title": "EDIT NAME"
+    },
+    "edit_balance": {
+      "title": "EDIT BALANCE"
+    }
+  },
+  "recurring": {
+    "title": "RECURRING"
+  },
+  "installments": {
+    "title": "INSTALLMENTS"
   }
 }

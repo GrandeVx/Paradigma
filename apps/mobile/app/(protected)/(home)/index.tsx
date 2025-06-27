@@ -10,9 +10,10 @@ import { TabBar } from "@/components/tab-navigation/tab-bar";
 import { TransactionsSection } from "@/components/home-sections/transactions-section";
 import { ChartsSection } from "@/components/home-sections/charts-section";
 import { GoalsSection } from "@/components/home-sections/goals-section";
-import { HOME_TABS, type HomeTab } from "@/types/tabs";
+import { getHomeTabs, type HomeTab } from "@/types/tabs";
 import { api } from "@/lib/api";
 import { MonthProvider } from "@/context/month-context";
+import { useTranslation } from 'react-i18next';
 
 // Context to disable animations in inactive tabs
 const TabVisibilityContext = createContext<{ isTabVisible: boolean }>({ isTabVisible: true });
@@ -59,6 +60,7 @@ const TabContent = React.memo<{
 TabContent.displayName = 'TabContent';
 
 export default function Home() {
+  const { t } = useTranslation();
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [mountedTabs, setMountedTabs] = useState<Set<number>>(new Set([0])); // Start with first tab mounted
 
@@ -66,6 +68,9 @@ export default function Home() {
   const currentDate = useMemo(() => new Date(), []);
   const currentMonth = useMemo(() => currentDate.getMonth() + 1, [currentDate]);
   const currentYear = useMemo(() => currentDate.getFullYear(), [currentDate]);
+
+  // Memoize translated tabs to avoid recalculation on every render
+  const homeTabs = useMemo(() => getHomeTabs(t), [t]);
 
   // Get API utils
   const utils = api.useContext();
@@ -121,13 +126,13 @@ export default function Home() {
       setMountedTabs(prev => {
         const newSet = new Set(prev);
         if (activeTabIndex > 0) newSet.add(activeTabIndex - 1);
-        if (activeTabIndex < HOME_TABS.length - 1) newSet.add(activeTabIndex + 1);
+        if (activeTabIndex < homeTabs.length - 1) newSet.add(activeTabIndex + 1);
         return newSet;
       });
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [activeTabIndex]);
+  }, [activeTabIndex, homeTabs]);
 
   // Mount all tabs after everything is loaded
   useEffect(() => {
@@ -159,12 +164,12 @@ export default function Home() {
   }, [enableBackgroundQueries, utils, currentMonth, currentYear]);
 
   return (
-    <HeaderContainer variant="secondary">
+    <HeaderContainer variant="secondary" customTitle={t("home.title")}>
       <MonthProvider>
         <View className="flex-1 bg-gray-50">
           {/* Animated Tab Navigation */}
           <TabBar
-            tabs={HOME_TABS}
+            tabs={homeTabs}
             activeIndex={activeTabIndex}
             onTabPress={handleTabPress}
           />

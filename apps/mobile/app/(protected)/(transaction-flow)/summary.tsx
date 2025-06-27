@@ -22,6 +22,7 @@ import { RecurrencePickerBottomSheet, RecurrenceOption } from "@/components/bott
 import { api } from "@/lib/api";
 import { IconName } from "@/components/ui/icons";
 import { useCurrency } from '@/hooks/use-currency';
+import { useTranslation } from 'react-i18next';
 // Removed StackActions import - using normal router navigation instead
 
 type TransactionType = 'income' | 'expense' | 'transfer';
@@ -36,6 +37,7 @@ const defaultRecurrenceOption: RecurrenceOption = {
 };
 
 export default function SummaryScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ amount: string, type: TransactionType }>();
   const queryClient = api.useContext();
@@ -551,7 +553,7 @@ export default function SummaryScreen() {
 
   return (
     <>
-      <HeaderContainer variant="secondary" customTitle="NUOVA TRANSAZIONE">
+      <HeaderContainer variant="secondary" customTitle={t('transaction.new.title')}>
         <SafeAreaView className="flex-1 bg-white w-screen">
           <View className="flex-row justify-between items-center px-4 py-2">
             <View className="flex-col">

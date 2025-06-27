@@ -5,6 +5,7 @@ import { SvgIcon } from '@/components/ui/svg-icon';
 import HeaderContainer from '@/components/layouts/_header';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
+import { useTranslation } from 'react-i18next';
 
 
 // Types based on API response
@@ -137,6 +138,8 @@ const RecurringCard: React.FC<{
 };
 
 export default function RecurringTransactionsScreen() {
+  const { t } = useTranslation();
+
   // Fetch recurring transactions (only non-installment ones = classic recurring)
   const { data: recurringData, isLoading, refetch } = api.recurringRule.list.useQuery({
     isInstallment: false, // Only classic recurring transactions, not installments
@@ -152,7 +155,7 @@ export default function RecurringTransactionsScreen() {
   };
 
   return (
-    <HeaderContainer variant="secondary" customTitle="RICORRENTI" tabBarHidden={true}>
+    <HeaderContainer variant="secondary" customTitle={t('recurring.title')} tabBarHidden={true}>
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}

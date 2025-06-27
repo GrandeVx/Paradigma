@@ -238,7 +238,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
               }}
             >
               <Text
-                className="text-black font-sans font-medium"
+                className="text-black font-sans font-medium uppercase text-center"
                 style={{ fontSize: 16 }}
               >
                 {customTitle ||

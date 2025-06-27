@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-
+import { useTranslation } from 'react-i18next';
 
 import { NumericKeyboard } from '@/components/primitives/NumericKeyboard';
 import HeaderContainer from '@/components/layouts/_header';
@@ -10,6 +10,7 @@ import { useCurrency } from '@/hooks/use-currency';
 type TransactionType = 'income' | 'expense' | 'transfer';
 
 export default function ValueScreen() {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState('0');
   const [transactionType, setTransactionType] = useState<TransactionType>('expense');
   const [isAnimating, setIsAnimating] = useState(false);
@@ -94,7 +95,7 @@ export default function ValueScreen() {
   return (
     <HeaderContainer
       variant="secondary"
-      customTitle="NUOVA TRANSAZIONE"
+      customTitle={t('transaction.new.title')}
       onBackPress={handleBackPress}
       hideBackButton={false} // Forza la visualizzazione del back button
     >
@@ -124,7 +125,7 @@ export default function ValueScreen() {
               onPress={() => setTransactionType('income')}
             >
               <Text className={`font-medium text-base ${transactionType === 'income' ? 'text-white' : 'text-gray-700'}`}>
-                Entrata
+                {t('transaction.types.income')}
               </Text>
             </Pressable>
 
@@ -133,7 +134,7 @@ export default function ValueScreen() {
               onPress={() => setTransactionType('expense')}
             >
               <Text className={`font-medium text-base ${transactionType === 'expense' ? 'text-white' : 'text-gray-700'}`}>
-                Uscita
+                {t('transaction.types.expense')}
               </Text>
             </Pressable>
 
@@ -142,7 +143,7 @@ export default function ValueScreen() {
               onPress={() => setTransactionType('transfer')}
             >
               <Text className={`font-medium text-base ${transactionType === 'transfer' ? 'text-white' : 'text-gray-700'}`}>
-                Trasferimento
+                {t('transaction.types.transfer')}
               </Text>
             </Pressable>
           </View>

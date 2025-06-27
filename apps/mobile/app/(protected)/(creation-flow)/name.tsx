@@ -78,7 +78,7 @@ export default function NameStepFlow(
               className="mb-8" // Add margin if needed
             >
               <Text className="text-[16px] font-sans font-semibold">
-                {t("auth.actions.continue", "Continua")}
+                {t("auth.actions.continue")}
               </Text>
             </Button>
           </Animated.View>

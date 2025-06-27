@@ -20,6 +20,7 @@ import { RecurrencePickerBottomSheet, RecurrenceOption } from "@/components/bott
 
 import { api } from "@/lib/api";
 import { IconName } from "@/components/ui/icons";
+import { useTranslation } from 'react-i18next';
 
 type TransactionType = 'income' | 'expense' | 'transfer';
 
@@ -33,6 +34,7 @@ const defaultRecurrenceOption: RecurrenceOption = {
 };
 
 export default function TransactionEditScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
   const queryClient = api.useContext();
@@ -341,7 +343,7 @@ export default function TransactionEditScreen() {
 
   if (isLoadingTransaction) {
     return (
-      <HeaderContainer variant="secondary" customTitle="TRANSAZIONE" tabBarHidden={true}>
+      <HeaderContainer variant="secondary" customTitle={t('transaction.edit.title')} tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white w-screen">
           <View className="flex-1 items-center justify-center">
             <Text className="text-center text-gray-500">Caricamento...</Text>
@@ -353,7 +355,7 @@ export default function TransactionEditScreen() {
 
   if (transactionError || !transaction) {
     return (
-      <HeaderContainer variant="secondary" customTitle="TRANSAZIONE" tabBarHidden={true}>
+      <HeaderContainer variant="secondary" customTitle={t('transaction.edit.title')} tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white w-screen">
           <View className="flex-1 items-center justify-center">
             <Text className="text-center text-red-500">Errore nel caricamento della transazione</Text>
@@ -367,7 +369,7 @@ export default function TransactionEditScreen() {
     <>
       <HeaderContainer
         variant="secondary"
-        customTitle="TRANSAZIONE"
+        customTitle={t('transaction.edit.title')}
         tabBarHidden={true}
         rightActions={[{
           icon: <SvgIcon name="delete" size={20} color="#DE4841" />,
