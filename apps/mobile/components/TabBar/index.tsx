@@ -4,12 +4,13 @@ import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useTabBar } from "@/context/TabBarContext";
 import { useRouter } from "expo-router";
 
-export default function TabBar({
+// Memoized TabBar component for better performance
+const TabBar = React.memo<BottomTabBarProps>(({
   state,
   insets,
   navigation,
   descriptors,
-}: BottomTabBarProps) {
+}) => {
   const { isTabBarVisible, tabBarAnimation } = useTabBar();
   const router = useRouter();
 
@@ -21,6 +22,12 @@ export default function TabBar({
   if (shouldHideTabBar) {
     return null;
   }
+
+  // Memoize filtered routes to avoid recalculating on every render
+  const filteredRoutes = React.useMemo(() =>
+    state.routes.filter((route) => (route?.params as { href?: string })?.href !== null || false),
+    [state.routes]
+  );
 
   return (
     <Animated.View
@@ -43,11 +50,11 @@ export default function TabBar({
       <View style={styles.container}>
         <View style={styles.tab_bar_container}>
           {/* Questo strano filtraggio permette di nascondere le tab settando href a null */}
-          {state.routes.filter((route) => (route?.params as { href?: string })?.href !== null || false).map((route, index) => {
+          {filteredRoutes.map((route, index) => {
             const { options } = descriptors[route.key];
             const isFocused = state.index === index;
 
-            const onPress = async () => {
+            const onPress = React.useCallback(async () => {
               const event = navigation.emit({
                 type: "tabPress",
                 target: route.key,
@@ -63,7 +70,17 @@ export default function TabBar({
                   navigation.navigate(route.name);
                 }
               }
-            };
+            }, [isFocused, route.key, route.name, navigation, router]);
+
+            // Memoize tab icon to avoid unnecessary re-renders
+            const tabIcon = React.useMemo(() =>
+              options.tabBarIcon?.({
+                focused: isFocused,
+                color: isFocused ? "#005EFD" : "#8E8E93",
+                size: 24,
+              }),
+              [options.tabBarIcon, isFocused]
+            );
 
             return (
               <Pressable
@@ -73,11 +90,7 @@ export default function TabBar({
               >
                 <View style={styles.tab_button}>
                   <View style={styles.icon_container}>
-                    {options.tabBarIcon?.({
-                      focused: isFocused,
-                      color: isFocused ? "#005EFD" : "#8E8E93",
-                      size: 24,
-                    })}
+                    {tabIcon}
                   </View>
                   {
                     options.title && (
@@ -100,7 +113,11 @@ export default function TabBar({
       </View>
     </Animated.View>
   );
-}
+});
+
+TabBar.displayName = 'TabBar';
+
+export default TabBar;
 
 const styles = StyleSheet.create({
   safe_area_container: {

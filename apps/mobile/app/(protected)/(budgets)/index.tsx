@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, RefObject, useState, useEffect } from 'react';
+import React, { useRef, useCallback, RefObject, useState, useEffect, useMemo } from 'react';
 import { View, SafeAreaView, ScrollView, Pressable, RefreshControl } from 'react-native';
 import Animated, {
   FadeIn,
@@ -40,9 +40,8 @@ import { useCurrency } from '@/hooks/use-currency';
 //   }).format(amount);
 // };
 
-// Helper to get category background color with opacity
+// Helper to get category background color with opacity - memoized
 const getCategoryBackgroundColor = (color: string) => {
-  // Convert hex color to rgba with low opacity for background
   const hex = color.replace('#', '');
   const r = parseInt(hex.substr(0, 2), 16);
   const g = parseInt(hex.substr(2, 2), 16);
@@ -50,8 +49,8 @@ const getCategoryBackgroundColor = (color: string) => {
   return `rgba(${r}, ${g}, ${b}, 0.1)`;
 };
 
-// Loading skeleton component
-const LoadingSkeleton = ({ budgetCount = 3 }: { budgetCount?: number }) => {
+// Memoized loading skeleton component for better performance
+const LoadingSkeleton = React.memo<{ budgetCount?: number }>(({ budgetCount = 3 }) => {
   const shimmerOpacity = useSharedValue(0.3);
 
   useEffect(() => {
@@ -69,8 +68,11 @@ const LoadingSkeleton = ({ budgetCount = 3 }: { budgetCount?: number }) => {
     opacity: shimmerOpacity.value,
   }));
 
-  // Generate skeleton items based on cached budget count
-  const skeletonItems = Array.from({ length: Math.max(1, budgetCount) }, (_, index) => index + 1);
+  // Memoize skeleton items
+  const skeletonItems = useMemo(() =>
+    Array.from({ length: Math.max(1, budgetCount) }, (_, index) => index + 1),
+    [budgetCount]
+  );
 
   return (
     <Animated.View
@@ -91,17 +93,12 @@ const LoadingSkeleton = ({ budgetCount = 3 }: { budgetCount?: number }) => {
       ))}
     </Animated.View>
   );
-};
+});
 
-// Individual Budget Item Component with animations
-const BudgetItem = ({
-  budget,
-  category,
-  spending,
-  onPress,
-  index,
-  formatCurrency
-}: {
+LoadingSkeleton.displayName = 'LoadingSkeleton';
+
+// Memoized Budget Item Component with simplified animations for better performance
+const BudgetItem = React.memo<{
   budget: {
     id: string;
     allocatedAmount: string | number;
@@ -118,24 +115,36 @@ const BudgetItem = ({
   onPress: () => void;
   index: number;
   formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}>(({
+  budget,
+  category,
+  spending,
+  onPress,
+  index,
+  formatCurrency
 }) => {
-  const budgetAmount = Number(budget.allocatedAmount);
-  const spent = spending;
-  const remaining = budgetAmount - spent;
-  const percentage = Math.min(100, (spent / budgetAmount) * 100);
+  // Memoize calculations to avoid recalculation on every render
+  const calculations = useMemo(() => {
+    const budgetAmount = Number(budget.allocatedAmount);
+    const spent = spending;
+    const remaining = budgetAmount - spent;
+    const percentage = Math.min(100, (spent / budgetAmount) * 100);
+
+    return { budgetAmount, spent, remaining, percentage };
+  }, [budget.allocatedAmount, spending]);
 
   const progressWidth = useSharedValue(0);
   const itemScale = useSharedValue(1);
 
   useEffect(() => {
     progressWidth.value = withDelay(
-      index * 100,
-      withSpring(percentage, {
-        damping: 15,
-        stiffness: 100,
+      index * 50, // Reduced delay for smoother feel
+      withSpring(calculations.percentage, {
+        damping: 20, // Increased damping for less bouncy animation
+        stiffness: 120,
       })
     );
-  }, [percentage, index]);
+  }, [calculations.percentage, index]);
 
   const progressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
@@ -145,19 +154,32 @@ const BudgetItem = ({
     transform: [{ scale: itemScale.value }],
   }));
 
-  const handlePressIn = () => {
+  const handlePressIn = useCallback(() => {
     itemScale.value = withSpring(0.98);
-  };
+  }, [itemScale]);
 
-  const handlePressOut = () => {
+  const handlePressOut = useCallback(() => {
     itemScale.value = withSpring(1);
-  };
+  }, [itemScale]);
+
+  // Memoize background color calculation
+  const categoryBackgroundColor = useMemo(() =>
+    getCategoryBackgroundColor(category.color),
+    [category.color]
+  );
+
+  // Memoize remaining amount color
+  const remainingAmountColor = useMemo(() => {
+    if (calculations.remaining < 0) return '#DE4841';
+    if (calculations.remaining < calculations.budgetAmount * 0.2) return '#EBAE46';
+    return '#66BD50';
+  }, [calculations.remaining, calculations.budgetAmount]);
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(index * 150).duration(500).springify()}
+      entering={FadeInDown.delay(index * 100).duration(400).springify()} // Reduced duration
       exiting={FadeOutUp.duration(300)}
-      layout={Layout.springify().damping(15).stiffness(100)}
+      layout={Layout.springify().damping(20).stiffness(120)} // Adjusted for smoother animation
       style={itemStyle}
     >
       <Pressable
@@ -169,7 +191,7 @@ const BudgetItem = ({
         {/* Category header */}
         <View className="items-center mb-2">
           <View
-            style={{ backgroundColor: getCategoryBackgroundColor(category.color) }}
+            style={{ backgroundColor: categoryBackgroundColor }}
             className="flex-row items-center py-1.5 px-3 rounded-xl"
           >
             <Text
@@ -205,25 +227,22 @@ const BudgetItem = ({
           <View className="items-center">
             <Text className="text-gray-400 text-sm">Budget</Text>
             <Text className="text-gray-700 text-base font-medium">
-              {formatCurrency(budgetAmount)}
+              {formatCurrency(calculations.budgetAmount)}
             </Text>
           </View>
           <View className="items-center">
             <Text className="text-gray-400 text-sm">Speso già</Text>
             <Text className="text-gray-700 text-base font-medium">
-              {formatCurrency(spent)}
+              {formatCurrency(calculations.spent)}
             </Text>
           </View>
           <View className="items-center">
             <Text className="text-gray-400 text-sm">Rimanente</Text>
             <Text
               className="text-base font-medium"
-              style={{
-                color: remaining < 0 ? '#DE4841' :
-                  remaining < budgetAmount * 0.2 ? '#EBAE46' : '#66BD50'
-              }}
+              style={{ color: remainingAmountColor }}
             >
-              {remaining < 0 ? '-' : ''}{formatCurrency(Math.abs(remaining))}
+              {calculations.remaining < 0 ? '-' : ''}{formatCurrency(Math.abs(calculations.remaining))}
             </Text>
           </View>
         </View>
@@ -233,7 +252,9 @@ const BudgetItem = ({
       </Pressable>
     </Animated.View>
   );
-};
+});
+
+BudgetItem.displayName = 'BudgetItem';
 
 export default function BudgetScreen() {
   const { formatCurrency, getCurrencySymbol } = useCurrency();
@@ -255,6 +276,12 @@ export default function BudgetScreen() {
   // Get API utils
   const utils = api.useContext();
 
+  // Memoize query parameters to avoid unnecessary refetches
+  const queryParams = useMemo(() => ({
+    month: currentDate.getMonth() + 1,
+    year: currentDate.getFullYear(),
+  }), [currentDate]);
+
   // API queries
   const {
     data: budgetSettings,
@@ -265,8 +292,11 @@ export default function BudgetScreen() {
 
   const { data: allCategories, refetch: refetchCategories } = api.category.list.useQuery({});
 
-  // Extract macro categories
-  const macroCategories = allCategories?.filter(cat => cat.type === 'INCOME' || cat.type === 'EXPENSE');
+  // Extract macro categories - memoized
+  const macroCategories = useMemo(() =>
+    allCategories?.filter(cat => cat.type === 'INCOME' || cat.type === 'EXPENSE'),
+    [allCategories]
+  );
 
   // Get transaction data for the current month
   const {
@@ -274,20 +304,22 @@ export default function BudgetScreen() {
     refetch: refetchTransactions,
     isRefetching: isRefetchingTransactions
   } = api.transaction.getMonthlySpending.useQuery({
-    month: currentDate.getMonth() + 1,
-    year: currentDate.getFullYear(),
+    ...queryParams,
     // Pass selected categories if any, undefined means get all transactions
     macroCategoryIds: budgetSettings?.map(budget => budget.macroCategoryId),
   });
 
-  // Determine loading and content states
-  const isInitialLoading = isLoadingBudgets;
-  const hasBudgets = budgetSettings && budgetSettings.length > 0;
+  // Memoize loading and content states
+  const contentStates = useMemo(() => {
+    const isInitialLoading = isLoadingBudgets;
+    const hasBudgets = budgetSettings && budgetSettings.length > 0;
 
-  // Smart loading logic based on cache
-  const shouldShowSkeleton = isInitialLoading && hasBudgetsInCache;
-  const shouldShowEmptyState = !isInitialLoading && !hasBudgets && !hasBudgetsInCache;
-  const shouldShowBudgetView = !isInitialLoading && hasBudgets;
+    return {
+      shouldShowSkeleton: isInitialLoading && hasBudgetsInCache,
+      shouldShowEmptyState: !isInitialLoading && !hasBudgets && !hasBudgetsInCache,
+      shouldShowBudgetView: !isInitialLoading && hasBudgets,
+    };
+  }, [isLoadingBudgets, budgetSettings, hasBudgetsInCache]);
 
   // Initialize monthly total budget and cache from MMKV
   useEffect(() => {
@@ -321,16 +353,16 @@ export default function BudgetScreen() {
 
   // Animate content when data loads
   useEffect(() => {
-    if (!isInitialLoading) {
-      contentOpacity.value = withTiming(1, { duration: 600 });
+    if (!isLoadingBudgets) {
+      contentOpacity.value = withTiming(1, { duration: 400 }); // Reduced duration
       summaryScale.value = withSpring(1, {
-        damping: 15,
-        stiffness: 100,
+        damping: 20, // Increased damping for smoother animation
+        stiffness: 120,
       });
     }
-  }, [isInitialLoading, contentOpacity, summaryScale]);
+  }, [isLoadingBudgets, contentOpacity, summaryScale]);
 
-  // Handle refresh
+  // Memoized refresh handler
   const handleRefresh = useCallback(() => {
     refetchBudgets();
     refetchCategories();
@@ -342,29 +374,28 @@ export default function BudgetScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const { hideTabBar, showTabBar } = useTabBar();
 
-  const handleOpenBottomSheet = () => {
+  const handleOpenBottomSheet = useCallback(() => {
     hideTabBar();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     bottomSheetRef.current?.expand();
-  };
+  }, [hideTabBar]);
 
-  const handleCloseBottomSheet = () => {
+  const handleCloseBottomSheet = useCallback(() => {
     showTabBar();
     bottomSheetRef.current?.close();
 
     // Invalidate queries when bottom sheet is closed to refresh data
     utils.budget.getCurrentSettings.invalidate();
     utils.transaction.getMonthlySpending.invalidate({
-      month: currentDate.getMonth() + 1,
-      year: currentDate.getFullYear(),
+      ...queryParams,
       // Use current selected categories or undefined for all
       macroCategoryIds: budgetSettings?.map(budget => budget.macroCategoryId),
     });
-  };
+  }, [showTabBar, utils, queryParams, budgetSettings]);
 
-  const handleBudgetClick = (budgetId: string) => {
+  const handleBudgetClick = useCallback((budgetId: string) => {
     router.push(`/(protected)/(home)/(category-transactions)/${budgetId}?referrer=budgets`);
-  };
+  }, []);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -384,11 +415,11 @@ export default function BudgetScreen() {
         ]}
       />
     ),
-    []
+    [showTabBar]
   );
 
-  // Calculate budget summary data
-  const calculateBudgetSummary = () => {
+  // Memoized budget summary calculation
+  const budgetSummary = useMemo(() => {
     if (!budgetSettings || !transactionData) return null;
 
     // Calculate total allocated budget from expense categories
@@ -415,12 +446,10 @@ export default function BudgetScreen() {
       totalSpent: Math.abs(totalSpent),
       remainingBudget // This is what's left to allocate
     };
-  };
+  }, [budgetSettings, transactionData, macroCategories, monthlyTotalBudget]);
 
-  const budgetSummary = calculateBudgetSummary();
-
-  // Calculate category spending
-  const getCategorySpending = (categoryId: string) => {
+  // Memoized category spending calculation
+  const getCategorySpending = useCallback((categoryId: string) => {
     if (!transactionData) return 0;
 
     return transactionData
@@ -428,43 +457,44 @@ export default function BudgetScreen() {
       .filter((transaction: any) => transaction.subCategory?.macroCategoryId === categoryId)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .reduce((sum: number, transaction: any) => sum + Math.abs(Number(transaction.amount)), 0);
-  };
+  }, [transactionData]);
 
-  // Handle month navigation with animation
-  const goToPreviousMonth = () => {
-    summaryScale.value = withSpring(0.95, { duration: 200 }, () => {
-      summaryScale.value = withSpring(1, { duration: 300 });
+  // Handle month navigation with animation - memoized
+  const goToPreviousMonth = useCallback(() => {
+    summaryScale.value = withSpring(0.95, { duration: 150 }, () => {
+      summaryScale.value = withSpring(1, { duration: 200 });
     });
 
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() - 1);
     setCurrentDate(newDate);
-  };
+  }, [currentDate, summaryScale]);
 
-  const goToNextMonth = () => {
-    summaryScale.value = withSpring(0.95, { duration: 200 }, () => {
-      summaryScale.value = withSpring(1, { duration: 300 });
+  const goToNextMonth = useCallback(() => {
+    summaryScale.value = withSpring(0.95, { duration: 150 }, () => {
+      summaryScale.value = withSpring(1, { duration: 200 });
     });
 
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + 1);
     setCurrentDate(newDate);
-  };
+  }, [currentDate, summaryScale]);
 
-  // Format month name
-  const formatMonthYear = (date: Date) => {
-    return format(date, 'MMMM yyyy', { locale: it });
-  };
+  // Memoized month formatting
+  const formattedMonthYear = useMemo(() =>
+    format(currentDate, 'MMMM yyyy', { locale: it }),
+    [currentDate]
+  );
 
   // Determine if we're refreshing
   const isRefreshing = isRefetchingBudgets || isRefetchingTransactions;
 
-  const rightActions = [
+  const rightActions = useMemo(() => [
     {
       icon: <SvgIcon name="edit" color={"#005EFD"} size={20} />,
-      onPress: () => handleOpenBottomSheet()
+      onPress: handleOpenBottomSheet
     },
-  ];
+  ], [handleOpenBottomSheet]);
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
@@ -478,9 +508,9 @@ export default function BudgetScreen() {
     <>
       <HeaderContainer variant="secondary" customTitle="BUDGET" rightActions={rightActions} modal>
         <SafeAreaView className="flex-1 bg-white">
-          {shouldShowSkeleton ? (
+          {contentStates.shouldShowSkeleton ? (
             <LoadingSkeleton budgetCount={cachedBudgetCount} />
-          ) : shouldShowEmptyState ? (
+          ) : contentStates.shouldShowEmptyState ? (
             // Empty state - no budgets set
             <ScrollView
               contentContainerStyle={{ flexGrow: 1 }}
@@ -498,9 +528,9 @@ export default function BudgetScreen() {
                 {/* Background emojis with staggered animations */}
                 <Animated.Text
                   entering={FadeIn.delay(200).duration(800)}
-                  className="text-[96px] text-gray-500 absolute top-[185px] right-[27px]"
+                  className="absolute top-20 left-10 text-6xl opacity-5"
                 >
-                  🎁
+                  💰
                 </Animated.Text>
                 <Animated.Text
                   entering={FadeIn.delay(400).duration(800)}
@@ -552,7 +582,7 @@ export default function BudgetScreen() {
                 </View>
               </Animated.View>
             </ScrollView>
-          ) : shouldShowBudgetView ? (
+          ) : contentStates.shouldShowBudgetView ? (
             // Budget view - when budgets exist
             <ScrollView
               contentContainerStyle={{ flexGrow: 1, paddingBottom: 72 }}
@@ -580,7 +610,7 @@ export default function BudgetScreen() {
                       <Text className="text-black">←</Text>
                     </Pressable>
                     <Text className="text-base font-normal text-black capitalize">
-                      {formatMonthYear(currentDate)}
+                      {formattedMonthYear}
                     </Text>
                     <Pressable onPress={goToNextMonth} disabled={
                       // check if the next month is in the future

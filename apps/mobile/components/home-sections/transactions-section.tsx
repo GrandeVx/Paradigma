@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
 import Animated, {
   FadeIn,
@@ -19,6 +19,7 @@ import { SwipeableTransactionItem } from '@/components/ui/swipeable-transaction-
 import { InvalidationUtils } from '@/lib/invalidation-utils';
 import * as Haptics from 'expo-haptics';
 import { useCurrency } from '@/hooks/use-currency';
+import { useMonth } from '@/context/month-context';
 
 interface TransactionGroup {
   date: string;
@@ -358,8 +359,8 @@ const FlatListTransactionComponent: React.FC<{
 
 
 export const TransactionsSection: React.FC = () => {
-  const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth() + 1);
-  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
+  // Use shared month context
+  const { currentMonth, currentYear, handleMonthChange } = useMonth();
 
   // Currency hook
   const { formatCurrency } = useCurrency();
@@ -451,22 +452,23 @@ export const TransactionsSection: React.FC = () => {
     }
   }, [isLoading, contentOpacity, summaryScale]);
 
-  // Handle transaction delete
-  const handleDeleteTransaction = async (transactionId: string) => {
+  // Memoized delete handler
+  const handleDeleteTransaction = useCallback(async (transactionId: string) => {
     try {
       await deleteMutation.mutateAsync({ transactionId });
     } catch (error) {
       console.error('Failed to delete transaction:', error);
     }
-  };
+  }, [deleteMutation]);
 
-  // Handle refresh
-  const handleRefresh = async () => {
+  // Memoized refresh handler
+  const handleRefresh = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await refetch();
-  };
+  }, [refetch]);
 
-  const formatDayName = (date: Date): string => {
+  // Memoized format day name function
+  const formatDayName = useCallback((date: Date): string => {
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
 
@@ -479,8 +481,7 @@ export const TransactionsSection: React.FC = () => {
       'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC'];
 
     return `${dayNames[date.getDay()]}, ${date.getDate()} ${monthNames[date.getMonth()]}`;
-  };
-
+  }, []);
 
   // Process and group transactions by day, then convert to FlatList format
   const { summary, flatListData } = useMemo(() => {
@@ -582,35 +583,43 @@ export const TransactionsSection: React.FC = () => {
       summary: { income, expenses, remaining },
       flatListData
     };
-  }, [transactions]);
+  }, [transactions, formatDayName]);
 
-  const handleMonthChange = (month: number, year: number) => {
-    // Animate transition
-    summaryScale.value = withSpring(0.95, { duration: 200 }, () => {
-      summaryScale.value = withSpring(1, { duration: 300 });
-    });
+  // Memoized month change handler with animation
+  const handleMonthChangeWithAnimation = useCallback((month: number, year: number) => {
+    // Use shared context handler with animation support
+    handleMonthChange(month, year, summaryScale);
+  }, [handleMonthChange, summaryScale]);
 
-    setCurrentMonth(month);
-    setCurrentYear(year);
-  };
-
-  // FlatList render item function
-  const renderItem = ({ item }: { item: FlatListItem }) => {
+  // Memoized FlatList render item function
+  const renderItem = useCallback(({ item }: { item: FlatListItem }) => {
     if (item.type === 'header') {
       return <FlatListHeaderComponent item={item} formatCurrency={formatCurrency} />;
     } else {
       return <FlatListTransactionComponent item={item} onDelete={handleDeleteTransaction} />;
     }
-  };
+  }, [formatCurrency, handleDeleteTransaction]);
 
-  // FlatList key extractor
-  const keyExtractor = (item: FlatListItem) => item.id;
+  // Memoized FlatList key extractor
+  const keyExtractor = useCallback((item: FlatListItem) => item.id, []);
+
+  // Memoized animated styles
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+  }));
+
+  const summaryStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: summaryScale.value }],
+  }));
 
   // Determine loading states - Always show skeleton during loading for immediate feedback
   const isInitialLoading = isLoading;
   const shouldShowSkeleton = isInitialLoading;
   const shouldShowEmptyState = !isInitialLoading && (!transactions || transactions.length === 0);
   const shouldShowContent = !isInitialLoading && transactions && transactions.length > 0;
+
+  // ALL CONDITIONAL RENDERING MOVED TO THE END AFTER ALL HOOKS
+  // This prevents the "Rendered fewer hooks than expected" error
 
   if (shouldShowSkeleton) {
     return <TransactionLoadingSkeleton dailyGroupsCount={cachedDailyGroupsCount} />;
@@ -627,18 +636,7 @@ export const TransactionsSection: React.FC = () => {
     );
   }
 
-  if (shouldShowEmptyState) {
-    return (
-      <Animated.View
-        entering={FadeIn.duration(400)}
-        className="flex-1 p-4 justify-center items-center"
-      >
-        <Text className="text-center text-gray-500">Nessuna transazione per questo mese</Text>
-      </Animated.View>
-    );
-  }
-
-  if (!shouldShowContent) {
+  if (!shouldShowContent && !shouldShowEmptyState) {
     return (
       <Animated.View
         entering={FadeIn.duration(400)}
@@ -649,14 +647,8 @@ export const TransactionsSection: React.FC = () => {
     );
   }
 
-  const contentStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
-
-  const summaryStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: summaryScale.value }],
-  }));
-
+  // Always show the main layout with SummaryContainer (includes MonthSelector)
+  // This ensures month navigation is always available, even when no transactions exist
   return (
     <Animated.View style={contentStyle} className="flex-1 px-4 pt-2 pb-6">
       <Animated.View style={summaryStyle}>
@@ -666,12 +658,12 @@ export const TransactionsSection: React.FC = () => {
           remaining={summary.remaining}
           currentMonth={currentMonth}
           currentYear={currentYear}
-          onMonthChange={handleMonthChange}
+          onMonthChange={handleMonthChangeWithAnimation}
           formatCurrency={formatCurrency}
         />
       </Animated.View>
 
-      {flatListData.length === 0 ? (
+      {shouldShowEmptyState || flatListData.length === 0 ? (
         <Animated.View
           entering={FadeIn.delay(300).duration(600)}
           className="items-center justify-center py-12 flex-1"

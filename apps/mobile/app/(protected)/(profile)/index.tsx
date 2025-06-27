@@ -16,6 +16,7 @@ import { useTabBar } from "@/context/TabBarContext";
 import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { ManualUpdateChecker } from "@/components/ui";
 import { useCurrency, type Currency } from "@/hooks/use-currency";
+import { useProfileIcon } from "@/hooks/use-profile-icon";
 
 const LANGUAGES = [
   { code: "en-US", flag: "🇺🇸", name: "English" },
@@ -72,6 +73,7 @@ export default function ProfileScreen() {
   const { t, i18n: i18nInstance } = useTranslation();
   const { hideTabBar } = useTabBar();
   const { currency, setCurrency, supportedCurrencies } = useCurrency();
+  const { icon, setIcon, supportedIcons } = useProfileIcon();
 
   const handleLanguageChange = async (language: string) => {
     try {
@@ -93,6 +95,26 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error("Error changing currency:", error);
       Alert.alert("Errore", "Impossibile cambiare la valuta. Riprova.");
+    }
+  };
+
+  const handleIconChange = async (selectedIcon: string) => {
+    try {
+      await setIcon(selectedIcon);
+      profileIconBottomSheetRef.current?.close();
+      // generate an alert to tell the user that we need to restart the app to see the new icon
+      Alert.alert("Icona aggiornata", "Per applicare la nuova icona, è necessario riavviare l'app.", [
+        {
+          text: "Riavvia",
+          onPress: () => {
+            reloadAppAsync();
+          }
+        }
+      ])
+
+    } catch (error) {
+      console.error("Error changing icon:", error);
+      Alert.alert("Errore", "Impossibile cambiare l'icona. Riprova.");
     }
   };
 
@@ -170,6 +192,7 @@ export default function ProfileScreen() {
 
   const languageBottomSheetRef = useRef<BottomSheet>(null);
   const currencyBottomSheetRef = useRef<BottomSheet>(null);
+  const profileIconBottomSheetRef = useRef<BottomSheet>(null);
   return (
     <>
       <HeaderContainer variant="secondary" hideBackButton={true}>
@@ -177,11 +200,11 @@ export default function ProfileScreen() {
           {/* IMPOSTAZIONI ACCOUNT */}
           <Section title="IMPOSTAZIONI ACCOUNT">
             {/* Profile Picture */}
-            <View style={styles.profileContainer}>
+            <Pressable style={styles.profileContainer} onPress={() => profileIconBottomSheetRef.current?.expand()}>
               <View style={styles.profilePic}>
-                <Text style={styles.profileEmoji}>🤩</Text>
+                <Text style={styles.profileEmoji}>{icon}</Text>
               </View>
-            </View>
+            </Pressable>
 
             <CategoryItem
               label="Nome"
@@ -398,6 +421,52 @@ export default function ProfileScreen() {
           </ScrollView>
         </View>
       </BottomSheet>
+
+      {/* Profile Icon Selection Bottom Sheet */}
+      <BottomSheet
+        ref={profileIconBottomSheetRef}
+        snapPoints={["60%"]}
+        index={-1}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        handleStyle={{
+          backgroundColor: '#FFFFFF',
+          borderTopLeftRadius: 15,
+          borderTopRightRadius: 15,
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: "#000",
+          width: 40,
+        }}
+        containerStyle={{
+          zIndex: 1000,
+        }}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF"
+        }}
+      >
+        <View style={styles.bottomSheetContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Seleziona Icona</Text>
+          </View>
+          <View style={styles.iconGrid}>
+            {supportedIcons.map((iconOption) => (
+              <Pressable
+                key={iconOption}
+                style={[
+                  styles.iconOption,
+                  icon === iconOption && styles.selectedIcon,
+                ]}
+                onPress={() => handleIconChange(iconOption)}
+              >
+                <Text style={styles.iconText}>
+                  {iconOption}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </BottomSheet>
     </>
   );
 }
@@ -528,5 +597,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
     fontWeight: "500",
+  },
+  iconGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 16,
+  },
+  iconOption: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  selectedIcon: {
+    borderWidth: 2,
+    borderColor: "#1E94FF",
+  },
+  iconText: {
+    fontSize: 28,
   },
 });

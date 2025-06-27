@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, ActivityIndicator, TouchableOpacity, Pressable } from 'react-native';
 import Animated, {
   FadeIn,
@@ -19,6 +19,7 @@ import { api } from '@/lib/api';
 import { useRouter } from 'expo-router';
 import { chartsUtils } from '@/lib/mmkv-storage';
 import { useCurrency } from '@/hooks/use-currency';
+import { useMonth } from '@/context/month-context';
 
 // Loading skeleton for charts section
 const ChartsLoadingSkeleton = ({ categoriesCount = 4 }: { categoriesCount?: number }) => {
@@ -373,8 +374,10 @@ const AnimatedCategoryLegendItem: React.FC<{
 export const ChartsSection: React.FC = () => {
   const router = useRouter();
   const { formatCurrency } = useCurrency();
-  const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth() + 1);
-  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
+
+  // Use shared month context
+  const { currentMonth, currentYear, handleMonthChange } = useMonth();
+
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
 
   // Cache state
@@ -461,29 +464,37 @@ export const ChartsSection: React.FC = () => {
     }
   }, [isSummaryLoading, isCategoryLoading, contentOpacity, summaryScale]);
 
-  const handleMonthChange = (month: number, year: number) => {
-    // Animate transition
-    summaryScale.value = withSpring(0.95, { duration: 200 }, () => {
-      summaryScale.value = withSpring(1, { duration: 300 });
-    });
-
-    setCurrentMonth(month);
-    setCurrentYear(year);
+  // Memoized month change handler with animation
+  const handleMonthChangeWithAnimation = useCallback((month: number, year: number) => {
+    // Use shared context handler with animation support
+    handleMonthChange(month, year, summaryScale);
     setExpandedCategoryId(null); // Reset expansion when month changes
-  };
+  }, [handleMonthChange, summaryScale]);
 
-  const handleToggleExpand = (categoryId: string) => {
+
+
+  const handleCategoryPress = useCallback((categoryId: string) => {
+    router.push(`/(protected)/(home)/(category-transactions)/${categoryId}`);
+  }, [router]);
+
+  const handleToggleExpandMemoized = useCallback((categoryId: string) => {
     setExpandedCategoryId(expandedCategoryId === categoryId ? null : categoryId);
-  };
+  }, [expandedCategoryId]);
 
-  const handleDayPress = (day: CalendarDay) => {
+  const handleDayPressMemoized = useCallback((day: CalendarDay) => {
     const dateString = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${day.day.toString().padStart(2, '0')}`;
     router.push(`/(protected)/(home)/(daily-transactions)/${dateString}`);
-  };
+  }, [currentYear, currentMonth, router]);
 
-  const handleCategoryPress = (categoryId: string) => {
-    router.push(`/(protected)/(home)/(category-transactions)/${categoryId}`);
-  };
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RENDERING
+  // This prevents the "Rendered fewer hooks than expected" error
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+  }));
+
+  const summaryStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: summaryScale.value }],
+  }));
 
   // Determine loading states
   const isInitialLoading = isSummaryLoading || isCategoryLoading;
@@ -491,6 +502,12 @@ export const ChartsSection: React.FC = () => {
   const shouldShowEmptyState = !isInitialLoading && (!categoryData?.categories || categoryData.categories.length === 0) && !hasChartsInCache;
   const shouldShowContent = !isInitialLoading && categoryData?.categories && categoryData.categories.length > 0;
 
+  // Handle no data case - prepare data
+  const summary = summaryData || { income: 0, expenses: 0, remaining: 0 };
+  const categories: CategoryData[] = categoryData?.categories || [];
+  const totalExpenses = categoryData?.totalAmount || 0;
+
+  // ALL CONDITIONAL RENDERING MOVED TO THE END AFTER ALL HOOKS
   if (shouldShowSkeleton) {
     return <ChartsLoadingSkeleton categoriesCount={cachedCategoriesCount} />;
   }
@@ -499,17 +516,30 @@ export const ChartsSection: React.FC = () => {
     return (
       <Animated.View
         entering={FadeIn.duration(400)}
-        className="flex-1 items-center justify-center p-4"
+        className="flex-1 p-4"
       >
-        <Text className="text-center text-gray-500">Nessun dato disponibile per questo mese</Text>
+        {/* Always show summary container for month navigation */}
+        <Animated.View style={summaryStyle}>
+          <SummaryContainer
+            income={summary.income}
+            expenses={summary.expenses}
+            remaining={summary.remaining}
+            currentMonth={currentMonth}
+            currentYear={currentYear}
+            onMonthChange={handleMonthChangeWithAnimation}
+            formatCurrency={formatCurrency}
+          />
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeIn.delay(300).duration(600)}
+          className="items-center justify-center py-12 flex-1"
+        >
+          <Text className="text-center text-gray-500">Nessun dato disponibile per questo mese</Text>
+        </Animated.View>
       </Animated.View>
     );
   }
-
-  // Handle no data case
-  const summary = summaryData || { income: 0, expenses: 0, remaining: 0 };
-  const categories: CategoryData[] = categoryData?.categories || [];
-  const totalExpenses = categoryData?.totalAmount || 0;
 
   if (!shouldShowContent) {
     return (
@@ -525,14 +555,6 @@ export const ChartsSection: React.FC = () => {
     );
   }
 
-  const contentStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
-
-  const summaryStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: summaryScale.value }],
-  }));
-
 
   return (
     <Animated.View style={contentStyle} className="flex-1">
@@ -545,7 +567,7 @@ export const ChartsSection: React.FC = () => {
             remaining={summary.remaining}
             currentMonth={currentMonth}
             currentYear={currentYear}
-            onMonthChange={handleMonthChange}
+            onMonthChange={handleMonthChangeWithAnimation}
             formatCurrency={formatCurrency}
           />
         </Animated.View>
@@ -579,7 +601,7 @@ export const ChartsSection: React.FC = () => {
                     isExpanded={expandedCategoryId === category.id}
                     subCategories={expandedCategoryId === category.id ? subCategoryData?.subCategories : undefined}
                     isLoadingSubCategories={expandedCategoryId === category.id ? isSubCategoryLoading : false}
-                    onToggleExpand={() => handleToggleExpand(category.id)}
+                    onToggleExpand={() => handleToggleExpandMemoized(category.id)}
                     onCategoryPress={handleCategoryPress}
                     formatCurrency={formatCurrency}
                   />
@@ -614,7 +636,7 @@ export const ChartsSection: React.FC = () => {
                 data={dailySpendingData?.dailySpending || []}
                 month={currentMonth}
                 year={currentYear}
-                onDayPress={handleDayPress}
+                onDayPress={handleDayPressMemoized}
               />
             )}
           </Animated.View>

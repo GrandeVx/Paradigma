@@ -48,7 +48,8 @@ const AccountCard: React.FC<{
   onPress: (id: string) => void;
   formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
   getCurrencySymbol: () => string;
-}> = React.memo(({ account, onPress, formatCurrency, getCurrencySymbol }) => {
+  isLast: boolean;
+}> = React.memo(({ account, onPress, formatCurrency, getCurrencySymbol, isLast }) => {
   // Custom formatter for the display format used in this screen
   const formatDisplayCurrency = (amount: number) => {
     const [integer, decimal] = amount.toFixed(2).split('.');
@@ -71,10 +72,10 @@ const AccountCard: React.FC<{
 
     return (
       <Pressable
-        className="w-full rounded-3xl bg-transparent mb-2"
+        className={`w-full bg-transparent ${isLast ? '' : 'mb-[-15px]'}`}
         onPress={() => onPress(account.id)}
       >
-        <View className="w-full rounded-3xl p-6" style={{ backgroundColor: account.color }}>
+        <View className={`w-full p-6 ${isLast ? 'rounded-3xl' : 'rounded-t-3xl'}`} style={{ backgroundColor: account.color }}>
           <View className="flex-row justify-between items-center w-full">
             <View className="flex-row items-center gap-2 py-2">
               <SvgIcon name={account.icon as IconName} width={24} height={24} color="#FFFFFF" />
@@ -296,16 +297,18 @@ export default function AccountsScreen() {
               <Text className="text-gray-500">Nessun conto trovato</Text>
             </View>
           ) : (
-            accounts.map(account => (
+            accounts.map((account, index) => (
               <AccountCard
                 key={account.id}
                 account={account}
                 onPress={handleAccountPress}
                 formatCurrency={formatCurrency}
                 getCurrencySymbol={getCurrencySymbol}
+                isLast={index === accounts.length - 1}
               />
             ))
           )}
+          <View className="h-20" />
         </ScrollView>
       </View>
     </HeaderContainer>

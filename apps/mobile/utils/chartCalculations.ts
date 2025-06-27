@@ -21,7 +21,12 @@ export const calculateDonutSegments = (
   
   return data.map((item) => {
     const percentage = (item.amount / total) * 100;
-    const angleSize = (percentage / 100) * 360;
+    let angleSize = (percentage / 100) * 360;
+    
+    // Fix for 100% single category: reduce angle slightly to avoid SVG rendering issues
+    if (angleSize >= 360) {
+      angleSize = 359.99; // Slightly less than 360 to ensure proper SVG rendering
+    }
     
     // Convert to radians for calculations
     const startAngleRad = (currentAngle * Math.PI) / 180;

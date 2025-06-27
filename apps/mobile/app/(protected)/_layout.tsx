@@ -6,7 +6,8 @@ import { theme } from "@/lib/constants";
 
 import { useTranslation } from "react-i18next";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { View } from "react-native";
+import { View, Text } from "react-native";
+import { useProfileIcon } from "@/hooks/use-profile-icon";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -19,6 +20,7 @@ function TabBarIcon(props: {
 export default function TabLayout() {
 
   const { t } = useTranslation();
+  const { icon, isIconReady } = useProfileIcon();
 
 
   return (
@@ -95,7 +97,12 @@ export default function TabLayout() {
         options={{
           // This title is used to set the title of the bottom tab
           title: t("tab-bar.profile"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+          tabBarIcon: ({ color }) =>
+            isIconReady ? (
+              <Text style={{ fontSize: 28, marginBottom: -3 }}>{icon}</Text>
+            ) : (
+              <TabBarIcon name="user" color={color} />
+            )
         }}
       />
       <Tabs.Screen
