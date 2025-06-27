@@ -31,7 +31,7 @@ export default function NameStepFlow(
   const isButtonDisabled = !name; // Basic check, enhance with validation
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t(params.firstAccount === "true" ? "flow.name.first-account" : "flow.name.title", "NUOVO CONTO")}>
+    <HeaderContainer variant="secondary" customTitle={t(params.firstAccount === "true" ? "flow.name.firstAccount" : "flow.name.title")}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -41,7 +41,7 @@ export default function NameStepFlow(
           <View className="flex-1 justify-center items-center w-full ">
             <Pressable onPress={() => nameInputRef.current?.focus()} className="w-full flex flex-col items-center justify-center" >
               <Text className="text-gray-600 text-base font-sans font-normal mb-2">
-                {t("flow.name.prompt", "Assegna un nome per il tuo conto")}
+                {t("flow.name.prompt")}
               </Text>
               <View className="relative w-full h-fit items-center justify-center">
                 <TextInput
@@ -49,7 +49,7 @@ export default function NameStepFlow(
                   ref={nameInputRef}
                   className="font-sans text-black text-center"
                   style={{ fontSize: 34 }}
-                  placeholder={t("flow.name.placeholder", "Nuovo Conto")}
+                  placeholder={t("flow.name.placeholder")}
                   placeholderTextColor="#9CA3AF"
                   value={name}
                   onChangeText={setName}

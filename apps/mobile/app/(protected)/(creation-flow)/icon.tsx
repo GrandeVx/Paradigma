@@ -37,7 +37,7 @@ export default function IconStepFlow(
   const isButtonDisabled = !icon; // Basic check, enhance with validation
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t("flow.name.title")}>
+    <HeaderContainer variant="secondary" customTitle={t(params.firstAccount === "true" ? "flow.name.firstAccount" : "flow.name.title")}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -47,7 +47,7 @@ export default function IconStepFlow(
           <View className="flex-1 justify-center items-center w-full  ">
             <Pressable onPress={() => nameInputRef.current?.focus()}>
               <Text className="  text-gray-600 text-base font-sans font-normal mb-2 text-center">
-                {t("flow.name.prompt", "Scegli un'icona per")} <Text className="font-semibold font-sans">{params.name.toUpperCase()}</Text>
+                {t("flow.icon.prompt")} <Text className="font-semibold font-sans">{params.name.toUpperCase()}</Text>
               </Text>
 
               <View className="relative w-full items-center justify-center mt-4">
@@ -94,7 +94,7 @@ export default function IconStepFlow(
               className="mb-8" // Add margin if needed
             >
               <Text className="text-[16px] font-sans font-semibold">
-                {t("auth.actions.continue", "Continua")}
+                {t("auth.actions.continue")}
               </Text>
             </Button>
           </Animated.View>

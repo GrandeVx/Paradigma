@@ -59,7 +59,7 @@ export const mutations = {
       return updatedUser;
     }),
 
-  // Delete user account (soft delete)
+  // Delete user account (hard delete with complete data removal)
   deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
     const currentUserId = ctx.session?.user?.id;
     if (!currentUserId) {
@@ -69,26 +69,79 @@ export const mutations = {
       });
     }
 
-    // Soft delete the user with cache invalidation
-    const deletedUser = await ctx.db.user.update({
-      where: { id: currentUserId },
-      data: {
-        isDeleted: true,
-        deletedAt: new Date(),
-      },
-      // Invalidate all user-related caches when account is deleted
-      uncache: {
-        uncacheKeys: [
-          // Invalidate all data related to this user
-          `balanceapp:*:user_id:${currentUserId}*`,
-          // Invalidate user profile data
-          `balanceapp:user:id:${currentUserId}*`
-        ],
-        hasPattern: true
-      }
-    });
+    console.log(`🗑️ [User] Starting complete account deletion for user: ${currentUserId}`);
 
-    return deletedUser;
+    try {
+      // Use Prisma transaction to ensure atomicity
+      const result = await ctx.db.$transaction(async (prisma) => {
+        console.log(`📊 [User] Step 1: Deleting user transactions...`);
+        // Delete all user transactions
+        const deletedTransactions = await prisma.transaction.deleteMany({
+          where: {
+            userId: currentUserId,
+          },
+        });
+        console.log(`✅ [User] Deleted ${deletedTransactions.count} transactions`);
+
+        console.log(`📈 [User] Step 2: Deleting user budgets...`);
+        // Delete all user budgets
+        const deletedBudgets = await prisma.budget.deleteMany({
+          where: {
+            userId: currentUserId,
+          },
+        });
+        console.log(`✅ [User] Deleted ${deletedBudgets.count} budgets`);
+
+        console.log(`🔄 [User] Step 3: Deleting recurring transaction rules...`);
+        // Delete all user recurring transaction rules
+        const deletedRecurringRules = await prisma.recurringTransactionRule.deleteMany({
+          where: {
+            userId: currentUserId,
+          },
+        });
+        console.log(`✅ [User] Deleted ${deletedRecurringRules.count} recurring rules`);
+
+        console.log(`🏦 [User] Step 4: Deleting money accounts...`);
+        // Delete all user money accounts
+        const deletedAccounts = await prisma.moneyAccount.deleteMany({
+          where: {
+            userId: currentUserId,
+          },
+        });
+        console.log(`✅ [User] Deleted ${deletedAccounts.count} money accounts`);
+
+        console.log(`👤 [User] Step 5: Deleting user profile...`);
+        // Finally, delete the user (Sessions and OAuth Accounts will be cascade deleted)
+        const deletedUser = await prisma.user.delete({
+          where: {
+            id: currentUserId,
+          },
+        });
+        console.log(`✅ [User] User profile deleted successfully`);
+
+        return {
+          deletedUser,
+          stats: {
+            transactions: deletedTransactions.count,
+            budgets: deletedBudgets.count,
+            recurringRules: deletedRecurringRules.count,
+            accounts: deletedAccounts.count,
+          },
+        };
+      });
+
+          console.log(`🎉 [User] Account deletion completed successfully:`, result.stats);
+    
+    // Note: Caches will be automatically invalidated when data is deleted
+    return { success: true, deletedData: result.stats };
+
+    } catch (error) {
+      console.error(`❌ [User] Error during account deletion:`, error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to delete account completely. Please contact support.",
+      });
+    }
   }),
 
   addUser: protectedProcedure

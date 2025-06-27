@@ -83,6 +83,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
     onBackPress?.();
 
     if (router.canGoBack()) {
+      console.log("[HEADER] Back navigation with router.back()");
       router.back();
       return;
     }

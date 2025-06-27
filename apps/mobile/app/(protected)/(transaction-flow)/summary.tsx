@@ -23,6 +23,7 @@ import { api } from "@/lib/api";
 import { IconName } from "@/components/ui/icons";
 import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
+import { InvalidationUtils } from '@/lib/invalidation-utils';
 // Removed StackActions import - using normal router navigation instead
 
 type TransactionType = 'income' | 'expense' | 'transfer';
@@ -75,43 +76,41 @@ export default function SummaryScreen() {
     * Mutations
   */
   const expenseMutation = api.transaction.createExpense.useMutation({
-    onSuccess: async () => {
-      await queryClient.recurringRule.list.invalidate();
-      await queryClient.transaction.list.invalidate();
-      await queryClient.account.listWithBalances.invalidate();
-      await queryClient.transaction.getMonthlySpending.invalidate();
-      await queryClient.budget.getCurrentSettings.invalidate();
-      router.back();
+    onSuccess: async (data) => {
+      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+        currentMonth: data.date.getMonth() + 1,
+        currentYear: data.date.getFullYear(),
+        clearCache: true,
+      });
+      router.replace("/(protected)/(home)");
     }
   });
   const incomeMutation = api.transaction.createIncome.useMutation({
-    onSuccess: async () => {
-      await queryClient.recurringRule.list.invalidate();
-      await queryClient.transaction.list.invalidate();
-      await queryClient.account.listWithBalances.invalidate();
-      await queryClient.transaction.getMonthlySpending.invalidate();
-      await queryClient.budget.getCurrentSettings.invalidate();
-      router.back();
+    onSuccess: async (data) => {
+      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+        currentMonth: data.date.getMonth() + 1,
+        currentYear: data.date.getFullYear(),
+        clearCache: true,
+      });
+      router.replace("/(protected)/(home)");
     }
   });
   const transferMutation = api.transaction.createTransfer.useMutation({
-    onSuccess: async () => {
-      await queryClient.recurringRule.list.invalidate();
-      await queryClient.transaction.list.invalidate();
-      await queryClient.account.listWithBalances.invalidate();
-      await queryClient.transaction.getMonthlySpending.invalidate();
-      await queryClient.budget.getCurrentSettings.invalidate();
-      router.back();
+    onSuccess: async (data) => {
+      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+        currentMonth: data.outflowTransaction.date.getMonth() + 1,
+        currentYear: data.outflowTransaction.date.getFullYear(),
+        clearCache: true,
+      });
+      router.replace("/(protected)/(home)");
     }
   });
   const recurringRuleMutation = api.recurringRule.create.useMutation({
     onSuccess: async () => {
-      await queryClient.recurringRule.list.invalidate();
-      await queryClient.transaction.list.invalidate();
-      await queryClient.account.listWithBalances.invalidate();
-      await queryClient.transaction.getMonthlySpending.invalidate();
-      await queryClient.budget.getCurrentSettings.invalidate();
-      router.back();
+      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+        clearCache: true,
+      });
+      router.replace("/(protected)/(home)");
     }
   });
   const convertFrequencyMutation = api.recurringRule.convertFrequency.useMutation();
@@ -182,8 +181,6 @@ export default function SummaryScreen() {
   );
 
 
-  // Removed problematic navigation override - use normal router.back() instead
-
 
 
   // Handle recurrence option change
@@ -201,43 +198,43 @@ export default function SummaryScreen() {
 
       // Enhanced validation
       if (!selectedAccountId) {
-        throw new Error("Seleziona un conto");
+        throw new Error(t("transaction.errors.selectAccount"));
       }
 
       // Verify that the selected account actually exists in the loaded accounts
       const sourceAccount = moneyAccounts?.find(item => item.account.id === selectedAccountId);
       if (!sourceAccount) {
-        throw new Error("Conto selezionato non disponibile. Riprova o seleziona un altro conto.");
+        throw new Error(t("transaction.errors.accountNotAvailable"));
       }
 
       if (transactionType !== 'transfer' && !selectedCategoryId) {
-        throw new Error("Seleziona una categoria");
+        throw new Error(t("transaction.errors.selectCategory"));
       }
 
       if (transactionType === 'transfer') {
         if (!selectedTransferAccountId) {
-          throw new Error("Seleziona un conto di destinazione");
+          throw new Error(t("transaction.errors.selectTransferAccount"));
         }
 
         // Verify destination account exists
         const destAccount = moneyAccounts?.find(item => item.account.id === selectedTransferAccountId);
         if (!destAccount) {
-          throw new Error("Conto di destinazione non disponibile. Riprova o seleziona un altro conto.");
+          throw new Error(t("transaction.errors.transferAccountNotAvailable"));
         }
 
         if (selectedAccountId === selectedTransferAccountId) {
-          throw new Error("I conti di origine e destinazione devono essere diversi");
+          throw new Error(t("transaction.errors.sameAccount"));
         }
       }
 
       if (parseFloat(amount) <= 0) {
-        throw new Error("L'importo deve essere maggiore di zero");
+        throw new Error(t("transaction.errors.amountMustBePositive"));
       }
 
       const description = note ? note :
-        transactionType === 'expense' ? "Spesa" :
-          transactionType === 'income' ? "Entrata" :
-            "Trasferimento";
+        transactionType === 'expense' ? t("transaction.descriptions.expense") :
+          transactionType === 'income' ? t("transaction.descriptions.income") :
+            t("transaction.descriptions.transfer");
 
       // Handle recurring rule if isRecurring is true
       if (isRecurring) {
@@ -258,7 +255,7 @@ export default function SummaryScreen() {
                 amount: singleInstallmentAmount,
                 date: selectedDate,
                 subCategoryId: selectedCategoryId || undefined,
-                notes: note ? `${note} - Prima rata` : `Prima rata di ${numInstallments}`
+                notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments })
               });
               break;
 
@@ -269,13 +266,13 @@ export default function SummaryScreen() {
                 amount: singleInstallmentAmount,
                 date: selectedDate,
                 subCategoryId: selectedCategoryId || undefined,
-                notes: note ? `${note} - Prima rata` : `Prima rata di ${numInstallments}`
+                notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments })
               });
               break;
 
             case 'transfer':
               if (!selectedTransferAccountId) {
-                throw new Error("Seleziona un conto di destinazione per il trasferimento");
+                throw new Error(t("transaction.errors.selectTransferAccountError"));
               }
               await transferMutation.mutateAsync({
                 fromAccountId: selectedAccountId,
@@ -283,12 +280,12 @@ export default function SummaryScreen() {
                 amount: singleInstallmentAmount,
                 date: selectedDate,
                 description: `${description} (1/${numInstallments})`,
-                notes: note ? `${note} - Prima rata` : `Prima rata di ${numInstallments}`
+                notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments })
               });
               break;
 
             default:
-              throw new Error("Tipo di transazione non supportato per le rate");
+              throw new Error(t("transaction.errors.unsupportedTransactionType"));
           }
 
           // Then create the recurring rule for the remaining installments (if more than 1)
@@ -301,7 +298,7 @@ export default function SummaryScreen() {
             if (transactionType !== 'transfer') {
               await recurringRuleMutation.mutateAsync({
                 accountId: selectedAccountId,
-                description: `${description} (rate rimanenti)`,
+                description: `${description} (${t("transaction.descriptions.remainingInstallments")})`,
                 amount: singleInstallmentAmount,
                 type: transactionType === "income" ? "INCOME" : "EXPENSE",
                 subCategoryId: selectedCategoryId || undefined,
@@ -310,7 +307,7 @@ export default function SummaryScreen() {
                 frequencyInterval,
                 isInstallment: true,
                 totalOccurrences: numInstallments - 1, // Minus the first one we already created
-                notes: note ? `${note} - Rate automatiche` : `Rate automatiche (${numInstallments - 1} rimanenti)`
+                notes: note ? `${note} - ${t("transaction.descriptions.remainingInstallments")}` : t("transaction.descriptions.remainingInstallmentsNote", { count: numInstallments - 1 })
               });
             } else {
               // For transfers, we show a warning that only the first installment was created
@@ -319,7 +316,7 @@ export default function SummaryScreen() {
           }
 
         } catch (apiError) {
-          throw new Error("Si è verificato un errore nel creare la transazione a rate. Verifica che il conto esista.");
+          throw new Error(t("transaction.errors.createInstallmentError"));
         }
       } else {
         // Handle single transactions
@@ -330,7 +327,7 @@ export default function SummaryScreen() {
               // Get full account object to verify it exists
               const expenseAccount = moneyAccounts?.find(item => item.account.id === selectedAccountId);
               if (!expenseAccount) {
-                throw new Error("Conto selezionato non disponibile");
+                throw new Error(t("transaction.errors.accountNotAvailable"));
               }
 
               try {
@@ -343,7 +340,7 @@ export default function SummaryScreen() {
                   notes: note || undefined
                 });
               } catch (error) {
-                throw new Error("Errore nella creazione della spesa: " + (error instanceof Error ? error.message : String(error)));
+                throw new Error(t("transaction.errors.createExpenseError", { error: error instanceof Error ? error.message : String(error) }));
               }
               break;
 
@@ -352,7 +349,7 @@ export default function SummaryScreen() {
               // Get full account object to verify it exists
               const incomeAccount = moneyAccounts?.find(item => item.account.id === selectedAccountId);
               if (!incomeAccount) {
-                throw new Error("Conto selezionato non disponibile");
+                throw new Error(t("transaction.errors.accountNotAvailable"));
               }
 
               try {
@@ -365,7 +362,7 @@ export default function SummaryScreen() {
                   notes: note || undefined
                 });
               } catch (error) {
-                throw new Error("Errore nella creazione dell'entrata: " + (error instanceof Error ? error.message : String(error)));
+                throw new Error(t("transaction.errors.createIncomeError", { error: error instanceof Error ? error.message : String(error) }));
               }
               break;
 
@@ -376,11 +373,11 @@ export default function SummaryScreen() {
               const toAccount = moneyAccounts?.find(item => item.account.id === selectedTransferAccountId);
 
               if (!fromAccount) {
-                throw new Error("Conto di origine non disponibile");
+                throw new Error(t("transaction.errors.fromAccountNotAvailable"));
               }
 
               if (!toAccount) {
-                throw new Error("Conto di destinazione non disponibile");
+                throw new Error(t("transaction.errors.toAccountNotAvailable"));
               }
 
 
@@ -394,13 +391,16 @@ export default function SummaryScreen() {
                   notes: note || undefined
                 });
               } catch (error) {
-                throw new Error("Errore nella creazione del trasferimento: " + (error instanceof Error ? error.message : String(error)));
+                throw new Error(t("transaction.errors.createTransferError", { error: error instanceof Error ? error.message : String(error) }));
               }
               break;
           }
 
         } catch (apiError) {
-          throw new Error(`Errore nella creazione della ${transactionType === 'expense' ? 'spesa' : transactionType === 'income' ? 'entrata' : 'trasferimento'}. Verifica che i conti esistano.`);
+          const type = transactionType === 'expense' ? t('transaction.types.expense') :
+            transactionType === 'income' ? t('transaction.types.income') :
+              t('transaction.types.transfer');
+          throw new Error(t("transaction.errors.createTransactionError", { type }));
         }
       }
 
@@ -424,11 +424,11 @@ export default function SummaryScreen() {
             frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
             frequencyInterval,
             isInstallment: false, // Not an installment, but a recurring transaction
-            notes: note ? `${note} (${recurrenceOption.label.toLowerCase()})` : `Transazione ricorrente ${recurrenceOption.label.toLowerCase()}`
+            notes: note ? `${note} (${recurrenceOption.label.toLowerCase()})` : t("transaction.descriptions.recurringNote", { frequency: recurrenceOption.label.toLowerCase() })
           });
 
         } catch (apiError) {
-          throw new Error("Si è verificato un errore nel creare la transazione ricorrente. Verifica che il conto esista.");
+          throw new Error(t("transaction.errors.createRecurringError"));
         }
       }
 
@@ -449,7 +449,7 @@ export default function SummaryScreen() {
       } else if (typeof err === 'object' && err !== null && 'message' in err) {
         errorMessage = String((err as { message: unknown }).message);
       } else {
-        errorMessage = "Si è verificato un errore nel salvataggio della transazione";
+        errorMessage = t("transaction.errors.saveTransactionError");
       }
 
       setError(errorMessage);
@@ -465,9 +465,9 @@ export default function SummaryScreen() {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) return 'Oggi';
-    if (date.toDateString() === tomorrow.toDateString()) return 'Domani';
-    if (date.toDateString() === yesterday.toDateString()) return 'Ieri';
+    if (date.toDateString() === today.toDateString()) return t('transaction.dates.today');
+    if (date.toDateString() === tomorrow.toDateString()) return t('transaction.dates.tomorrow');
+    if (date.toDateString() === yesterday.toDateString()) return t('transaction.dates.yesterday');
     return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
@@ -484,27 +484,27 @@ export default function SummaryScreen() {
 
   const getTransactionTypeText = () => {
     switch (transactionType) {
-      case 'income': return 'Entrata';
-      case 'expense': return 'Uscita';
-      case 'transfer': return 'Trasferimento';
-      default: return 'Uscita';
+      case 'income': return t('transaction.types.income');
+      case 'expense': return t('transaction.types.expense');
+      case 'transfer': return t('transaction.types.transfer');
+      default: return t('transaction.types.expense');
     }
   };
 
   const getCategoryName = () => {
     if (selectedCategoryId) {
       const subCategory = categories?.flatMap(cat => cat.subCategories).find(sc => sc.id === selectedCategoryId);
-      return subCategory ? `${subCategory.icon} ${subCategory.name}` : 'Seleziona categoria';
+      return subCategory ? `${subCategory.icon} ${subCategory.name}` : t('transaction.placeholders.selectCategory');
     }
-    return 'Seleziona una categoria';
+    return t('transaction.placeholders.selectCategory');
   };
 
   const getAccountName = () => {
     if (selectedAccountId) {
       const accountData = moneyAccounts?.find(item => item.account.id === selectedAccountId);
-      return accountData ? accountData.account.name : 'Seleziona un conto';
+      return accountData ? accountData.account.name : t('transaction.placeholders.selectAccount');
     }
-    return 'Seleziona un conto';
+    return t('transaction.placeholders.selectAccount');
   };
 
   const getAccountIcon = () => {
@@ -518,9 +518,9 @@ export default function SummaryScreen() {
   const getTransferAccountName = () => {
     if (selectedTransferAccountId) {
       const accountData = moneyAccounts?.find(item => item.account.id === selectedTransferAccountId);
-      return accountData ? accountData.account.name : 'Seleziona un conto';
+      return accountData ? accountData.account.name : t('transaction.placeholders.selectAccount');
     }
-    return 'Seleziona un conto';
+    return t('transaction.placeholders.selectAccount');
   };
 
   const formattedAmount = parseFloat(amount).toLocaleString('it-IT', {
@@ -585,12 +585,12 @@ export default function SummaryScreen() {
             <View className="flex-col">
               <Pressable disabled={transactionType === 'transfer'} onPress={handleOpenCategoryBottomSheet} className="border-b border-t border-gray-200 py-4">
                 <View className="flex-row gap-8 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Categoria</Text>
+                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.category')}</Text>
                   <View className="flex-row items-center">
                     {transactionType === 'transfer' ? (
                       <View className="flex-row items-center gap-3">
                         <SvgIcon name="target" size={16} color="gray" />
-                        <Text className="text-gray-400" style={{ fontSize: 16, fontWeight: 'regular' }}>Trasferimento</Text>
+                        <Text className="text-gray-400" style={{ fontSize: 16, fontWeight: 'regular' }}>{t('transaction.types.transfer')}</Text>
                       </View>
                     ) : (
                       <Text className="text-black text-base">{getCategoryName()}</Text>
@@ -601,7 +601,7 @@ export default function SummaryScreen() {
 
               <Pressable onPress={handleOpenMoneyAccountBottomSheet} className="border-b border-gray-200 py-4">
                 <View className="flex-row gap-8 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{transactionType === 'transfer' ? 'Da conto' : 'Conto'}</Text>
+                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{transactionType === 'transfer' ? t('transaction.fields.fromAccount') : t('transaction.fields.account')}</Text>
                   <View className="flex-row items-center gap-3">
                     <SvgIcon name={getAccountIcon()} size={16} color="gray" />
                     <Text className="text-black text-base">{getAccountName()}</Text>
@@ -612,7 +612,7 @@ export default function SummaryScreen() {
               {transactionType === 'transfer' && (
                 <Pressable onPress={handleOpenTransferAccountBottomSheet} className="border-b border-gray-200 py-4">
                   <View className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Al conto</Text>
+                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.toAccount')}</Text>
                     <View className="flex-row items-center">
                       <Text className="text-black text-base">{getTransferAccountName()}</Text>
                     </View>
@@ -623,7 +623,7 @@ export default function SummaryScreen() {
               <View className="border-b border-gray-200 py-4">
                 <View className="flex-row justify-between pr-2 items-center">
                   <Pressable onPress={handleOpenDateBottomSheet} className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Data</Text>
+                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.date')}</Text>
                     <View className="flex-row items-center gap-4">
                       <SvgIcon name="calendar" size={16} color="black" />
                       <Text className="text-black text-base">{getDateText(selectedDate)}</Text>
@@ -633,8 +633,8 @@ export default function SummaryScreen() {
                     <Pressable onPress={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}>
                       <SvgIcon name="left" size={14} color="black" />
                     </Pressable>
-                    <Pressable onPress={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}>
-                      <SvgIcon name="right" size={14} color="black" />
+                    <Pressable disabled={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date()} onPress={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}>
+                      <SvgIcon name="right" size={14} color={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date() ? 'gray' : 'black'} />
                     </Pressable>
                   </View>
                 </View>
@@ -644,7 +644,7 @@ export default function SummaryScreen() {
                 (transactionType === 'expense' || transactionType === 'income') && (
                   <View className="border-b border-gray-200 py-4">
                     <View className="flex-row gap-8 items-center py-2">
-                      <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Rate</Text>
+                      <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.installments')}</Text>
                       <Pressable
                         onPress={() => {
                           if (isRecurring) {
@@ -658,18 +658,18 @@ export default function SummaryScreen() {
                           <SvgIcon name="link" size={16} color="black" />
                           {isRecurring ? (
                             <View className="flex-col">
-                              <Text className="text-black text-base font-normal">{`${numInstallments} rate`}</Text>
+                              <Text className="text-black text-base font-normal">{t('transaction.installments.multiple', { count: numInstallments })}</Text>
                               <Text className="text-gray-600 text-xs font-normal">
-                                {frequency === 'daily' && frequencyDays === 14 && 'ogni 14 giorni'}
-                                {frequency === 'monthly' && frequencyDays === 30 && 'ogni 30 giorni'}
-                                {frequency === 'monthly' && frequencyDays === 60 && 'ogni 60 giorni'}
-                                {frequency === 'monthly' && frequencyDays === 90 && 'ogni 90 giorni'}
-                                {frequency === 'monthly' && frequencyDays === 180 && 'ogni 180 giorni'}
+                                {frequency === 'daily' && frequencyDays === 14 && t('transaction.installments.every14Days')}
+                                {frequency === 'monthly' && frequencyDays === 30 && t('transaction.installments.every30Days')}
+                                {frequency === 'monthly' && frequencyDays === 60 && t('transaction.installments.every60Days')}
+                                {frequency === 'monthly' && frequencyDays === 90 && t('transaction.installments.every90Days')}
+                                {frequency === 'monthly' && frequencyDays === 180 && t('transaction.installments.every180Days')}
                                 {!(['daily', 'monthly'].includes(frequency) && [14, 30, 60, 90, 180].includes(frequencyDays)) && frequency}
                               </Text>
                             </View>
                           ) : (
-                            <Text className="text-black text-base">Pagamento singolo</Text>
+                            <Text className="text-black text-base">{t('transaction.installments.single')}</Text>
                           )}
                         </View>
                         <Switch
@@ -693,13 +693,13 @@ export default function SummaryScreen() {
               {!isRecurring && (
                 <View className="border-b border-gray-200 py-4">
                   <View className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Ripeti</Text>
+                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.repeat')}</Text>
                     <Pressable onPress={handleOpenRecurrenceBottomSheet} style={{ flex: 1 }}>
                       <View className="flex-row items-center gap-4 w-full">
                         <SvgIcon name="schedule" size={16} color="black" />
                         <View className="flex-row justify-between items-center pr-4" style={{ flex: 1 }}>
                           <Text className="text-black text-base">
-                            {recurrenceOption.id !== 'none' ? recurrenceOption.label : 'Mai'}
+                            {recurrenceOption.id !== 'none' ? recurrenceOption.label : t('transaction.recurrence.never')}
                           </Text>
                           <SvgIcon name="refresh" size={16} color="black" />
                         </View>
@@ -711,12 +711,12 @@ export default function SummaryScreen() {
 
               <View className="border-b border-gray-200 py-4">
                 <View className="flex-row gap-x-4 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16, marginRight: 18 }}>Note</Text>
+                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16, marginRight: 18 }}>{t('transaction.fields.notes')}</Text>
                   <SvgIcon name="schedule" size={16} color="black" />
                   <TextInput
                     value={note}
                     onChangeText={setNote}
-                    placeholder="Aggiungi una nota"
+                    placeholder={t('transaction.placeholders.addNote')}
                     className="text-black text-base flex-1 text-left"
                     placeholderTextColor="#9CA3AF"
                   />
@@ -741,7 +741,7 @@ export default function SummaryScreen() {
               isLoading={isLoading}
               disabled={!canSaveTransaction()}
             >
-              <Text className="text-white font-semibold text-lg">Continua</Text>
+              <Text className="text-white font-semibold text-lg">{t('auth.actions.continue')}</Text>
             </Button>
           </View>
         </SafeAreaView>

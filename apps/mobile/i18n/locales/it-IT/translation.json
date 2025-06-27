@@ -275,14 +275,23 @@
     "edit": "Modifica",
     "delete": "Elimina",
     "confirm": "Conferma",
-    "success": "Successo"
+    "success": "Successo",
+    "ok": "OK",
+    "actions": {
+      "save": "Salva"
+    }
   },
   "budgets": {
     "title": "Budget",
     "budget": "Budget",
     "spent": "Speso",
     "remaining": "Rimanente",
-    "alreadySpent": "Speso già"
+    "alreadySpent": "Speso già",
+    "monthlyBudget": "Budget mensile",
+    "description": "Imposta il tuo budget e tieni traccia delle spese per raggiungere i tuoi obiettivi",
+    "getStarted": "Inizia",
+    "availableThisMonth": "ancora a disposizione per questo mese",
+    "spentOnTotal": "Hai speso {{spent}} su {{total}}"
   },
   "profile": {
     "accountSettings": "IMPOSTAZIONI ACCOUNT",
@@ -303,6 +312,13 @@
     "helpCenter": "Centro Assistenza",
     "signOut": "Disconnettiti",
     "deleteAccount": "Elimina Account",
+    "deletingAccount": "Eliminazione account...",
+    "finalDeleteConfirmTitle": "Elimina Account Definitivamente",
+    "finalDeleteConfirmMessage": "Questa azione è irreversibile e cancellerà permanentemente:\n\n• Tutti i tuoi conti e transazioni\n• Tutti i dati di budget e obiettivi\n• Tutte le regole di pagamento ricorrenti\n• L'intero tuo profilo\n\nSei assolutamente sicuro?",
+    "deleteForever": "Elimina per Sempre",
+    "accountDeleted": "Account Eliminato",
+    "accountDeletedMessage": "Il tuo account e tutti i dati associati sono stati eliminati permanentemente.",
+    "errorDeletingAccount": "Impossibile eliminare l'account. Riprova o contatta il supporto.",
     "selectCurrency": "Seleziona Valuta",
     "selectIcon": "Seleziona Icona",
     "currencyUpdated": "Valuta aggiornata",
@@ -321,8 +337,26 @@
       "prompt": "Assegna un nome per il tuo conto",
       "placeholder": "Nuovo Conto"
     },
+    "icon": {
+      "title": "NUOVA ICONA",
+      "prompt": "Scegli un'icona per"
+    },
+    "color": {
+      "title": "NUOVO COLORE",
+      "prompt": "Scegli un colore per"
+    },
+    "value": {
+      "title": "VALORE INIZIALE",
+      "prompt": "Imposta il saldo di partenza per"
+    },
     "summary": {
-      "title": "NUOVO CONTO"
+      "title": "NUOVO CONTO",
+      "defaultAccount": "Conto predefinito",
+      "defaultAccountDesc": "Imposta questo conto preselezionato quando crei una nuova transazione",
+      "savingsAccount": "Conto di risparmio",
+      "savingsAccountDesc": "Abilitando questa impostazione potrai aggiungere un obiettivo di risparmio",
+      "savingTarget": "Obiettivo di risparmio",
+      "goalDescription": "Obiettivo di risparmio per il conto {{name}}"
     }
   },
   "transaction": {
@@ -339,6 +373,68 @@
       "income": "Entrata",
       "expense": "Uscita",
       "transfer": "Trasferimento"
+    },
+    "fields": {
+      "category": "Categoria",
+      "account": "Conto",
+      "fromAccount": "Da conto",
+      "toAccount": "Al conto",
+      "date": "Data",
+      "installments": "Rate",
+      "repeat": "Ripeti",
+      "notes": "Note"
+    },
+    "placeholders": {
+      "selectCategory": "Seleziona una categoria",
+      "selectAccount": "Seleziona un conto",
+      "addNote": "Aggiungi una nota"
+    },
+    "dates": {
+      "today": "Oggi",
+      "tomorrow": "Domani",
+      "yesterday": "Ieri"
+    },
+    "installments": {
+      "single": "Pagamento singolo",
+      "multiple": "{{count}} rate",
+      "every14Days": "ogni 14 giorni",
+      "every30Days": "ogni 30 giorni",
+      "every60Days": "ogni 60 giorni",
+      "every90Days": "ogni 90 giorni",
+      "every180Days": "ogni 180 giorni"
+    },
+    "recurrence": {
+      "never": "Mai"
+    },
+    "descriptions": {
+      "expense": "Spesa",
+      "income": "Entrata",
+      "transfer": "Trasferimento",
+      "firstInstallment": "Prima rata di {{count}}",
+      "firstInstallmentNote": "Prima rata",
+      "remainingInstallments": "Rate automatiche",
+      "remainingInstallmentsNote": "Rate automatiche ({{count}} rimanenti)",
+      "recurringNote": "Transazione ricorrente {{frequency}}"
+    },
+    "errors": {
+      "selectAccount": "Seleziona un conto",
+      "selectCategory": "Seleziona una categoria",
+      "selectTransferAccount": "Seleziona un conto di destinazione",
+      "accountNotAvailable": "Conto selezionato non disponibile. Riprova o seleziona un altro conto.",
+      "transferAccountNotAvailable": "Conto di destinazione non disponibile. Riprova o seleziona un altro conto.",
+      "sameAccount": "I conti di origine e destinazione devono essere diversi",
+      "amountMustBePositive": "L'importo deve essere maggiore di zero",
+      "selectTransferAccountError": "Seleziona un conto di destinazione per il trasferimento",
+      "unsupportedTransactionType": "Tipo di transazione non supportato per le rate",
+      "fromAccountNotAvailable": "Conto di origine non disponibile",
+      "toAccountNotAvailable": "Conto di destinazione non disponibile",
+      "createInstallmentError": "Si è verificato un errore nel creare la transazione a rate. Verifica che il conto esista.",
+      "createExpenseError": "Errore nella creazione della spesa: {{error}}",
+      "createIncomeError": "Errore nella creazione dell'entrata: {{error}}",
+      "createTransferError": "Errore nella creazione del trasferimento: {{error}}",
+      "createTransactionError": "Errore nella creazione della {{type}}. Verifica che i conti esistano.",
+      "createRecurringError": "Si è verificato un errore nel creare la transazione ricorrente. Verifica che il conto esista.",
+      "saveTransactionError": "Si è verificato un errore nel salvataggio della transazione"
     }
   },
   "account": {

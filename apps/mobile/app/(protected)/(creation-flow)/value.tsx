@@ -71,11 +71,11 @@ export default function ValueStepFlow() {
   }).replace('.', ',')}`;
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t(params.firstAccount === "true" ? "flow.name.first-account" : "flow.name.title", "NUOVO CONTO")}>
+    <HeaderContainer variant="secondary" customTitle={t(params.firstAccount === "true" ? "flow.name.firstAccount" : "flow.name.title")}>
       <View className="flex-1 bg-white">
         <View className="flex-1 justify-center items-center px-4">
           <View className="w-full justify-center text-center flex flex-row items-center gap-2 mb-2">
-            <Text className="text-gray-500">{t("flow.name.prompt", "Imposta il budget di partenza per")}</Text>
+            <Text className="text-gray-500">{t("flow.value.prompt")}</Text>
             <View className="flex-row items-center gap-2 justify-center">
               <SvgIcon name={params.icon as IconName} width={16} height={16} color={params.color} />
               <Text className="font-semibold font-sans" style={{ color: params.color }}>{params.name.toUpperCase()}</Text>

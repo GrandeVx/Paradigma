@@ -119,11 +119,11 @@ const AccountCard: React.FC<{
   // Regular account card
   return (
     <Pressable
-      className="w-full rounded-t-3xl mb-[-20px]"
+      className={`w-full ${isLast ? 'rounded-3xl' : 'rounded-t-3xl'} mb-[-20px]`}
       style={{ backgroundColor: account.color }}
       onPress={() => onPress(account.id)}
     >
-      <View className="flex-row justify-between items-center p-6 pb-12">
+      <View className={`flex-row justify-between items-center ${isLast ? 'py-6 px-6' : 'p-6 pb-12'}`}>
         <View className="flex-row items-center gap-2 py-2">
           <SvgIcon name={account.icon as IconName} width={24} height={24} color="#FFFFFF" />
           <Text className="text-white font-semibold text-base">{account.name}</Text>

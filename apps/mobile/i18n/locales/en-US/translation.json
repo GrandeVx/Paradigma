@@ -251,14 +251,23 @@
     "edit": "Edit",
     "delete": "Delete",
     "confirm": "Confirm",
-    "success": "Success"
+    "success": "Success",
+    "ok": "OK",
+    "actions": {
+      "save": "Save"
+    }
   },
   "budgets": {
     "title": "Budgets",
     "budget": "Budget",
     "spent": "Spent",
     "remaining": "Remaining",
-    "alreadySpent": "Already spent"
+    "alreadySpent": "Already spent",
+    "monthlyBudget": "Monthly Budget",
+    "description": "Set your budget and track expenses to reach your goals",
+    "getStarted": "Get Started",
+    "availableThisMonth": "still available this month",
+    "spentOnTotal": "You spent {{spent}} out of {{total}}"
   },
   "profile": {
     "accountSettings": "ACCOUNT SETTINGS",
@@ -279,6 +288,13 @@
     "helpCenter": "Help Center",
     "signOut": "Sign Out",
     "deleteAccount": "Delete Account",
+    "deletingAccount": "Deleting account...",
+    "finalDeleteConfirmTitle": "Delete Account Forever",
+    "finalDeleteConfirmMessage": "This action is irreversible and will permanently delete:\n\n• All your accounts and transactions\n• All budget data and goals\n• All recurring payment rules\n• Your entire profile\n\nAre you absolutely sure?",
+    "deleteForever": "Delete Forever",
+    "accountDeleted": "Account Deleted",
+    "accountDeletedMessage": "Your account and all associated data have been permanently deleted.",
+    "errorDeletingAccount": "Unable to delete account. Please try again or contact support.",
     "selectCurrency": "Select Currency",
     "selectIcon": "Select Icon",
     "currencyUpdated": "Currency updated",
@@ -297,8 +313,26 @@
       "prompt": "Assign a name for your account",
       "placeholder": "New Account"
     },
+    "icon": {
+      "title": "NEW ICON",
+      "prompt": "Choose an icon for"
+    },
+    "color": {
+      "title": "NEW COLOR",
+      "prompt": "Choose a color for"
+    },
+    "value": {
+      "title": "INITIAL VALUE",
+      "prompt": "Set the starting balance for"
+    },
     "summary": {
-      "title": "NEW ACCOUNT"
+      "title": "NEW ACCOUNT",
+      "defaultAccount": "Default account",
+      "defaultAccountDesc": "Set this account as preselected when creating a new transaction",
+      "savingsAccount": "Savings account",
+      "savingsAccountDesc": "Enabling this setting will allow you to add a savings goal",
+      "savingTarget": "Savings target",
+      "goalDescription": "Savings goal for account {{name}}"
     }
   },
   "transaction": {
@@ -315,6 +349,68 @@
       "income": "Income",
       "expense": "Expense",
       "transfer": "Transfer"
+    },
+    "fields": {
+      "category": "Category",
+      "account": "Account",
+      "fromAccount": "From account",
+      "toAccount": "To account",
+      "date": "Date",
+      "installments": "Installments",
+      "repeat": "Repeat",
+      "notes": "Notes"
+    },
+    "placeholders": {
+      "selectCategory": "Select a category",
+      "selectAccount": "Select an account",
+      "addNote": "Add a note"
+    },
+    "dates": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "yesterday": "Yesterday"
+    },
+    "installments": {
+      "single": "Single payment",
+      "multiple": "{{count}} installments",
+      "every14Days": "every 14 days",
+      "every30Days": "every 30 days",
+      "every60Days": "every 60 days",
+      "every90Days": "every 90 days",
+      "every180Days": "every 180 days"
+    },
+    "recurrence": {
+      "never": "Never"
+    },
+    "descriptions": {
+      "expense": "Expense",
+      "income": "Income",
+      "transfer": "Transfer",
+      "firstInstallment": "First installment of {{count}}",
+      "firstInstallmentNote": "First installment",
+      "remainingInstallments": "Automatic installments",
+      "remainingInstallmentsNote": "Automatic installments ({{count}} remaining)",
+      "recurringNote": "Recurring transaction {{frequency}}"
+    },
+    "errors": {
+      "selectAccount": "Select an account",
+      "selectCategory": "Select a category",
+      "selectTransferAccount": "Select a destination account",
+      "accountNotAvailable": "Selected account not available. Try again or select another account.",
+      "transferAccountNotAvailable": "Destination account not available. Try again or select another account.",
+      "sameAccount": "Source and destination accounts must be different",
+      "amountMustBePositive": "Amount must be greater than zero",
+      "selectTransferAccountError": "Select a destination account for the transfer",
+      "unsupportedTransactionType": "Transaction type not supported for installments",
+      "fromAccountNotAvailable": "Source account not available",
+      "toAccountNotAvailable": "Destination account not available",
+      "createInstallmentError": "An error occurred while creating the installment transaction. Verify that the account exists.",
+      "createExpenseError": "Error creating expense: {{error}}",
+      "createIncomeError": "Error creating income: {{error}}",
+      "createTransferError": "Error creating transfer: {{error}}",
+      "createTransactionError": "Error creating {{type}}. Verify that the accounts exist.",
+      "createRecurringError": "An error occurred while creating the recurring transaction. Verify that the account exists.",
+      "saveTransactionError": "An error occurred while saving the transaction"
     }
   },
   "account": {

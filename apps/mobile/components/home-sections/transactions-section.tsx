@@ -410,7 +410,13 @@ export const TransactionsSection: React.FC = () => {
           currentMonth,
           currentYear,
           clearCache: true,
-          forceRefetch: true,
+        });
+
+        // Additional aggressive invalidation for charts (invalidates specific month)
+        console.log('📊 [TransactionsSection] Aggressively invalidating chart queries...');
+        await InvalidationUtils.invalidateChartsQueries(utils, {
+          currentMonth,
+          currentYear,
         });
 
         // Additional explicit refetch of current component's query
@@ -418,6 +424,11 @@ export const TransactionsSection: React.FC = () => {
         await refetch();
 
         console.log('✅ [TransactionsSection] All refresh operations completed');
+
+        // Fire global event to notify other components (like ChartsSection)
+        const transactionDeletedEvent = new CustomEvent('transactionDeleted');
+        window.dispatchEvent(transactionDeletedEvent);
+        console.log('📡 [TransactionsSection] Fired transactionDeleted event');
 
       } catch (error) {
         console.warn('❌ [TransactionsSection] Some queries failed to invalidate:', error);

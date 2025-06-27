@@ -78,7 +78,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 60 * 2, // 2 minutes (reduced for more responsive updates)
         cacheTime: 1000 * 60 * 60 * 24, // 24 hours
         retry: (failureCount, error) => {
           // Don't retry on auth errors
@@ -88,8 +88,17 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
           }
           return failureCount < 3;
         },
+        // Enable background refetching for better UX
+        refetchOnWindowFocus: false,
+        refetchOnMount: true,
+        refetchOnReconnect: true,
+        // Network mode for better offline experience
+        networkMode: 'offlineFirst',
       },
     },
+    // Query-specific configurations for better performance
+    queryCache: undefined,
+    mutationCache: undefined,
   }));
 
   const [trpcClient] = useState(() =>

@@ -285,8 +285,8 @@ export const GoalsSection: React.FC = () => {
   // Determine loading states
   const isInitialLoading = isLoading;
   const shouldShowSkeleton = isInitialLoading && hasGoalsInCache;
-  const shouldShowEmptyState = !isInitialLoading && goalAccounts.length === 0 && !hasGoalsInCache;
-  const shouldShowContent = !isInitialLoading && goalAccounts.length > 0;
+  // Simplified: show empty state when not loading and no data (regardless of cache)
+  const shouldShowEmptyState = !isInitialLoading && goalAccounts.length === 0;
 
   if (shouldShowSkeleton) {
     return <GoalsLoadingSkeleton goalsCount={cachedGoalsCount} />;
@@ -322,7 +322,8 @@ export const GoalsSection: React.FC = () => {
     );
   }
 
-  if (!shouldShowContent) {
+  // If loading, show loading state
+  if (isInitialLoading) {
     return (
       <Animated.View
         entering={FadeIn.duration(400)}

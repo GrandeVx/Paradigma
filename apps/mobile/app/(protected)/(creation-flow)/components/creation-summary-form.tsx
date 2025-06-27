@@ -29,10 +29,10 @@ export const CreationSummaryForm = React.memo<CreationSummaryFormProps>(({
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-10">
           <Text className="text-base font-semibold text-black">
-            {t("flow.summary.default_account", "Conto predefinito")}
+            {t("flow.summary.defaultAccount")}
           </Text>
           <Text className="text-sm text-gray-500">
-            {t("flow.summary.default_account_desc", "Imposta questo conto preselezionato quando crei una nuova transazione")}
+            {t("flow.summary.defaultAccountDesc")}
           </Text>
         </View>
         <Switch
@@ -48,10 +48,10 @@ export const CreationSummaryForm = React.memo<CreationSummaryFormProps>(({
         <View className="flex-row items-center justify-between">
           <View className="flex-1 mr-10">
             <Text className="text-base font-semibold text-black">
-              {t("flow.summary.savings_account", "Conto di risparmio")}
+              {t("flow.summary.savingsAccount")}
             </Text>
             <Text className="text-sm text-gray-500">
-              {t("flow.summary.savings_account_desc", "Abilitando questa impostazione potrai aggiungere un obiettivo di risparmio")}
+              {t("flow.summary.savingsAccountDesc")}
             </Text>
           </View>
           <Switch
@@ -66,7 +66,7 @@ export const CreationSummaryForm = React.memo<CreationSummaryFormProps>(({
         {savingsAccount && (
           <View className="flex-row items-center justify-between bg-gray-50 px-4 py-4 rounded-xl">
             <Text className="text-base font-semibold text-gray-500">
-              {t("flow.summary.saving_target", "Obiettivo di risparmio")}
+              {t("flow.summary.savingTarget")}
             </Text>
             <View className="flex-row items-start justify-start gap-2 mx-4">
               <Text className="text-base font-sans font-semibold text-black leading-tight">€</Text>

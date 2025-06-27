@@ -1,5 +1,7 @@
 import { SplashScreen, useRouter, useSegments, useRootNavigation } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { authClient } from "@/lib/auth-client";
 import { Session } from "better-auth/types";
@@ -69,6 +71,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
   const [isOnboarded, setIsOnboardedState] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isInitialRoutingDone, setIsInitialRoutingDone] = useState<boolean>(false);
+  const [shouldShowSplash, setShouldShowSplash] = useState<boolean>(true);
 
   // Check onboarding status from AsyncStorage
   const checkOnboardingStatus = async () => {
@@ -86,8 +89,10 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, String(value));
       setIsOnboardedState(value);
-      // Reset routing flag to trigger a new routing decision
-      setIsInitialRoutingDone(false);
+      // Only reset routing flag if we're changing from false to true
+      if (value && !isOnboarded) {
+        setIsInitialRoutingDone(false);
+      }
     } catch (error) {
       console.error("Error setting onboarding status:", error);
     }
@@ -382,13 +387,15 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
       return;
     }
 
-    // Define our route sections for better type safety
-    type AppSection = "(protected)" | "(onboarding)" | "(auth)" | "(splash)";
+    // Only make routing decisions after loading is complete
+    if (isLoading) {
+      return;
+    }
 
-    // Helper function to check if we're in a specific section
-    const isInSection = (section: AppSection) => {
-      console.log("Checking if we're in section", section, segments[0], segments);
-      return segments[0] === section;
+    // Don't continue if routing is already done
+    if (isInitialRoutingDone) {
+      console.log("Routing already done, skipping...");
+      return;
     }
 
     // Helper function for redirecting with type safety
@@ -397,83 +404,104 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
       router.replace(path as never);
     };
 
-    // Only make routing decisions after loading is complete
-    if (isLoading) {
-      // If still loading, route to splash screen
-      if (!isInSection("(splash)" as AppSection)) {
-        redirectTo("/(splash)");
-      }
-      return;
-    }
-
-    // Don't continue if routing is already done
-    if (isInitialRoutingDone) return;
-
     const handleRouting = async () => {
-      const inProtectedGroup = isInSection("(protected)" as AppSection);
-      const inOnboardingGroup = isInSection("(onboarding)" as AppSection);
-      const inAuthGroup = isInSection("(auth)" as AppSection);
-      const inSplashGroup = isInSection("(splash)" as AppSection);
-
-      console.log("Routing decision:", {
+      console.log("Making single routing decision:", {
         session: !!session,
         isOnboarded,
-        inProtectedGroup,
-        inOnboardingGroup,
-        inAuthGroup,
-        inSplashGroup
+        currentSegments: segments
       });
 
-      // Make a single routing decision based on current state
+      // Determine expected section based on auth and onboarding status
+      let expectedSection: string;
+
       if (session) {
         // User is authenticated
         if (isOnboarded) {
-          // User is authenticated and onboarded
-          if (!inProtectedGroup) {
-            redirectTo("/(protected)");
-          }
-        } else if (!inOnboardingGroup) {
-          // User is authenticated but not onboarded
-          redirectTo("/(onboarding)");
+          // User is authenticated and onboarded → go to app
+          expectedSection = "(protected)";
+        } else {
+          // User is authenticated but not onboarded → complete onboarding
+          expectedSection = "(onboarding)";
         }
       } else {
         // User is not authenticated
-        if (!isOnboarded && !inOnboardingGroup) {
-          // User has not completed onboarding and is not in onboarding screen
-          redirectTo("/(onboarding)");
-        } else if (isOnboarded && !inAuthGroup) {
-          // User has completed onboarding but is not authenticated
-          redirectTo("/(auth)/");
+        if (isOnboarded) {
+          // User completed onboarding but not authenticated → go to auth
+          expectedSection = "(auth)";
+        } else {
+          // User never completed onboarding → start onboarding
+          expectedSection = "(onboarding)";
         }
       }
 
-      // Mark initial routing as done to prevent multiple redirects
+      const currentSection = segments[0];
+
+      console.log(`Expected section: ${expectedSection}, Current section: ${currentSection}`);
+
+      // Only redirect if we're not already in the correct section
+      if (currentSection !== expectedSection) {
+        const finalDestination = expectedSection === "(auth)" ? "/(auth)/" : `/${expectedSection}`;
+        console.log(`Redirecting to: ${finalDestination}`);
+        redirectTo(finalDestination);
+      } else {
+        console.log("Already in correct section, no redirect needed");
+      }
+
+      // Mark initial routing as done
       setIsInitialRoutingDone(true);
 
-      // Hide splash screen after routing decisions are made
+      // Hide splash screen with smooth transition
       setTimeout(() => {
+        setShouldShowSplash(false);
         SplashScreen.hideAsync();
-      }, 500); // Small delay to ensure routing completes
+      }, 300); // Smooth transition delay
     };
 
     handleRouting();
-  }, [isLoading, session, isOnboarded, segments, isInitialRoutingDone, rootNavigation]);
+  }, [isLoading, session, isOnboarded, isInitialRoutingDone, rootNavigation?.isReady]);
 
-  // Reset routing flag when segments change
-  useEffect(() => {
-    if (!isLoading && isInitialRoutingDone && segments.length > 0) {
-      // Allow a new routing decision when user navigates to a different section
-      const currentSection = segments[0];
-      if (
-        (session && isOnboarded && currentSection !== "(protected)") ||
-        (session && !isOnboarded && currentSection !== "(onboarding)") ||
-        (!session && !isOnboarded && currentSection !== "(onboarding)") ||
-        (!session && isOnboarded && currentSection !== "(auth)")
-      ) {
-        setIsInitialRoutingDone(false);
-      }
-    }
-  }, [segments, session, isOnboarded, isLoading, isInitialRoutingDone]);
+  // Custom Loading Screen Component
+  const LoadingScreen = () => (
+    <SafeAreaView style={styles.loadingContainer}>
+      <View style={styles.loadingContent}>
+        <View style={styles.logoContainer}>
+          <View style={styles.logoBackground}>
+            <Text style={styles.logoText}>B</Text>
+          </View>
+        </View>
+        <Text style={styles.loadingTitle}>Balance</Text>
+        <Text style={styles.loadingSubtitle}>Preparing your experience...</Text>
+      </View>
+    </SafeAreaView>
+  );
+
+  // Show loading screen only when shouldShowSplash is true
+  if (shouldShowSplash) {
+    return (
+      <SupabaseContext.Provider
+        value={{
+          user,
+          session,
+          initialized,
+          isOnboarded,
+          isLoading,
+          setIsOnboarded,
+          signUp,
+          signInWithPassword,
+          signInWithVerificationOtp,
+          signInWithApple,
+          signInWithGoogle,
+          sendVerificationOtp,
+          signOut,
+          PasswordReset: async () => { },
+          uploadAvatar: async () => "",
+          getAvatarUrl: async () => "",
+        }}
+      >
+        <LoadingScreen />
+      </SupabaseContext.Provider>
+    );
+  }
 
   return (
     <SupabaseContext.Provider
@@ -501,3 +529,50 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
     </SupabaseContext.Provider>
   );
 };
+
+// Styles for the loading screen
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  loadingContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  logoContainer: {
+    marginBottom: 24,
+  },
+  logoBackground: {
+    width: 100,
+    height: 100,
+    borderRadius: 20,
+    backgroundColor: "#005EFD",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  logoText: {
+    fontSize: 60,
+    fontWeight: "bold",
+    color: "white",
+  },
+  loadingTitle: {
+    fontSize: 32,
+    fontWeight: "bold",
+    marginBottom: 8,
+    textAlign: "center",
+    color: "#000",
+  },
+  loadingSubtitle: {
+    fontSize: 16,
+    opacity: 0.7,
+    marginBottom: 32,
+    textAlign: "center",
+    color: "#666",
+  },
+  loader: {
+    marginTop: 20,
+  },
+});

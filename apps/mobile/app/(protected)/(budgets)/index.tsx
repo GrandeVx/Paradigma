@@ -285,15 +285,24 @@ export default function BudgetScreen() {
     year: currentDate.getFullYear(),
   }), [currentDate]);
 
-  // API queries
+  // API queries with optimized caching
   const {
     data: budgetSettings,
     isLoading: isLoadingBudgets,
     refetch: refetchBudgets,
     isRefetching: isRefetchingBudgets
-  } = api.budget.getCurrentSettings.useQuery({});
+  } = api.budget.getCurrentSettings.useQuery({}, {
+    staleTime: 1000 * 60 * 10, // 10 minutes - budget settings change rarely
+    cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+    refetchOnWindowFocus: false,
+  });
 
-  const { data: allCategories, refetch: refetchCategories } = api.category.list.useQuery({});
+  const { data: allCategories, refetch: refetchCategories } = api.category.list.useQuery({}, {
+    staleTime: 1000 * 60 * 30, // 30 minutes - categories change very rarely
+    cacheTime: 1000 * 60 * 60 * 24 * 7, // 1 week
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
   // Extract macro categories - memoized
   const macroCategories = useMemo(() =>
@@ -301,7 +310,7 @@ export default function BudgetScreen() {
     [allCategories]
   );
 
-  // Get transaction data for the current month
+  // Get transaction data for the current month with optimized caching
   const {
     data: transactionData,
     refetch: refetchTransactions,
@@ -310,6 +319,11 @@ export default function BudgetScreen() {
     ...queryParams,
     // Pass selected categories if any, undefined means get all transactions
     macroCategoryIds: budgetSettings?.map(budget => budget.macroCategoryId),
+  }, {
+    staleTime: 1000 * 60 * 2, // 2 minutes - transaction data needs to be relatively fresh
+    cacheTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnWindowFocus: false, // Don't refetch on focus to avoid unnecessary loads
+    enabled: !!budgetSettings, // Only run when budget settings are available
   });
 
   // Memoize loading and content states
@@ -319,7 +333,7 @@ export default function BudgetScreen() {
 
     return {
       shouldShowSkeleton: isInitialLoading && hasBudgetsInCache,
-      shouldShowEmptyState: !isInitialLoading && !hasBudgets && !hasBudgetsInCache,
+      shouldShowEmptyState: !isInitialLoading && !hasBudgets,
       shouldShowBudgetView: !isInitialLoading && hasBudgets,
     };
   }, [isLoadingBudgets, budgetSettings, hasBudgetsInCache]);
@@ -531,31 +545,31 @@ export default function BudgetScreen() {
                 {/* Background emojis with staggered animations */}
                 <Animated.Text
                   entering={FadeIn.delay(200).duration(800)}
-                  className="absolute top-20 left-10 text-6xl opacity-5"
+                  className="absolute top-[200px] right-[45px] text-9xl rotate-[15deg] opacity-5 scale-150"
                 >
                   💰
                 </Animated.Text>
                 <Animated.Text
                   entering={FadeIn.delay(400).duration(800)}
-                  className="text-[48px] text-gray-500 absolute top-[418px] right-[20px]"
+                  className="text-[48px] text-gray-500 absolute rotate-[20deg] top-[418px] right-[40px]"
                 >
                   🛒
                 </Animated.Text>
                 <Animated.Text
                   entering={FadeIn.delay(100).duration(800)}
-                  className="text-[64px] text-gray-500 absolute top-[89px] left-[126px]"
+                  className="text-[64px] text-gray-500 absolute rotate-[-10deg] top-[89px] left-[126px]"
                 >
                   🏠
                 </Animated.Text>
                 <Animated.Text
                   entering={FadeIn.delay(300).duration(800)}
-                  className="text-[40px] text-gray-500 absolute top-[196px] left-[19px]"
+                  className="text-[40px] text-gray-500 absolute rotate-[-10deg] top-[196px] left-[24px]"
                 >
                   🍽️
                 </Animated.Text>
                 <Animated.Text
                   entering={FadeIn.delay(500).duration(800)}
-                  className="text-[64px] text-gray-500 absolute top-[447px] left-[59px]"
+                  className="text-[64px] text-gray-500 rotate-[-10deg] absolute top-[447px] left-[59px]"
                 >
                   🎬
                 </Animated.Text>
@@ -567,19 +581,19 @@ export default function BudgetScreen() {
                     className="items-center"
                   >
                     <Text className="text-3xl font-semibold text-black text-center mb-2">
-                      Budget mensile
+                      {t('budgets.monthlyBudget')}
                     </Text>
                     <Text className="text-sm text-gray-500 text-center mb-6">
-                      Imposta il tuo budget e tieni traccia delle spese per raggiungere i tuoi obiettivi
+                      {t('budgets.description')}
                     </Text>
                     <Button
                       variant="primary"
                       size="lg"
                       rounded="default"
-                      className="w-40"
+                      className="w-a"
                       onPress={handleOpenBottomSheet}
                     >
-                      <Text className="text-white font-semibold">Inizia</Text>
+                      <Text className="text-white font-semibold">{t('budgets.getStarted')}</Text>
                     </Button>
                   </Animated.View>
                 </View>
@@ -645,7 +659,7 @@ export default function BudgetScreen() {
                         </Text>
                       </View>
                       <Text className="text-gray-500 text-sm text-center">
-                        ancora a disposizione per questo mese
+                        {t('budgets.availableThisMonth')}
                       </Text>
                     </Animated.View>
                   )}
@@ -693,7 +707,10 @@ export default function BudgetScreen() {
                             })}
                       </View>
                       <Text className="text-gray-500 text-xs mt-2">
-                        Hai speso {formatCurrency(budgetSummary.totalSpent)} su {formatCurrency(budgetSummary.totalBudget)}
+                        {t('budgets.spentOnTotal', {
+                          spent: formatCurrency(budgetSummary.totalSpent),
+                          total: formatCurrency(budgetSummary.totalBudget)
+                        })}
                       </Text>
                     </Animated.View>
                   )}
@@ -731,10 +748,12 @@ export default function BudgetScreen() {
               </Animated.View>
             </ScrollView>
           ) : (
-            // Fallback state
-            <View className="flex-1 justify-center items-center">
-              <Text className="text-gray-500">Caricamento...</Text>
-            </View>
+            // Loading state - when actually loading
+            isLoadingBudgets ? (
+              <View className="flex-1 justify-center items-center">
+                <Text className="text-gray-500">{t('common.loading')}</Text>
+              </View>
+            ) : null
           )}
         </SafeAreaView>
       </HeaderContainer>

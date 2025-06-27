@@ -54,11 +54,11 @@ export default function SummaryScreen() {
         // Include goal-related fields only if it's a savings account
         ...(savingsAccount && {
           targetAmount: parseFloat(savingTarget.replace(",", ".")),
-          goalDescription: `Obiettivo di risparmio per il conto ${params.name}`
+          goalDescription: t("flow.summary.goalDescription", { name: params.name })
         })
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Errore durante la creazione del conto");
+      setError(err instanceof Error ? err.message : t("common.error"));
       setIsLoading(false);
     }
   };
@@ -112,7 +112,7 @@ export default function SummaryScreen() {
               isLoading={isLoading || isCreatingAccount}
             >
               <Text className="text-white font-semibold">
-                {t("common.actions.save", "Salva")}
+                {t("common.actions.save")}
               </Text>
             </Button>
           </View>

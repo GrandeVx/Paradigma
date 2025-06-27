@@ -39,7 +39,7 @@ export default function ColorStepFlow(
   const isButtonDisabled = !color; // Basic check, enhance with validation
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t("flow.name.title")}>
+    <HeaderContainer variant="secondary" customTitle={t(params.firstAccount === "true" ? "flow.name.firstAccount" : "flow.name.title")}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -49,7 +49,7 @@ export default function ColorStepFlow(
           <View className="flex-1 justify-center items-center w-full  ">
             <Pressable onPress={() => nameInputRef.current?.focus()}>
               <View className=" justify-center text-gray-600 text-base font-sans font-normal mb-2 text-center flex flex-row items-center gap-2">
-                <Text>{t("flow.name.prompt", "Scegli un colore per")}</Text>
+                <Text>{t("flow.color.prompt")}</Text>
                 <View className="flex-row items-center gap-2 justify-center">
                   <SvgIcon name={params.icon as IconName} width={16} height={16} color={color} />
                   <Text className="font-semibold font-sans" style={{ color: color }}>{params.name.toUpperCase()}</Text>
@@ -101,7 +101,7 @@ export default function ColorStepFlow(
               className="mb-8" // Add margin if needed
             >
               <Text className="text-[16px] font-sans font-semibold">
-                {t("auth.actions.continue", "Continua")}
+                {t("auth.actions.continue")}
               </Text>
             </Button>
           </Animated.View>

@@ -1,8 +1,9 @@
 import React from "react";
-import { Tabs } from "expo-router";
+import { Tabs, useSegments } from "expo-router";
 import { FontAwesome6 } from "@expo/vector-icons";
 import TabBar from "@/components/TabBar";
 import { theme } from "@/lib/constants";
+import { useTabPrefetching } from "@/hooks/use-tab-prefetching";
 
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { View, Text } from "react-native";
@@ -18,7 +19,13 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const { icon, isIconReady } = useProfileIcon();
+  const segments = useSegments();
 
+  // Get current tab for prefetching
+  const currentTab = segments[1] || "(home)"; // segments[1] contains the tab name
+
+  // Enable intelligent prefetching
+  useTabPrefetching(currentTab);
 
   return (
 

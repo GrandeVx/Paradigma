@@ -17,6 +17,7 @@ import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { ManualUpdateChecker } from "@/components/ui";
 import { useCurrency, type Currency } from "@/hooks/use-currency";
 import { useProfileIcon } from "@/hooks/use-profile-icon";
+import { cacheUtils, budgetUtils, transactionUtils, goalsUtils } from "@/lib/mmkv-storage";
 
 const LANGUAGES = [
   { code: "en-US", flag: "🇺🇸", name: "English" },
@@ -65,9 +66,88 @@ const CategoryItem: React.FC<{
 export default function ProfileScreen() {
   const router = useRouter();
   const { signOut, user } = useSupabase();
-  const { mutate: deleteAccount } = api.user.deleteAccount.useMutation({
-    onSuccess: () => {
-      router.replace("/(auth)/sign-in");
+  const { mutate: deleteAccount, isLoading: isDeletingAccount } = api.user.deleteAccount.useMutation({
+    onSuccess: async (data) => {
+      console.log('✅ Account deleted successfully:', data.deletedData);
+
+      try {
+        // Clear all local storage and cache data
+        console.log('🧹 Clearing AsyncStorage...');
+        await AsyncStorage.multiRemove([
+          'language',
+          'currency',
+          'profileIcon',
+          'onboarding_completed',
+          'user_preferences'
+        ]);
+
+        // Clear all MMKV storage data
+        console.log('🧹 Clearing MMKV cache data...');
+        try {
+          // Clear React Query cache
+          cacheUtils.clearCache();
+
+          // Clear specific cache utilities
+          budgetUtils.clearMonthlyTotalBudget();
+          budgetUtils.clearBudgetCache();
+          goalsUtils.clearGoalsCache();
+
+          // Clear transaction caches for current and recent months
+          const currentDate = new Date();
+          const currentMonth = currentDate.getMonth() + 1;
+          const currentYear = currentDate.getFullYear();
+
+          // Clear last 12 months of transaction and chart caches
+          for (let i = 0; i < 12; i++) {
+            let month = currentMonth - i;
+            let year = currentYear;
+
+            if (month <= 0) {
+              month += 12;
+              year -= 1;
+            }
+
+            transactionUtils.clearTransactionCache(month, year);
+          }
+
+          console.log('✅ MMKV cache cleared successfully');
+        } catch (error) {
+          console.warn('⚠️ Some MMKV caches failed to clear:', error);
+          // Continue with account deletion even if cache clearing fails
+        }
+
+        console.log('🔐 Signing out user...');
+        // Sign out the user to clear session
+        await signOut();
+
+        // Show success message before redirect
+        Alert.alert(
+          t('profile.accountDeleted'),
+          t('profile.accountDeletedMessage'),
+          [
+            {
+              text: t('common.ok'),
+              onPress: () => {
+                // Force redirect to auth screen
+                router.replace("/(auth)");
+              }
+            }
+          ]
+        );
+
+      } catch (error) {
+        console.error('Error during cleanup after account deletion:', error);
+        // Even if cleanup fails, still redirect to auth
+        router.replace("/(auth)");
+      }
+    },
+    onError: (error) => {
+      console.error('❌ Failed to delete account:', error);
+      Alert.alert(
+        t('common.error'),
+        error.message || t('profile.errorDeletingAccount'),
+        [{ text: t('common.ok'), style: 'default' }]
+      );
     },
   });
   const { t, i18n: i18nInstance } = useTranslation();
@@ -130,6 +210,11 @@ export default function ProfileScreen() {
   );
 
   const handleDeleteAccount = () => {
+    // Don't allow deletion if already in progress
+    if (isDeletingAccount) {
+      return;
+    }
+
     Alert.alert(
       t("settings.account.deleteConfirmTitle"),
       t("settings.account.deleteConfirmMessage"),
@@ -142,7 +227,25 @@ export default function ProfileScreen() {
           text: t("settings.account.delete"),
           style: "destructive",
           onPress: () => {
-            deleteAccount();
+            // Show additional confirmation for such a destructive action
+            Alert.alert(
+              t("profile.finalDeleteConfirmTitle"),
+              t("profile.finalDeleteConfirmMessage"),
+              [
+                {
+                  text: t("settings.account.cancel"),
+                  style: "cancel",
+                },
+                {
+                  text: t("profile.deleteForever"),
+                  style: "destructive",
+                  onPress: () => {
+                    console.log('🗑️ Starting account deletion process...');
+                    deleteAccount();
+                  },
+                },
+              ]
+            );
           },
         },
       ]
@@ -162,7 +265,7 @@ export default function ProfileScreen() {
           console.log("Starting sign out process...");
           signOut();
           console.log("Sign out completed");
-          router.replace("/(auth)/sign-in");
+          router.replace("/(auth)");
         },
       },
     ]);
@@ -320,9 +423,9 @@ export default function ProfileScreen() {
             />
 
             <CategoryItem
-              label={t('profile.deleteAccount')}
-              textColor="#DE4841"
-              onPress={handleDeleteAccount}
+              label={isDeletingAccount ? t('profile.deletingAccount') : t('profile.deleteAccount')}
+              textColor={isDeletingAccount ? "#9CA3AF" : "#DE4841"}
+              onPress={isDeletingAccount ? undefined : handleDeleteAccount}
             />
           </Section>
 

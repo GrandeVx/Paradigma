@@ -379,8 +379,6 @@ const AnimatedCategoryLegendItem: React.FC<{
   );
 };
 
-
-
 export const ChartsSection: React.FC = () => {
   const router = useRouter();
   const { formatCurrency } = useCurrency();
@@ -474,14 +472,24 @@ export const ChartsSection: React.FC = () => {
     }
   }, [isSummaryLoading, isCategoryLoading, contentOpacity, summaryScale]);
 
+  // Reset expanded category when category data changes (e.g., after transaction deletion)
+  useEffect(() => {
+    if (expandedCategoryId && categoryData?.categories) {
+      // Check if the expanded category still exists in the new data
+      const categoryStillExists = categoryData.categories.some(cat => cat.id === expandedCategoryId);
+      if (!categoryStillExists) {
+        console.log('📊 [ChartsSection] Resetting expanded category after data refresh');
+        setExpandedCategoryId(null);
+      }
+    }
+  }, [categoryData, expandedCategoryId]);
+
   // Memoized month change handler with animation
   const handleMonthChangeWithAnimation = useCallback((month: number, year: number) => {
     // Use shared context handler with animation support
     handleMonthChange(month, year, summaryScale);
     setExpandedCategoryId(null); // Reset expansion when month changes
   }, [handleMonthChange, summaryScale]);
-
-
 
   const handleCategoryPress = useCallback((categoryId: string) => {
     router.push(`/(protected)/(home)/(category-transactions)/${categoryId}`);
@@ -509,8 +517,8 @@ export const ChartsSection: React.FC = () => {
   // Determine loading states
   const isInitialLoading = isSummaryLoading || isCategoryLoading;
   const shouldShowSkeleton = isInitialLoading && hasChartsInCache;
-  const shouldShowEmptyState = !isInitialLoading && (!categoryData?.categories || categoryData.categories.length === 0) && !hasChartsInCache;
-  const shouldShowContent = !isInitialLoading && categoryData?.categories && categoryData.categories.length > 0;
+  // Simplified: show empty state when not loading and no data (regardless of cache)
+  const shouldShowEmptyState = !isInitialLoading && (!categoryData?.categories || categoryData.categories.length === 0);
 
   // Handle no data case - prepare data
   const summary = summaryData || { income: 0, expenses: 0, remaining: 0 };
@@ -551,7 +559,8 @@ export const ChartsSection: React.FC = () => {
     );
   }
 
-  if (!shouldShowContent) {
+  // If loading, show loading state
+  if (isInitialLoading) {
     return (
       <Animated.View
         entering={FadeIn.duration(400)}
@@ -564,7 +573,6 @@ export const ChartsSection: React.FC = () => {
       </Animated.View>
     );
   }
-
 
   return (
     <Animated.View style={contentStyle} className="flex-1">
