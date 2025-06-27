@@ -55,7 +55,8 @@ const TabBar = React.memo<BottomTabBarProps>(({
             const { options } = descriptors[route.key];
             const isFocused = state.index === index;
 
-            const onPress = React.useCallback(async () => {
+            // Regular function instead of useCallback (hooks can't be called in loops)
+            const onPress = async () => {
               const event = navigation.emit({
                 type: "tabPress",
                 target: route.key,
@@ -71,17 +72,14 @@ const TabBar = React.memo<BottomTabBarProps>(({
                   navigation.navigate(route.name);
                 }
               }
-            }, [isFocused, route.key, route.name, navigation, router]);
+            };
 
-            // Memoize tab icon to avoid unnecessary re-renders
-            const tabIcon = React.useMemo(() =>
-              options.tabBarIcon?.({
-                focused: isFocused,
-                color: isFocused ? "#005EFD" : "#8E8E93",
-                size: 24,
-              }),
-              [options.tabBarIcon, isFocused]
-            );
+            // Regular function call instead of useMemo (hooks can't be called in loops)
+            const tabIcon = options.tabBarIcon?.({
+              focused: isFocused,
+              color: isFocused ? "#005EFD" : "#8E8E93",
+              size: 24,
+            });
 
             return (
               <Pressable
