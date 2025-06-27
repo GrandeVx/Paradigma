@@ -16,6 +16,7 @@ import { SvgIcon } from '@/components/ui/svg-icon';
 import { useRouter } from 'expo-router';
 import { useTabBar } from '@/context/TabBarContext';
 import * as Haptics from 'expo-haptics';
+import { useCurrency } from '@/hooks/use-currency';
 
 const ACTION_WIDTH = 75;
 const SWIPE_THRESHOLD = 60;
@@ -47,6 +48,7 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
 }) => {
   const router = useRouter();
   const { hideTabBar } = useTabBar();
+  const { formatCurrency } = useCurrency();
   const panRef = useRef<PanGestureHandler>(null);
 
   const translateX = useSharedValue(0);
@@ -274,7 +276,7 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
                 }`}
               style={{ fontFamily: 'Apfel Grotezk' }}
             >
-              {isIncome ? '+ ' : ''}€ {Math.abs(transaction.amount).toFixed(2)}
+              {formatCurrency(transaction.amount, { showSign: isIncome })}
             </Text>
           </TouchableOpacity>
         </Animated.View>

@@ -5,6 +5,7 @@ import { SvgIcon } from '@/components/ui/svg-icon';
 import HeaderContainer from '@/components/layouts/_header';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
+import { useCurrency } from '@/hooks/use-currency';
 
 
 // Types based on actual API response
@@ -41,14 +42,14 @@ type InstallmentTransaction = {
   isInstallment: boolean;
 }
 
-// Format currency helper (Italian format)
-const formatCurrency = (amount: number | string | Decimal) => {
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) :
-    amount instanceof Decimal ? amount.toNumber() : amount;
-  const [integer, decimal] = numAmount.toFixed(2).split('.');
-  const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `€ ${formattedInteger},${decimal}`;
-};
+// Legacy format currency helper - now using global currency hook
+// const formatCurrency = (amount: number | string | Decimal) => {
+//   const numAmount = typeof amount === 'string' ? parseFloat(amount) :
+//     amount instanceof Decimal ? amount.toNumber() : amount;
+//   const [integer, decimal] = numAmount.toFixed(2).split('.');
+//   const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+//   return `€ ${formattedInteger},${decimal}`;
+// };
 
 // Get frequency text
 const getFrequencyText = (frequencyType: string, frequencyInterval: number) => {
@@ -275,6 +276,9 @@ const ProgressBar = ({ current, total, nextDueDate }: { current: number; total: 
 
 // Main component
 export default function InstallmentsScreen() {
+  // Currency hook
+  const { formatCurrency } = useCurrency();
+
   // Fetch installment transactions
   const { data: installmentData, isLoading, refetch } = api.recurringRule.list.useQuery({
     isInstallment: true, // Only installments

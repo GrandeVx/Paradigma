@@ -18,6 +18,7 @@ import { transactionUtils } from '@/lib/mmkv-storage';
 import { SwipeableTransactionItem } from '@/components/ui/swipeable-transaction-item';
 import { InvalidationUtils } from '@/lib/invalidation-utils';
 import * as Haptics from 'expo-haptics';
+import { useCurrency } from '@/hooks/use-currency';
 
 interface TransactionGroup {
   date: string;
@@ -230,7 +231,8 @@ const SummaryContainer: React.FC<{
   currentMonth: number;
   currentYear: number;
   onMonthChange: (month: number, year: number) => void;
-}> = ({ income, expenses, remaining, currentMonth, currentYear, onMonthChange }) => {
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}> = ({ income, expenses, remaining, currentMonth, currentYear, onMonthChange, formatCurrency }) => {
   return (
     <View className="bg-gray-50 rounded-3xl p-4 mb-4">
       <MonthSelector
@@ -245,7 +247,7 @@ const SummaryContainer: React.FC<{
             Entrate
           </Text>
           <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
-            € {income.toFixed(2)}
+            {formatCurrency(income)}
           </Text>
         </View>
 
@@ -254,7 +256,7 @@ const SummaryContainer: React.FC<{
             Uscite
           </Text>
           <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
-            € {expenses.toFixed(2)}
+            {formatCurrency(expenses)}
           </Text>
         </View>
 
@@ -263,7 +265,7 @@ const SummaryContainer: React.FC<{
             Rimanente
           </Text>
           <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk' }}>
-            € {remaining.toFixed(2)}
+            {formatCurrency(remaining)}
           </Text>
         </View>
       </View>
@@ -308,7 +310,8 @@ const convertToFlatListData = (groupedTransactions: TransactionGroup[]): FlatLis
 // Header component for FlatList
 const FlatListHeaderComponent: React.FC<{
   item: FlatListHeader;
-}> = ({ item }) => {
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}> = ({ item, formatCurrency }) => {
   const isPositive = item.dailyTotal > 0;
 
   return (
@@ -326,7 +329,7 @@ const FlatListHeaderComponent: React.FC<{
           className={`text-base font-medium ${isPositive ? 'text-gray-500' : 'text-gray-500'}`}
           style={{ fontFamily: 'Apfel Grotezk' }}
         >
-          {isPositive ? '+ ' : '- '}€ {Math.abs(item.dailyTotal).toFixed(2)}
+          {formatCurrency(item.dailyTotal, { showSign: true })}
         </Text>
       </View>
     </Animated.View>
@@ -357,6 +360,9 @@ const FlatListTransactionComponent: React.FC<{
 export const TransactionsSection: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
+
+  // Currency hook
+  const { formatCurrency } = useCurrency();
 
   // Cache state
   const [cachedDailyGroupsCount, setCachedDailyGroupsCount] = useState<number>(0);
@@ -591,7 +597,7 @@ export const TransactionsSection: React.FC = () => {
   // FlatList render item function
   const renderItem = ({ item }: { item: FlatListItem }) => {
     if (item.type === 'header') {
-      return <FlatListHeaderComponent item={item} />;
+      return <FlatListHeaderComponent item={item} formatCurrency={formatCurrency} />;
     } else {
       return <FlatListTransactionComponent item={item} onDelete={handleDeleteTransaction} />;
     }
@@ -661,6 +667,7 @@ export const TransactionsSection: React.FC = () => {
           currentMonth={currentMonth}
           currentYear={currentYear}
           onMonthChange={handleMonthChange}
+          formatCurrency={formatCurrency}
         />
       </Animated.View>
 

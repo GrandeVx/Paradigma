@@ -8,10 +8,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { IconName } from "@/components/ui/icons";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { NumericKeyboard } from "@/components/primitives/NumericKeyboard";
+import { useCurrency } from '@/hooks/use-currency';
 
 export default function ValueStepFlow() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { getCurrencySymbol } = useCurrency();
   const [amount, setAmount] = useState('0');
   const [isAnimating, setIsAnimating] = useState(false);
   const params = useLocalSearchParams<{ name: string, icon: string, color: string, firstAccount: string }>();
@@ -81,7 +83,7 @@ export default function ValueStepFlow() {
           </View>
 
           <View className="flex flex-row items-center gap-2 justify-center">
-            <Text className="text-gray-400 text-5xl font-bold">€</Text>
+            <Text className="text-gray-400 text-5xl font-bold">{getCurrencySymbol()}</Text>
             <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
               <Text className={`text-7xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
                 {formattedAmount.split(',')[0]}

@@ -3,6 +3,7 @@ import { View, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { IconName } from '@/components/ui/icons';
+import { useCurrency } from '@/hooks/use-currency';
 
 interface AccountHeaderProps {
   name: string;
@@ -24,6 +25,7 @@ export const AccountHeader = React.memo<AccountHeaderProps>(({
   onIconPress,
   onColorPress
 }) => {
+  const { getCurrencySymbol } = useCurrency();
   // Format currency helper - optimized to prevent recalculation
   const formatCurrency = React.useMemo(() => {
     const [integer, decimal] = Math.abs(balance).toFixed(2).split('.');
@@ -66,7 +68,7 @@ export const AccountHeader = React.memo<AccountHeaderProps>(({
       <View className="bg-gray-50 rounded-xl p-4">
         <Text className="text-gray-500 text-xs font-medium mb-2">BILANCIO ATTUALE</Text>
         <View className="flex-row items-baseline gap-1">
-          <Text className="text-gray-400 text-lg font-normal">€</Text>
+          <Text className="text-gray-400 text-lg font-normal">{getCurrencySymbol()}</Text>
           <Text className="text-black text-3xl font-medium" style={{ fontFamily: 'Apfel Grotezk' }}>
             {formatCurrency.integer}
           </Text>

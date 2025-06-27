@@ -18,6 +18,7 @@ import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
 import { useTabBar } from '@/context/TabBarContext';
 import { goalsUtils } from '@/lib/mmkv-storage';
+import { useCurrency } from '@/hooks/use-currency';
 
 // Loading skeleton for goals section
 const GoalsLoadingSkeleton = ({ goalsCount = 3 }: { goalsCount?: number }) => {
@@ -58,15 +59,15 @@ const GoalsLoadingSkeleton = ({ goalsCount = 3 }: { goalsCount?: number }) => {
   );
 };
 
-// Format currency helper (Italian format)
-const formatCurrency = (amount: number) => {
-  const [integer, decimal] = amount.toFixed(2).split('.');
-  const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return {
-    integer: formattedInteger,
-    decimal: decimal
-  };
-};
+// Legacy format currency helper - now using global currency hook
+// const formatCurrency = (amount: number) => {
+//   const [integer, decimal] = amount.toFixed(2).split('.');
+//   const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+//   return {
+//     integer: formattedInteger,
+//     decimal: decimal
+//   };
+// };
 
 // Extended interface for MoneyAccount with goal fields
 interface MoneyAccountWithGoal {
@@ -102,11 +103,13 @@ const AnimatedGoalCard: React.FC<{
   goal: GoalAccount;
   index: number;
   onPress: (id: string) => void;
-}> = ({ goal, index, onPress }) => {
-  const { integer, decimal } = formatCurrency(goal.balance);
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+  getCurrencySymbol: () => string;
+}> = ({ goal, index, onPress, formatCurrency, getCurrencySymbol }) => {
+  const formattedBalance = formatCurrency(goal.balance);
   const remaining = goal.targetAmount - goal.balance;
-  const { integer: targetInteger, decimal: targetDecimal } = formatCurrency(goal.targetAmount);
-  const { integer: remainingInteger, decimal: remainingDecimal } = formatCurrency(remaining);
+  const formattedTarget = formatCurrency(goal.targetAmount);
+  const formattedRemaining = formatCurrency(remaining);
 
   const progressWidth = useSharedValue(0);
   const cardScale = useSharedValue(1);
@@ -155,11 +158,10 @@ const AnimatedGoalCard: React.FC<{
             </View>
 
             <View className="flex-row items-baseline gap-2">
-              <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>€</Text>
-              <View className="flex-row items-baseline">
-                <Text className="text-white font-medium" style={{ fontFamily: 'Apfel Grotezk', fontSize: 23 }}>{integer}</Text>
-                <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>,{decimal}</Text>
-              </View>
+              <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>{getCurrencySymbol()}</Text>
+              <Text className="text-white font-medium" style={{ fontFamily: 'Apfel Grotezk', fontSize: 23 }}>
+                {formattedBalance.replace(getCurrencySymbol(), '').trim()}
+              </Text>
             </View>
           </View>
 
@@ -177,7 +179,7 @@ const AnimatedGoalCard: React.FC<{
               />
             </View>
             <Text className="text-white text-xs font-medium">
-              Ancora € {remainingInteger},{remainingDecimal} per completare l'obiettivo di € {targetInteger},{targetDecimal}
+              Ancora {formattedRemaining} per completare l'obiettivo di {formattedTarget}
             </Text>
           </View>
         </View>
@@ -191,6 +193,7 @@ const AnimatedGoalCard: React.FC<{
 export const GoalsSection: React.FC = () => {
   const router = useRouter();
   const { hideTabBar } = useTabBar();
+  const { formatCurrency, getCurrencySymbol } = useCurrency();
 
   // Cache state
   const [cachedGoalsCount, setCachedGoalsCount] = useState<number>(0);
@@ -357,6 +360,8 @@ export const GoalsSection: React.FC = () => {
             goal={goal}
             index={index}
             onPress={handleGoalPress}
+            formatCurrency={formatCurrency}
+            getCurrencySymbol={getCurrencySymbol}
           />
         ))}
       </ScrollView>

@@ -29,15 +29,16 @@ import { cn } from '@/lib/utils';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { budgetUtils } from '@/lib/mmkv-storage';
 import { router } from 'expo-router';
+import { useCurrency } from '@/hooks/use-currency';
 
-// Helper function to format currency
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('it-IT', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-  }).format(amount);
-};
+// Legacy helper function to format currency - now using global currency hook in components
+// const formatCurrency = (amount: number) => {
+//   return new Intl.NumberFormat('it-IT', {
+//     style: 'currency',
+//     currency: 'EUR',
+//     minimumFractionDigits: 2,
+//   }).format(amount);
+// };
 
 // Helper to get category background color with opacity
 const getCategoryBackgroundColor = (color: string) => {
@@ -98,7 +99,8 @@ const BudgetItem = ({
   category,
   spending,
   onPress,
-  index
+  index,
+  formatCurrency
 }: {
   budget: {
     id: string;
@@ -115,6 +117,7 @@ const BudgetItem = ({
   spending: number;
   onPress: () => void;
   index: number;
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
 }) => {
   const budgetAmount = Number(budget.allocatedAmount);
   const spent = spending;
@@ -233,6 +236,8 @@ const BudgetItem = ({
 };
 
 export default function BudgetScreen() {
+  const { formatCurrency, getCurrencySymbol } = useCurrency();
+
   // State for current month
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -596,7 +601,7 @@ export default function BudgetScreen() {
                       className="mb-4"
                     >
                       <View className="flex-row items-baseline justify-center">
-                        <Text className="text-gray-500 text-2xl">€</Text>
+                        <Text className="text-gray-500 text-2xl">{getCurrencySymbol()}</Text>
                         <Text className="text-black text-5xl font-medium">
                           {Math.floor(
                             budgetSummary.totalBudget - budgetSummary.totalSpent > 0 ? budgetSummary.totalBudget - budgetSummary.totalSpent : 0
@@ -685,6 +690,7 @@ export default function BudgetScreen() {
                             spending={spending}
                             onPress={() => handleBudgetClick(budget.macroCategoryId)}
                             index={index}
+                            formatCurrency={formatCurrency}
                           />
                         );
                       })}

@@ -5,6 +5,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 
 import { NumericKeyboard } from '@/components/primitives/NumericKeyboard';
 import HeaderContainer from '@/components/layouts/_header';
+import { useCurrency } from '@/hooks/use-currency';
 
 type TransactionType = 'income' | 'expense' | 'transfer';
 
@@ -13,6 +14,7 @@ export default function ValueScreen() {
   const [transactionType, setTransactionType] = useState<TransactionType>('expense');
   const [isAnimating, setIsAnimating] = useState(false);
   const router = useRouter();
+  const { getCurrencySymbol } = useCurrency();
 
   // Reset state when screen comes into focus
   useFocusEffect(
@@ -103,7 +105,7 @@ export default function ValueScreen() {
 
         <View className="flex-1 justify-center items-center px-4">
           <View className="flex flex-row items-center gap-2">
-            <Text className="text-gray-400 text-5xl font-bold">€</Text>
+            <Text className="text-gray-400 text-5xl font-bold">{getCurrencySymbol()}</Text>
             <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
               <Text className={`text-9xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700'}`}>
                 {formattedAmount.split('.')[0]}

@@ -9,19 +9,7 @@ import HeaderContainer from '@/components/layouts/_header';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
-
-// Format currency helper
-const formatCurrency = (amount: number) => {
-  const [integer, decimal] = amount.toFixed(2).split('.');
-
-  // Format with dot as thousand separator and comma as decimal separator (Italian format)
-  const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-
-  return {
-    integer: formattedInteger,
-    decimal: decimal
-  };
-};
+import { useCurrency } from '@/hooks/use-currency';
 
 // Extended interface for MoneyAccount with goal fields
 interface MoneyAccountWithGoal {
@@ -58,14 +46,28 @@ interface UnifiedAccount {
 const AccountCard: React.FC<{
   account: UnifiedAccount;
   onPress: (id: string) => void;
-}> = React.memo(({ account, onPress }) => {
-  const { integer, decimal } = formatCurrency(account.balance);
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+  getCurrencySymbol: () => string;
+}> = React.memo(({ account, onPress, formatCurrency, getCurrencySymbol }) => {
+  // Custom formatter for the display format used in this screen
+  const formatDisplayCurrency = (amount: number) => {
+    const [integer, decimal] = amount.toFixed(2).split('.');
+    // Format with dot as thousand separator and comma as decimal separator (Italian format)
+    const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return {
+      integer: formattedInteger,
+      decimal: decimal
+    };
+  };
+
+  const { integer, decimal } = formatDisplayCurrency(account.balance);
+  const currencySymbol = getCurrencySymbol();
 
   // Savings account with progress display
   if (account.isGoalAccount && account.targetAmount && account.progress !== undefined) {
     const remaining = account.targetAmount - account.balance;
-    const { integer: targetInteger, decimal: targetDecimal } = formatCurrency(account.targetAmount);
-    const { integer: remainingInteger, decimal: remainingDecimal } = formatCurrency(remaining);
+    const { integer: targetInteger, decimal: targetDecimal } = formatDisplayCurrency(account.targetAmount);
+    const remainingFormatted = formatCurrency(remaining);
 
     return (
       <Pressable
@@ -80,7 +82,7 @@ const AccountCard: React.FC<{
             </View>
 
             <View className="flex-row items-baseline gap-2">
-              <Text className="text-white text-base font-normal">€</Text>
+              <Text className="text-white text-base font-normal">{currencySymbol}</Text>
               <View className="flex-row items-baseline">
                 <Text className="text-white text-2xl font-medium" style={{ fontFamily: 'Apfel Grotezk' }}>{integer}</Text>
                 <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>,{decimal}</Text>
@@ -99,7 +101,7 @@ const AccountCard: React.FC<{
               />
             </View>
             <Text className="text-white text-xs font-medium">
-              Ancora € {remainingInteger},{remainingDecimal} per completare l'obiettivo di € {targetInteger},{targetDecimal}
+              Ancora {remainingFormatted} per completare l'obiettivo di {currencySymbol} {targetInteger},{targetDecimal}
             </Text>
           </View>
         </View>
@@ -121,7 +123,7 @@ const AccountCard: React.FC<{
         </View>
 
         <View className="flex-row items-baseline gap-2">
-          <Text className="text-white text-base font-normal">€</Text>
+          <Text className="text-white text-base font-normal">{currencySymbol}</Text>
           <View className="flex-row items-baseline">
             <Text className="text-white text-2xl font-medium">{integer}</Text>
             <Text className="text-white text-base font-normal">,{decimal}</Text>
@@ -134,6 +136,9 @@ const AccountCard: React.FC<{
 
 export default function AccountsScreen() {
   const router = useRouter();
+
+  // Currency hook
+  const { formatCurrency, getCurrencySymbol } = useCurrency();
 
   // Fetch accounts data with controlled refetching - OPTIMIZED
   const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({}, {
@@ -198,7 +203,19 @@ export default function AccountsScreen() {
     };
   }, [accountsData]);
 
-  const { integer, decimal } = formatCurrency(totalBalance);
+  // Custom formatter for the total balance display
+  const formatDisplayCurrency = (amount: number) => {
+    const [integer, decimal] = amount.toFixed(2).split('.');
+    // Format with dot as thousand separator and comma as decimal separator (Italian format)
+    const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return {
+      integer: formattedInteger,
+      decimal: decimal
+    };
+  };
+
+  const { integer, decimal } = formatDisplayCurrency(totalBalance);
+  const currencySymbol = getCurrencySymbol();
 
   const handleAccountPress = (id: string) => {
     // Navigate to account details using the id parameter
@@ -231,7 +248,7 @@ export default function AccountsScreen() {
         {/* Top Section with Balance */}
         <View className="pb-10 items-center justify-center px-6">
           <View className="flex-row items-baseline justify-center w-full max-w-sm">
-            <Text className="text-gray-400 text-3xl font-normal">€</Text>
+            <Text className="text-gray-400 text-3xl font-normal">{currencySymbol}</Text>
             <View className="flex-row items-baseline flex-shrink">
               <Text
                 className="text-black font-medium flex-shrink-0"
@@ -284,6 +301,8 @@ export default function AccountsScreen() {
                 key={account.id}
                 account={account}
                 onPress={handleAccountPress}
+                formatCurrency={formatCurrency}
+                getCurrencySymbol={getCurrencySymbol}
               />
             ))
           )}

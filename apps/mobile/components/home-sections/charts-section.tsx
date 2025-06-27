@@ -18,6 +18,7 @@ import type { CategoryData, SubCategoryBreakdown, CalendarDay } from '@/types/ch
 import { api } from '@/lib/api';
 import { useRouter } from 'expo-router';
 import { chartsUtils } from '@/lib/mmkv-storage';
+import { useCurrency } from '@/hooks/use-currency';
 
 // Loading skeleton for charts section
 const ChartsLoadingSkeleton = ({ categoriesCount = 4 }: { categoriesCount?: number }) => {
@@ -155,7 +156,8 @@ const SummaryContainer: React.FC<{
   currentMonth: number;
   currentYear: number;
   onMonthChange: (month: number, year: number) => void;
-}> = ({ income, expenses, remaining, currentMonth, currentYear, onMonthChange }) => {
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}> = ({ income, expenses, remaining, currentMonth, currentYear, onMonthChange, formatCurrency }) => {
   return (
     <View className="bg-gray-50 rounded-3xl p-4 mb-4">
       <MonthSelector
@@ -170,7 +172,7 @@ const SummaryContainer: React.FC<{
             Entrate
           </Text>
           <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
-            € {income.toFixed(2)}
+            {formatCurrency(income)}
           </Text>
         </View>
 
@@ -179,7 +181,7 @@ const SummaryContainer: React.FC<{
             Uscite
           </Text>
           <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
-            € {expenses.toFixed(2)}
+            {formatCurrency(expenses)}
           </Text>
         </View>
 
@@ -188,7 +190,7 @@ const SummaryContainer: React.FC<{
             Rimanente
           </Text>
           <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk' }}>
-            € {remaining.toFixed(2)}
+            {formatCurrency(remaining)}
           </Text>
         </View>
       </View>
@@ -196,7 +198,10 @@ const SummaryContainer: React.FC<{
   );
 };
 
-const SubCategoryItem: React.FC<{ subCategory: SubCategoryBreakdown }> = ({ subCategory }) => {
+const SubCategoryItem: React.FC<{
+  subCategory: SubCategoryBreakdown;
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}> = ({ subCategory, formatCurrency }) => {
   return (
     <View className="flex-row items-center justify-between py-2 pl-6 pr-4">
       {/* Sub-category info */}
@@ -222,7 +227,7 @@ const SubCategoryItem: React.FC<{ subCategory: SubCategoryBreakdown }> = ({ subC
           className="text-gray-600 text-sm"
           style={{ fontFamily: 'Apfel Grotezk' }}
         >
-          € {subCategory.amount.toFixed(2)}
+          {formatCurrency(subCategory.amount)}
         </Text>
       </View>
     </View>
@@ -238,7 +243,8 @@ const AnimatedCategoryLegendItem: React.FC<{
   isLoadingSubCategories?: boolean;
   onToggleExpand: () => void;
   onCategoryPress: (categoryId: string) => void;
-}> = ({ category, index, isExpanded, subCategories, isLoadingSubCategories, onToggleExpand, onCategoryPress }) => {
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}> = ({ category, index, isExpanded, subCategories, isLoadingSubCategories, onToggleExpand, onCategoryPress, formatCurrency }) => {
   const itemScale = useSharedValue(1);
 
   const handlePressIn = () => {
@@ -307,7 +313,7 @@ const AnimatedCategoryLegendItem: React.FC<{
             className="text-black text-base font-medium"
             style={{ fontFamily: 'Apfel Grotezk' }}
           >
-            € {category.amount.toFixed(2)}
+            {formatCurrency(category.amount)}
           </Text>
 
           {/* Expand/Collapse arrow - separate touchable area */}
@@ -343,7 +349,7 @@ const AnimatedCategoryLegendItem: React.FC<{
                   key={subCategory.id}
                   entering={FadeInDown.delay(subIndex * 50).duration(300)}
                 >
-                  <SubCategoryItem subCategory={subCategory} />
+                  <SubCategoryItem subCategory={subCategory} formatCurrency={formatCurrency} />
                 </Animated.View>
               ))}
               {/* Separator line */}
@@ -366,6 +372,7 @@ const AnimatedCategoryLegendItem: React.FC<{
 
 export const ChartsSection: React.FC = () => {
   const router = useRouter();
+  const { formatCurrency } = useCurrency();
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
@@ -539,6 +546,7 @@ export const ChartsSection: React.FC = () => {
             currentMonth={currentMonth}
             currentYear={currentYear}
             onMonthChange={handleMonthChange}
+            formatCurrency={formatCurrency}
           />
         </Animated.View>
 
@@ -573,6 +581,7 @@ export const ChartsSection: React.FC = () => {
                     isLoadingSubCategories={expandedCategoryId === category.id ? isSubCategoryLoading : false}
                     onToggleExpand={() => handleToggleExpand(category.id)}
                     onCategoryPress={handleCategoryPress}
+                    formatCurrency={formatCurrency}
                   />
                 ))
               ) : (

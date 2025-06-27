@@ -21,6 +21,7 @@ import { RecurrencePickerBottomSheet, RecurrenceOption } from "@/components/bott
 
 import { api } from "@/lib/api";
 import { IconName } from "@/components/ui/icons";
+import { useCurrency } from '@/hooks/use-currency';
 // Removed StackActions import - using normal router navigation instead
 
 type TransactionType = 'income' | 'expense' | 'transfer';
@@ -38,6 +39,7 @@ export default function SummaryScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ amount: string, type: TransactionType }>();
   const queryClient = api.useContext();
+  const { getCurrencySymbol } = useCurrency();
 
   const amount = params.amount || '0';
   const transactionType = params.type as TransactionType || 'expense';
@@ -554,7 +556,7 @@ export default function SummaryScreen() {
           <View className="flex-row justify-between items-center px-4 py-2">
             <View className="flex-col">
               <View className="flex-row items-baseline gap-1">
-                <Text className="text-gray-400 text-2xl font-bold">€</Text>
+                <Text className="text-gray-400 text-2xl font-bold">{getCurrencySymbol()}</Text>
                 <View className="flex-row items-baseline">
                   <Text className="text-primary-700 text-5xl font-bold">{integerPart}</Text>
                   <Text className="text-primary-700 text-2xl font-bold">{decimalPart}</Text>
@@ -563,7 +565,7 @@ export default function SummaryScreen() {
 
               {isRecurring && (
                 <View className="flex-row items-baseline gap-1 ">
-                  <Text className="text-gray-400 text-sm font-normal">€</Text>
+                  <Text className="text-gray-400 text-sm font-normal">{getCurrencySymbol()}</Text>
                   <View className="flex-row items-baseline">
                     <Text className="text-gray-500 text-xl font-medium">{monthlyIntegerPart}</Text>
                     <Text className="text-gray-500 text-sm font-normal">{monthlyDecimalPart}</Text>

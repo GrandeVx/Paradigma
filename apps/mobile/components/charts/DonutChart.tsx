@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text';
 import type { DonutChartProps } from '@/types/charts';
 import { calculateDonutSegments, formatChartAmount, calculateOptimalChartSize } from '@/utils/chartCalculations';
 import { useRouter } from 'expo-router';
+import { useCurrency } from '@/hooks/use-currency';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -17,6 +18,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   animate = false,
 }) => {
   const router = useRouter();
+  const { getCurrencySymbol } = useCurrency();
 
   const handleCategoryPress = (categoryId: string) => {
     router.push(`/(protected)/(home)/(category-transactions)/${categoryId}`);
@@ -143,7 +145,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
               fontWeight: '400'
             }}
           >
-            €
+            {getCurrencySymbol()}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
             <Text

@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { useTabBar } from "@/context/TabBarContext";
 import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { ManualUpdateChecker } from "@/components/ui";
+import { useCurrency, type Currency } from "@/hooks/use-currency";
 
 const LANGUAGES = [
   { code: "en-US", flag: "🇺🇸", name: "English" },
@@ -70,16 +71,28 @@ export default function ProfileScreen() {
   });
   const { t, i18n: i18nInstance } = useTranslation();
   const { hideTabBar } = useTabBar();
+  const { currency, setCurrency, supportedCurrencies } = useCurrency();
 
   const handleLanguageChange = async (language: string) => {
     try {
       await AsyncStorage.setItem("language", language);
       await i18nInstance.changeLanguage(language);
-      bottomSheetRef.current?.close();
+      languageBottomSheetRef.current?.close();
       reloadAppAsync();
     } catch (error) {
       console.error("Error changing language:", error);
       Alert.alert("Error", "Failed to change language. Please try again.");
+    }
+  };
+
+  const handleCurrencyChange = async (selectedCurrency: Currency) => {
+    try {
+      await setCurrency(selectedCurrency);
+      currencyBottomSheetRef.current?.close();
+      Alert.alert("Valuta aggiornata", `La valuta è stata cambiata in ${selectedCurrency.name}`);
+    } catch (error) {
+      console.error("Error changing currency:", error);
+      Alert.alert("Errore", "Impossibile cambiare la valuta. Riprova.");
     }
   };
 
@@ -155,7 +168,8 @@ export default function ProfileScreen() {
     []
   );
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const languageBottomSheetRef = useRef<BottomSheet>(null);
+  const currencyBottomSheetRef = useRef<BottomSheet>(null);
   return (
     <>
       <HeaderContainer variant="secondary" hideBackButton={true}>
@@ -195,12 +209,14 @@ export default function ProfileScreen() {
               label="Lingua"
               value={currentLanguage ? `${currentLanguage.flag} ${currentLanguage.name}` : "Seleziona"}
               hasArrow={true}
-              onPress={() => bottomSheetRef.current?.expand()}
+              onPress={() => languageBottomSheetRef.current?.expand()}
             />
 
             <CategoryItem
               label="Valuta"
-              value="EUR"
+              value={`${currency.symbol} ${currency.name}`}
+              hasArrow={true}
+              onPress={() => currencyBottomSheetRef.current?.expand()}
             />
 
             <CategoryItem
@@ -285,7 +301,7 @@ export default function ProfileScreen() {
       </HeaderContainer>
       {/* Language Selection Bottom Sheet */}
       <BottomSheet
-        ref={bottomSheetRef}
+        ref={languageBottomSheetRef}
         snapPoints={["40%"]}
         index={-1}
         enablePanDownToClose
@@ -331,6 +347,55 @@ export default function ProfileScreen() {
               )}
             </Pressable>
           ))}
+        </View>
+      </BottomSheet>
+
+      {/* Currency Selection Bottom Sheet */}
+      <BottomSheet
+        ref={currencyBottomSheetRef}
+        snapPoints={["60%"]}
+        index={-1}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        handleStyle={{
+          backgroundColor: '#FFFFFF',
+          borderTopLeftRadius: 15,
+          borderTopRightRadius: 15,
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: "#000",
+          width: 40,
+        }}
+        containerStyle={{
+          zIndex: 1000,
+        }}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF"
+        }}
+      >
+        <View style={styles.bottomSheetContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Seleziona Valuta</Text>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {supportedCurrencies.map((currencyOption) => (
+              <Pressable
+                key={currencyOption.code}
+                style={[
+                  styles.languageOption,
+                  currency.code === currencyOption.code && styles.selectedLanguage,
+                ]}
+                onPress={() => handleCurrencyChange(currencyOption)}
+              >
+                <Text style={styles.languageText}>
+                  {currencyOption.symbol} {currencyOption.name}
+                </Text>
+                {currency.code === currencyOption.code && (
+                  <SvgIcon name="checks" width={16} height={16} color="#007AFF" />
+                )}
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
       </BottomSheet>
     </>

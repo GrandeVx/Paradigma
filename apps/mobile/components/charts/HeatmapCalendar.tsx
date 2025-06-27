@@ -4,11 +4,13 @@ import { Text } from '@/components/ui/text';
 import type { HeatmapProps, CalendarDay } from '@/types/charts';
 import { generateCalendarGrid } from '@/utils/chartCalculations';
 import { INTENSITY_COLORS } from '@/utils/chartColors';
+import { useCurrency } from '@/hooks/use-currency';
 
 const DayCell: React.FC<{
   day: CalendarDay | null;
   onPress?: (day: CalendarDay) => void;
-}> = ({ day, onPress }) => {
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}> = ({ day, onPress, formatCurrency }) => {
   if (!day) {
     // Empty cell for days outside current month
     return <View className="flex-1 h-16" />;
@@ -62,7 +64,7 @@ const DayCell: React.FC<{
                 lineHeight: 16,
               }}
             >
-              € {day.amount > 0 ? Math.round(day.amount) : 0}
+              {formatCurrency(day.amount > 0 ? Math.round(day.amount) : 0, { decimals: 0 })}
             </Text>
           </>
         )}
@@ -74,7 +76,8 @@ const DayCell: React.FC<{
 const WeekRow: React.FC<{
   days: (CalendarDay | null)[];
   onDayPress?: (day: CalendarDay) => void;
-}> = ({ days, onDayPress }) => {
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}> = ({ days, onDayPress, formatCurrency }) => {
   return (
     <View className="flex-row justify-between items-stretch">
       {days.map((day, index) => (
@@ -82,6 +85,7 @@ const WeekRow: React.FC<{
           key={day ? `${day.day}` : `empty-${index}`}
           day={day}
           onPress={onDayPress}
+          formatCurrency={formatCurrency}
         />
       ))}
     </View>
@@ -117,6 +121,8 @@ export const HeatmapCalendar: React.FC<HeatmapProps> = ({
   year,
   onDayPress,
 }) => {
+  const { formatCurrency } = useCurrency();
+
   // Generate calendar grid
   const calendarMonth = generateCalendarGrid(year, month, data);
 
@@ -132,6 +138,7 @@ export const HeatmapCalendar: React.FC<HeatmapProps> = ({
             key={`week-${weekIndex}`}
             days={week.days}
             onDayPress={onDayPress}
+            formatCurrency={formatCurrency}
           />
         ))}
       </View>
