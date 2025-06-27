@@ -11,23 +11,24 @@ const TabBar = React.memo<BottomTabBarProps>(({
   navigation,
   descriptors,
 }) => {
+  // ALWAYS call hooks in the same order - move all hooks to the top
   const { isTabBarVisible, tabBarAnimation } = useTabBar();
   const router = useRouter();
-
-  const Flows = ["(creation-flow)", "(transaction-flow)"];
-  // check if the creation flow is the active route
-  const isCreationFlow = state.routes.filter((route, index) => state.index === index).some((route) => Flows.includes(route.name));
-  const shouldHideTabBar = isCreationFlow || !isTabBarVisible;
-
-  if (shouldHideTabBar) {
-    return null;
-  }
 
   // Memoize filtered routes to avoid recalculating on every render
   const filteredRoutes = React.useMemo(() =>
     state.routes.filter((route) => (route?.params as { href?: string })?.href !== null || false),
     [state.routes]
   );
+
+  // Calculate visibility after all hooks are called
+  const Flows = ["(creation-flow)", "(transaction-flow)"];
+  const isCreationFlow = state.routes.filter((route, index) => state.index === index).some((route) => Flows.includes(route.name));
+  const shouldHideTabBar = isCreationFlow || !isTabBarVisible;
+
+  if (shouldHideTabBar) {
+    return null;
+  }
 
   return (
     <Animated.View

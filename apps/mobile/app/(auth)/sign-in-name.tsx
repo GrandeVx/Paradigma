@@ -70,7 +70,7 @@ export default function SignInNameStep(
           </View>
 
           {/* Floating Button at the bottom */}
-          {/* @ts-expect-error - Known issue with Reanimated v3 types in certain contexts */}
+
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <Button
               variant="primary"

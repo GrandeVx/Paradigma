@@ -72,6 +72,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isInitialRoutingDone, setIsInitialRoutingDone] = useState<boolean>(false);
   const [shouldShowSplash, setShouldShowSplash] = useState<boolean>(true);
+  const [skipAutoRouting, setSkipAutoRouting] = useState<boolean>(false);
 
   // Check onboarding status from AsyncStorage
   const checkOnboardingStatus = async () => {
@@ -167,8 +168,14 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
     }
     setUser(data.user as unknown as User);
     setSession(data.token as unknown as Session);
-    // Reset routing flag to trigger a new routing decision
-    setIsInitialRoutingDone(false);
+
+    // Skip auto routing for 3 seconds to allow manual navigation to complete
+    setSkipAutoRouting(true);
+    setTimeout(() => {
+      setSkipAutoRouting(false);
+      setIsInitialRoutingDone(false);
+    }, 3000);
+
     return data;
   };
 
@@ -395,6 +402,12 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
     // Don't continue if routing is already done
     if (isInitialRoutingDone) {
       console.log("Routing already done, skipping...");
+      return;
+    }
+
+    // Skip auto routing if manual navigation is in progress
+    if (skipAutoRouting) {
+      console.log("Skipping auto routing - manual navigation in progress...");
       return;
     }
 
