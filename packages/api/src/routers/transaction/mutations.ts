@@ -857,25 +857,48 @@ export const mutations = {
   delete: protectedProcedure
     .input(deleteTransactionSchema)
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      console.log(`🗑️ [Transaction] Starting delete mutation for ID: ${input.transactionId}`);
       
-      // Verify transaction belongs to user
+      const userId = ctx.session.user.id;
+      console.log(`👤 [Transaction] User ID: ${userId}`);
+      
+      // Verify transaction belongs to user and get full details for cache invalidation
       const transaction = await ctx.db.transaction.findFirst({
         where: {
           id: input.transactionId,
           userId,
         },
+        include: {
+          subCategory: {
+            include: {
+              macroCategory: true,
+            }
+          },
+        },
       });
       
       if (!transaction) {
+        console.log(`❌ [Transaction] Transaction not found or doesn't belong to user`);
         throw notFoundError(ctx, 'transaction');
       }
       
-      // Save the account ID to invalidate its cache
+      console.log(`✅ [Transaction] Transaction found:`, transaction);
+      
+      // Extract transaction details for cache invalidation
       const accountId = transaction.moneyAccountId;
+      const transactionDate = new Date(transaction.date);
+      const month = (transactionDate.getMonth() + 1).toString();
+      const year = transactionDate.getFullYear().toString();
+      const isExpense = Number(transaction.amount) < 0;
+      const isIncome = Number(transaction.amount) > 0;
+      
+      console.log(`🗓️ [Transaction] Transaction date: ${transactionDate.toISOString()}, Month: ${month}, Year: ${year}`);
+      console.log(`💰 [Transaction] Transaction type: ${isExpense ? 'expense' : isIncome ? 'income' : 'transfer'}`);
 
       // If this is part of a transfer, we need to delete both sides
       if (transaction.transferId) {
+        console.log(`🔄 [Transaction] Deleting transfer with ID: ${transaction.transferId}`);
+        
         // Find the other transaction in the transfer
         const otherTransaction = await ctx.db.transaction.findFirst({
           where: {
@@ -887,6 +910,7 @@ export const mutations = {
 
         // Store the other account ID to invalidate its cache 
         const otherAccountId = otherTransaction?.moneyAccountId;
+        console.log(`🔄 [Transaction] Other transaction account ID: ${otherAccountId}`);
         
         // Delete both transactions in the transfer
         await ctx.db.transaction.deleteMany({
@@ -901,15 +925,13 @@ export const mutations = {
               ctx.db.getKey({ 
                 params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
               }),
-              // Main account (if exists)
-              ...(accountId ? [
-                ctx.db.getKey({ 
-                  params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: accountId }] 
-                }),
-                ctx.db.getKey({ 
-                  params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: accountId }] 
-                })
-              ] : []),
+              // Main account
+              ctx.db.getKey({ 
+                params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: accountId }] 
+              }),
+              ctx.db.getKey({ 
+                params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: accountId }] 
+              }),
               // Other account (if exists and different)
               ...(otherAccountId && otherAccountId !== accountId ? [
                 ctx.db.getKey({ 
@@ -925,23 +947,389 @@ export const mutations = {
                 params: [{ prisma: 'Budget' }, { operation: 'getCurrentSettings' }, { userId: userId }] 
               }),
               
-              // === TRANSACTION QUERY CACHES ===
-              // Use pattern for monthly data since we don't know the exact month
-              `balanceapp:transaction:operation:getMonthlySpending:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getMonthlySummary:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getCategoryBreakdown:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getDailySpending:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getDailyTransactions:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getCategoryTransactions:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getBudgetInfo:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getSubCategoryBreakdown:user_id:${userId}:*`
+              // === MONTHLY SPENDING QUERIES (ALL ACCOUNTS) ===
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getMonthlySpending' }, 
+                  { userId }, 
+                  { month, year },
+                  { accountId: 'all' },
+                  { macroCategoryIds: 'all' }
+                ] 
+              }),
+              // Account-specific monthly spending
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getMonthlySpending' }, 
+                  { userId }, 
+                  { month, year },
+                  { accountId },
+                  { macroCategoryIds: 'all' }
+                ] 
+              }),
+              ...(otherAccountId && otherAccountId !== accountId ? [
+                ctx.db.getKey({ 
+                  params: [
+                    { prisma: 'Transaction' }, 
+                    { operation: 'getMonthlySpending' }, 
+                    { userId }, 
+                    { month, year },
+                    { accountId: otherAccountId },
+                    { macroCategoryIds: 'all' }
+                  ] 
+                })
+              ] : []),
+              
+              // === MONTHLY SUMMARY QUERIES ===
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getMonthlySummary' }, 
+                  { userId }, 
+                  { month, year },
+                  { accountId: 'all' }
+                ] 
+              }),
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getMonthlySummary' }, 
+                  { userId }, 
+                  { month, year },
+                  { accountId }
+                ] 
+              }),
+              ...(otherAccountId && otherAccountId !== accountId ? [
+                ctx.db.getKey({ 
+                  params: [
+                    { prisma: 'Transaction' }, 
+                    { operation: 'getMonthlySummary' }, 
+                    { userId }, 
+                    { month, year },
+                    { accountId: otherAccountId }
+                  ] 
+                })
+              ] : []),
+              
+              // === DAILY SPENDING QUERIES ===
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getDailySpending' }, 
+                  { userId }, 
+                  { month, year },
+                  { accountId: 'all' }
+                ] 
+              }),
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getDailySpending' }, 
+                  { userId }, 
+                  { month, year },
+                  { accountId }
+                ] 
+              }),
+              ...(otherAccountId && otherAccountId !== accountId ? [
+                ctx.db.getKey({ 
+                  params: [
+                    { prisma: 'Transaction' }, 
+                    { operation: 'getDailySpending' }, 
+                    { userId }, 
+                    { month, year },
+                    { accountId: otherAccountId }
+                  ] 
+                })
+              ] : []),
+              
+              // === DAILY TRANSACTIONS QUERIES ===
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getDailyTransactions' }, 
+                  { userId }, 
+                  { date: transactionDate.toISOString().split('T')[0] },
+                  { accountId: 'all' }
+                ] 
+              }),
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getDailyTransactions' }, 
+                  { userId }, 
+                  { date: transactionDate.toISOString().split('T')[0] },
+                  { accountId }
+                ] 
+              }),
+              ...(otherAccountId && otherAccountId !== accountId ? [
+                ctx.db.getKey({ 
+                  params: [
+                    { prisma: 'Transaction' }, 
+                    { operation: 'getDailyTransactions' }, 
+                    { userId }, 
+                    { date: transactionDate.toISOString().split('T')[0] },
+                    { accountId: otherAccountId }
+                  ] 
+                })
+              ] : [])
             ],
-            hasPattern: true
+            hasPattern: false
           }
         });
         
+        console.log(`✅ [Transaction] Transfer deleted successfully`);
         return { success: true };
       } else {
+        console.log(`💾 [Transaction] Deleting single transaction`);
+        
+        // Prepare invalidation keys for single transaction deletion
+        const invalidationKeys = [
+          // === ACCOUNT BALANCE CACHES ===
+          ctx.db.getKey({ 
+            params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+          }),
+          ctx.db.getKey({ 
+            params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: accountId }] 
+          }),
+          ctx.db.getKey({ 
+            params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: accountId }] 
+          }),
+          
+          // === BUDGET SETTINGS CACHE ===
+          ctx.db.getKey({ 
+            params: [{ prisma: 'Budget' }, { operation: 'getCurrentSettings' }, { userId: userId }] 
+          }),
+          
+          // === MONTHLY SPENDING QUERIES (ALL ACCOUNTS) ===
+          ctx.db.getKey({ 
+            params: [
+              { prisma: 'Transaction' }, 
+              { operation: 'getMonthlySpending' }, 
+              { userId }, 
+              { month, year },
+              { accountId: 'all' },
+              { macroCategoryIds: 'all' }
+            ] 
+          }),
+          // Account-specific monthly spending
+          ctx.db.getKey({ 
+            params: [
+              { prisma: 'Transaction' }, 
+              { operation: 'getMonthlySpending' }, 
+              { userId }, 
+              { month, year },
+              { accountId },
+              { macroCategoryIds: 'all' }
+            ] 
+          }),
+          
+          // === MONTHLY SUMMARY QUERIES ===
+          ctx.db.getKey({ 
+            params: [
+              { prisma: 'Transaction' }, 
+              { operation: 'getMonthlySummary' }, 
+              { userId }, 
+              { month, year },
+              { accountId: 'all' }
+            ] 
+          }),
+          ctx.db.getKey({ 
+            params: [
+              { prisma: 'Transaction' }, 
+              { operation: 'getMonthlySummary' }, 
+              { userId }, 
+              { month, year },
+              { accountId }
+            ] 
+          }),
+          
+          // === CATEGORY BREAKDOWN QUERIES ===
+          ...(isExpense ? [
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getCategoryBreakdown' }, 
+                { userId }, 
+                { month, year },
+                { type: 'expense' },
+                { accountId: 'all' }
+              ] 
+            }),
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getCategoryBreakdown' }, 
+                { userId }, 
+                { month, year },
+                { type: 'expense' },
+                { accountId }
+              ] 
+            })
+          ] : []),
+          ...(isIncome ? [
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getCategoryBreakdown' }, 
+                { userId }, 
+                { month, year },
+                { type: 'income' },
+                { accountId: 'all' }
+              ] 
+            }),
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getCategoryBreakdown' }, 
+                { userId }, 
+                { month, year },
+                { type: 'income' },
+                { accountId }
+              ] 
+            })
+          ] : []),
+          
+          // === DAILY SPENDING QUERIES ===
+          ctx.db.getKey({ 
+            params: [
+              { prisma: 'Transaction' }, 
+              { operation: 'getDailySpending' }, 
+              { userId }, 
+              { month, year },
+              { accountId: 'all' }
+            ] 
+          }),
+          ctx.db.getKey({ 
+            params: [
+              { prisma: 'Transaction' }, 
+              { operation: 'getDailySpending' }, 
+              { userId }, 
+              { month, year },
+              { accountId }
+            ] 
+          }),
+          
+          // === DAILY TRANSACTIONS QUERIES ===
+          ctx.db.getKey({ 
+            params: [
+              { prisma: 'Transaction' }, 
+              { operation: 'getDailyTransactions' }, 
+              { userId }, 
+              { date: transactionDate.toISOString().split('T')[0] },
+              { accountId: 'all' }
+            ] 
+          }),
+          ctx.db.getKey({ 
+            params: [
+              { prisma: 'Transaction' }, 
+              { operation: 'getDailyTransactions' }, 
+              { userId }, 
+              { date: transactionDate.toISOString().split('T')[0] },
+              { accountId }
+            ] 
+          })
+        ];
+        
+        // Add category-specific invalidations if transaction was categorized
+        if (transaction.subCategoryId && transaction.subCategory?.macroCategory) {
+          const macroCategoryId = transaction.subCategory.macroCategory.id;
+          console.log(`📊 [Transaction] Adding category-specific invalidations for category: ${macroCategoryId}`);
+          
+          invalidationKeys.push(
+            // Sub-category breakdown
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getSubCategoryBreakdown' }, 
+                { userId }, 
+                { month, year },
+                { macroCategoryId },
+                { accountId: 'all' }
+              ] 
+            }),
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getSubCategoryBreakdown' }, 
+                { userId }, 
+                { month, year },
+                { macroCategoryId },
+                { accountId }
+              ] 
+            }),
+            
+            // Category transactions
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getCategoryTransactions' }, 
+                { userId }, 
+                { categoryId: macroCategoryId },
+                { month, year },
+                { accountId: 'all' }
+              ] 
+            }),
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getCategoryTransactions' }, 
+                { userId }, 
+                { categoryId: macroCategoryId },
+                { month, year },
+                { accountId }
+              ] 
+            }),
+            
+            // Budget info for this category
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getBudgetInfo' }, 
+                { userId }, 
+                { categoryId: macroCategoryId },
+                { month, year }
+              ] 
+            })
+          );
+          
+          // Add budget-specific monthly spending invalidations
+          try {
+            // Get current budget settings to know which category combinations to invalidate
+            const budgetSettings = await ctx.db.budget.findMany({
+              where: { userId },
+              select: { macroCategoryId: true }
+            });
+            
+            if (budgetSettings.length > 0) {
+              // Create the macroCategoryIds array as used by BudgetScreen
+              const budgetCategoryIds = budgetSettings.map(b => b.macroCategoryId);
+              const budgetCategoryIdsString = budgetCategoryIds.join(',');
+              
+              console.log(`🔥 [Transaction] Invalidating BudgetScreen query with categories: ${budgetCategoryIdsString}`);
+              
+              invalidationKeys.push(
+                // This is the EXACT query used by BudgetScreen
+                ctx.db.getKey({ 
+                  params: [
+                    { prisma: 'Transaction' }, 
+                    { operation: 'getMonthlySpending' }, 
+                    { userId }, 
+                    { month, year },
+                    { accountId: 'all' },
+                    { macroCategoryIds: budgetCategoryIdsString }
+                  ] 
+                })
+              );
+            }
+          } catch (error) {
+            console.log(`🔥 [Transaction] Error getting budget settings for invalidation:`, error);
+          }
+        }
+        
+        console.log(`🔥 [Transaction] Invalidating ${invalidationKeys.length} cache keys`);
+        
         // Delete single transaction
         await ctx.db.transaction.delete({
           where: {
@@ -949,41 +1337,12 @@ export const mutations = {
           },
           // Invalidate relevant caches with precise keys
           uncache: {
-            uncacheKeys: [
-              // === ACCOUNT BALANCE CACHES ===
-              ctx.db.getKey({ 
-                params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
-              }),
-              // Account (if exists)
-              ...(accountId ? [
-                ctx.db.getKey({ 
-                  params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: accountId }] 
-                }),
-                ctx.db.getKey({ 
-                  params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: accountId }] 
-                })
-              ] : []),
-              
-              // === BUDGET SETTINGS CACHE ===
-              ctx.db.getKey({ 
-                params: [{ prisma: 'Budget' }, { operation: 'getCurrentSettings' }, { userId: userId }] 
-              }),
-              
-              // === TRANSACTION QUERY CACHES ===
-              // Use pattern for monthly data since we don't know the exact month
-              `balanceapp:transaction:operation:getMonthlySpending:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getMonthlySummary:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getCategoryBreakdown:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getDailySpending:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getDailyTransactions:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getCategoryTransactions:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getBudgetInfo:user_id:${userId}:*`,
-              `balanceapp:transaction:operation:getSubCategoryBreakdown:user_id:${userId}:*`
-            ],
-            hasPattern: true
+            uncacheKeys: invalidationKeys,
+            hasPattern: false
           }
         });
         
+        console.log(`✅ [Transaction] Transaction deleted successfully`);
         return { success: true };
       }
     }),
