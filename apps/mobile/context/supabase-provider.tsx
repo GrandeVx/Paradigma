@@ -411,6 +411,9 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
         currentSegments: segments
       });
 
+      // Add a small delay to allow manual navigation to complete first
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       // Determine expected section based on auth and onboarding status
       let expectedSection: string;
 

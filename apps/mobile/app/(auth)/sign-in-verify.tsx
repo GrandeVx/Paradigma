@@ -25,6 +25,8 @@ export default function SignInVerify(
   }, []);
 
   const handleContinue = async () => {
+    console.log("[🚥 SignInVerify] Starting authentication process...");
+
     await signInWithVerificationOtp(params.email, otp);
 
     if (params.name) {
@@ -33,16 +35,24 @@ export default function SignInVerify(
       });
     }
 
-    if (params.fromLogin === "true") {
-      router.dismissTo({
-        pathname: "/(protected)",
+    console.log("params.fromLogin", params.fromLogin);
 
+    // Add a small delay to ensure the auth state is properly set
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (params.fromLogin === "true") {
+      // Existing user login - go to home/accounts
+      console.log("[🚥 SignInVerify] Existing user login - go to home/accounts");
+      router.dismissTo({
+        pathname: "/(protected)/(accounts)",
       });
     } else {
+      // New user registration - start account creation flow from name step
+      console.log("[🚥 SignInVerify] New user registration - start account creation flow from name step");
       router.dismissTo({
-        pathname: "/(protected)/(creation-flow)/icon",
+        pathname: "/(protected)/(creation-flow)/name",
         params: {
-          newAccount: "true",
+          firstAccount: "true",
         },
       });
     }
@@ -88,7 +98,6 @@ export default function SignInVerify(
           </View>
 
           {/* Floating Button at the bottom */}
-          {/* @ts-expect-error - Known issue with Reanimated v3 types in certain contexts */}
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <Button
               variant="primary"

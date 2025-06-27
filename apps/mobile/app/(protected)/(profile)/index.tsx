@@ -71,7 +71,6 @@ export default function ProfileScreen() {
       console.log('✅ Account deleted successfully:', data.deletedData);
 
       try {
-        // Clear all local storage and cache data
         console.log('🧹 Clearing AsyncStorage...');
         await AsyncStorage.multiRemove([
           'language',
@@ -81,13 +80,10 @@ export default function ProfileScreen() {
           'user_preferences'
         ]);
 
-        // Clear all MMKV storage data
         console.log('🧹 Clearing MMKV cache data...');
         try {
-          // Clear React Query cache
           cacheUtils.clearCache();
 
-          // Clear specific cache utilities
           budgetUtils.clearMonthlyTotalBudget();
           budgetUtils.clearBudgetCache();
           goalsUtils.clearGoalsCache();
@@ -127,10 +123,6 @@ export default function ProfileScreen() {
           [
             {
               text: t('common.ok'),
-              onPress: () => {
-                // Force redirect to auth screen
-                router.replace("/(auth)");
-              }
             }
           ]
         );

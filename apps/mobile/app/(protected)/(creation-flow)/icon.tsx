@@ -47,7 +47,7 @@ export default function IconStepFlow(
           <View className="flex-1 justify-center items-center w-full  ">
             <Pressable onPress={() => nameInputRef.current?.focus()}>
               <Text className="  text-gray-600 text-base font-sans font-normal mb-2 text-center">
-                {t("flow.icon.prompt")} <Text className="font-semibold font-sans">{params.name.toUpperCase()}</Text>
+                {t("flow.icon.prompt")} <Text className="font-semibold font-sans">{params.name?.toUpperCase() || ''}</Text>
               </Text>
 
               <View className="relative w-full items-center justify-center mt-4">

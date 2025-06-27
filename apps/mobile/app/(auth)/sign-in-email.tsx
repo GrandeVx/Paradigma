@@ -54,7 +54,7 @@ export default function SignInEmail() {
               <View className="relative w-max items-center">
                 <TextInput
                   ref={emailInputRef}
-                  className="text-[34px] placeholder:font-medium font-sans text-black pb-2"
+                  className="text-[34px] text-center w-full placeholder:font-medium font-sans text-black pb-2"
                   placeholder={t("auth.email.placeholder", "Email")}
                   placeholderTextColor="text-gray-400" // Use Tailwind class if possible or direct color
                   value={email}
@@ -65,7 +65,7 @@ export default function SignInEmail() {
                   onSubmitEditing={handleContinue} // Submit on pressing return/next
                   autoComplete="email"
                   spellCheck={false}
-                  style={{ fontSize: 34 }} // Ensure font size prevents iOS zoom
+                  style={{ fontSize: 24 }} // Ensure font size prevents iOS zoom
                   blurOnSubmit={false} // Keep keyboard open
                 />
                 {/* Optional: Add an animated cursor or indicator if needed */}
@@ -74,7 +74,6 @@ export default function SignInEmail() {
           </View>
 
           {/* Floating Button at the bottom */}
-          {/* @ts-expect-error - Known issue with Reanimated v3 types in certain contexts */}
           <Animated.View entering={FadeIn} exiting={FadeOut}>
             <Button
               variant="primary"
