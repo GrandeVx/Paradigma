@@ -503,3 +503,88 @@ export const goalsUtils = {
     }
   }
 } 
+
+// Notification preferences types
+interface NotificationPreferences {
+  dailyReminderEnabled: boolean;
+  reminderTime: string;
+  recurringNotificationsEnabled: boolean;
+  notificationToken?: string;
+}
+
+// Notification utilities for managing notification preferences during onboarding
+export const notificationUtils = {
+  // Save notification preferences temporarily during onboarding
+  saveNotificationPreferences: (preferences: NotificationPreferences): void => {
+    try {
+      mmkvStorage.set('onboarding-notifications', JSON.stringify(preferences));
+    } catch (error) {
+      console.error('Failed to save notification preferences:', error);
+    }
+  },
+
+  // Get saved notification preferences
+  getNotificationPreferences: (): NotificationPreferences | null => {
+    try {
+      const cached = mmkvStorage.getString('onboarding-notifications');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  // Clear notification preferences after they have been processed
+  clearNotificationPreferences: (): void => {
+    try {
+      mmkvStorage.delete('onboarding-notifications');
+    } catch (error) {
+      console.error('Failed to clear notification preferences:', error);
+    }
+  },
+
+  // Check if notification preferences have been set
+  hasNotificationPreferences: (): boolean => {
+    const preferences = notificationUtils.getNotificationPreferences();
+    return preferences !== null;
+  },
+
+  // Persistent daily reminder settings (separate from onboarding)
+  saveDailyReminderSettings: (enabled: boolean, time: string): void => {
+    try {
+      mmkvStorage.set('daily-reminder-enabled', enabled);
+      mmkvStorage.set('daily-reminder-time', time);
+    } catch (error) {
+      console.error('Failed to save daily reminder settings:', error);
+    }
+  },
+
+  // Get daily reminder enabled status
+  getDailyReminderEnabled: (): boolean => {
+    try {
+      const enabled = mmkvStorage.getBoolean('daily-reminder-enabled');
+      return enabled || false;
+    } catch {
+      return false;
+    }
+  },
+
+  // Get daily reminder time
+  getDailyReminderTime: (): string => {
+    try {
+      const time = mmkvStorage.getString('daily-reminder-time');
+      return time || '19:00';
+    } catch {
+      return '19:00';
+    }
+  },
+
+  // Clear daily reminder settings
+  clearDailyReminderSettings: (): void => {
+    try {
+      mmkvStorage.delete('daily-reminder-enabled');
+      mmkvStorage.delete('daily-reminder-time');
+    } catch (error) {
+      console.error('Failed to clear daily reminder settings:', error);
+    }
+  }
+} 

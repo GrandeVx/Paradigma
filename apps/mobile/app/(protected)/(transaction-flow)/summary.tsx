@@ -91,8 +91,9 @@ export default function SummaryScreen() {
         currentMonth: data.date.getMonth() + 1,
         currentYear: data.date.getFullYear(),
         clearCache: true,
+      }).then(() => {
+        router.replace("/(protected)/(home)");
       });
-      router.replace("/(protected)/(home)");
     }
   });
   const transferMutation = api.transaction.createTransfer.useMutation({
@@ -101,16 +102,18 @@ export default function SummaryScreen() {
         currentMonth: data.outflowTransaction.date.getMonth() + 1,
         currentYear: data.outflowTransaction.date.getFullYear(),
         clearCache: true,
+      }).then(() => {
+        router.replace("/(protected)/(home)");
       });
-      router.replace("/(protected)/(home)");
     }
   });
   const recurringRuleMutation = api.recurringRule.create.useMutation({
     onSuccess: async () => {
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
         clearCache: true,
+      }).then(() => {
+        router.replace("/(protected)/(home)");
       });
-      router.replace("/(protected)/(home)");
     }
   });
   const convertFrequencyMutation = api.recurringRule.convertFrequency.useMutation();

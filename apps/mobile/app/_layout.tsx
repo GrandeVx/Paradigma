@@ -30,10 +30,23 @@ import { TabBarProvider } from "@/context/TabBarContext";
 import { useExpoUpdates } from "@/hooks/use-expo-updates";
 import { UpdateModal } from "@/components/ui/update-modal";
 
+import * as Notifications from 'expo-notifications';
+
 // This is the default configuration
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false, // Reanimated runs in strict mode by default (this is a workaround to avoid the error)
+});
+
+// Configure notifications to show alerts in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
 });
 
 export {

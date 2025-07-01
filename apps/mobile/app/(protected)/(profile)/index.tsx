@@ -17,7 +17,8 @@ import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { ManualUpdateChecker } from "@/components/ui";
 import { useCurrency, type Currency } from "@/hooks/use-currency";
 import { useProfileIcon } from "@/hooks/use-profile-icon";
-import { cacheUtils, budgetUtils, transactionUtils, goalsUtils } from "@/lib/mmkv-storage";
+import { cacheUtils, budgetUtils, transactionUtils, goalsUtils, notificationUtils } from "@/lib/mmkv-storage";
+import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
 
 const LANGUAGES = [
   { code: "en-US", flag: "🇺🇸", name: "English" },
@@ -66,6 +67,7 @@ const CategoryItem: React.FC<{
 export default function ProfileScreen() {
   const router = useRouter();
   const { signOut, user } = useSupabase();
+  const { data: userInfo } = api.user.getUserInfo.useQuery();
   const { mutate: deleteAccount, isLoading: isDeletingAccount } = api.user.deleteAccount.useMutation({
     onSuccess: async (data) => {
       console.log('✅ Account deleted successfully:', data.deletedData);
@@ -87,6 +89,10 @@ export default function ProfileScreen() {
           budgetUtils.clearMonthlyTotalBudget();
           budgetUtils.clearBudgetCache();
           goalsUtils.clearGoalsCache();
+
+          // Clear notification settings
+          notificationUtils.clearNotificationPreferences();
+          notificationUtils.clearDailyReminderSettings();
 
           // Clear transaction caches for current and recent months
           const currentDate = new Date();
@@ -295,6 +301,7 @@ export default function ProfileScreen() {
   const languageBottomSheetRef = useRef<BottomSheet>(null);
   const currencyBottomSheetRef = useRef<BottomSheet>(null);
   const profileIconBottomSheetRef = useRef<BottomSheet>(null);
+  const notificationsBottomSheetRef = useRef<BottomSheet>(null);
   return (
     <>
       <HeaderContainer variant="secondary" hideBackButton={true} customTitle={t('tab-bar.profile')}>
@@ -347,7 +354,7 @@ export default function ProfileScreen() {
             <CategoryItem
               label={t('profile.notifications')}
               hasArrow={true}
-              onPress={() => { }}
+              onPress={() => notificationsBottomSheetRef.current?.expand()}
             />
           </Section>
 
@@ -569,6 +576,21 @@ export default function ProfileScreen() {
           </View>
         </View>
       </BottomSheet>
+
+      {/* Notifications Bottom Sheet */}
+      <NotificationsBottomSheet
+        bottomSheetRef={notificationsBottomSheetRef as React.RefObject<BottomSheet>}
+        snapPoints={["85%"]}
+        renderBackdrop={renderBackdrop}
+        handleClosePress={() => notificationsBottomSheetRef.current?.close()}
+        mode="settings"
+        initialNotifications={userInfo?.notifications || false}
+        initialNotificationToken={userInfo?.notificationToken || undefined}
+        onSaveComplete={() => {
+          // Show success message
+          Alert.alert('Successo', 'Le impostazioni delle notifiche sono state aggiornate.');
+        }}
+      />
     </>
   );
 }

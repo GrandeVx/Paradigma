@@ -15,6 +15,13 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
+    "notification": {
+      "icon": "./assets/images/icon.png",
+      "color": "#005EFD",
+      "iosDisplayInForeground": true,
+      "androidMode": "default",
+      "androidCollapsedTitle": "Balance - Aggiorna i tuoi conti"
+    },
     "fonts": [
       {
         "name": "ApfelGrotezk",
@@ -55,7 +62,15 @@
       ],
       "expo-secure-store",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#005EFD",
+          "mode": "production"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

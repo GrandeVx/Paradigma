@@ -1,3 +1,4 @@
+import React from 'react';
 import nodemailer from 'nodemailer';
 import { render } from '@react-email/render';
 
@@ -87,7 +88,7 @@ class EmailService {
   }
 
   async renderAndSendEmail(
-    emailJsx: JSX.Element,
+    emailJsx: React.ReactElement,
     options: Omit<SendEmailOptions, 'html'>
   ): Promise<boolean> {
     try {
