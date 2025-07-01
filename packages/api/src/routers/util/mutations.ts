@@ -1,6 +1,8 @@
 import { publicProcedure } from "../../trpc";
 import { addToWhitelistSchema } from "../../schemas/util";
-
+import { emailService } from "../../utils/email";
+import WhitelistWelcomeEmail from "../../templates/whitelist-welcome";
+import * as React from "react";
 
 export const mutations = {
   addToWhitelist: publicProcedure
@@ -34,6 +36,31 @@ export const mutations = {
         const dbTime = Date.now() - startTime;
         console.log(`✅ [Whitelist] Database operation completed in ${dbTime}ms`);
         console.log(`📤 [Whitelist] Created whitelist entry:`, whitelist);
+
+        // Send welcome email
+        console.log(`📧 [Whitelist] Attempting to send welcome email to: ${input.email}`);
+        try {
+          const emailJsx = React.createElement(WhitelistWelcomeEmail, {
+            userEmail: input.email,
+          });
+
+          const emailSent = await emailService.renderAndSendEmail(
+            emailJsx,
+            {
+              to: input.email,
+              subject: "🎉 Benvenuto in Balance - Iscrizione confermata!",
+            }
+          );
+
+          if (emailSent) {
+            console.log(`✅ [Whitelist] Welcome email sent successfully to: ${input.email}`);
+          } else {
+            console.log(`⚠️ [Whitelist] Failed to send welcome email to: ${input.email}, but user was added to whitelist`);
+          }
+        } catch (emailError) {
+          console.error(`❌ [Whitelist] Error sending welcome email:`, emailError);
+          // Don't throw here - we still want to return the whitelist entry even if email fails
+        }
 
         return whitelist;
       } catch (error) {

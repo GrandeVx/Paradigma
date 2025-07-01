@@ -1,10 +1,1 @@
-@import '@paradigma/styles/src/styles/global.css';
-
-:root {
-  --brand: 27 96% 61%;
-  --brand-foreground: 31 97% 72%;
-}
-
-.dark {
-  --brand: 31 97% 72%;
-}
+@import url("../../../../packages/styles/src/styles/global.css");

@@ -1,6 +1,4 @@
-import { z } from "zod";
-import { TRPCError } from "@trpc/server";
-import { protectedProcedure, publicProcedure } from "../../trpc";
+import { publicProcedure } from "../../trpc";
 
 export const queries = {
   // Get user's posts
