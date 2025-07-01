@@ -9,10 +9,12 @@ import {
   getDailySpendingSchema,
   getDailyTransactionsSchema,
   getCategoryTransactionsSchema,
-  getBudgetInfoSchema
+  getBudgetInfoSchema,
+  getFutureTransactionsSchema
 } from "../../schemas/transaction";
 import { notFoundError } from "../../utils/errors";
 import type { Prisma } from "@paradigma/db";
+import { calculateNextOccurrenceDate } from "../../utils/dateCalculations";
 
 export const queries = {
   list: protectedProcedure
@@ -116,11 +118,17 @@ export const queries = {
       const startDate = new Date(year, month - 1, 1); // Month is 0-indexed in JS Date
       const endDate = new Date(year, month, 0); // Last day of the month
       
+      // Check if the requested month is in the future
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      const isFutureMonth = year > currentYear || (year === currentYear && month > currentMonth);
+      
       // Create custom cache key for monthly spending
       const cacheKey = ctx.db.getKey({ 
         params: [
           { prisma: 'Transaction' }, 
-          { operation: 'getMonthlySpending' }, 
+          { operation: isFutureMonth ? 'getMonthlySpendingWithFuture' : 'getMonthlySpending' }, 
           { userId }, 
           { month: month.toString(), year: year.toString() },
           { accountId: accountId || 'all' },
@@ -128,52 +136,173 @@ export const queries = {
         ] 
       });
       
-      // Build query filters
-      const filters: Prisma.TransactionWhereInput = {
-        userId,
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-        // Exclude transfers from monthly spending but include ALL transactions (income + expense)
-        transferId: null,
-      };
+      let realTransactions: unknown[] = [];
+      const futureTransactions: unknown[] = [];
       
-      // Add account filter if specified
-      if (accountId) {
-        filters.moneyAccountId = accountId;
-      }
-      
-      // Add macro category filter if specified
-      if (macroCategoryIds && macroCategoryIds.length > 0) {
-        filters.subCategory = {
-          macroCategoryId: {
-            in: macroCategoryIds
-          }
+      if (isFutureMonth) {
+        // For future months, get simulated transactions from recurring rules
+        // Call the getFutureTransactions logic directly
+        const filters: Prisma.RecurringTransactionRuleWhereInput = {
+          userId,
+          isActive: true,
+          OR: [
+            { endDate: null },
+            { endDate: { gte: startDate } }
+          ],
+          startDate: { lte: endDate }
         };
+        
+        if (accountId) {
+          filters.moneyAccountId = accountId;
+        }
+        
+        if (macroCategoryIds && macroCategoryIds.length > 0) {
+          filters.subCategory = {
+            macroCategoryId: {
+              in: macroCategoryIds
+            }
+          };
+        }
+        
+        const recurringRules = await ctx.db.recurringTransactionRule.findMany({
+          where: filters,
+          include: {
+            subCategory: {
+              include: {
+                macroCategory: true,
+              }
+            },
+            moneyAccount: true,
+          },
+          cache: { 
+            ttl: 600,
+            key: `${cacheKey}:recurringRules` 
+          }
+        });
+        
+        // Generate simulated transactions for the specified month
+        for (const rule of recurringRules) {
+          const shouldDeactivate = (
+            (rule.endDate && new Date() > rule.endDate) ||
+            (rule.isInstallment && rule.totalOccurrences && 
+             rule.occurrencesGenerated >= rule.totalOccurrences)
+          );
+          
+          if (shouldDeactivate) continue;
+          
+          let currentDate = new Date(Math.max(rule.nextDueDate.getTime(), startDate.getTime()));
+          let occurrenceCount = rule.occurrencesGenerated;
+          
+          while (currentDate <= endDate) {
+            const shouldGenerate = (
+              (!rule.endDate || currentDate <= rule.endDate) &&
+              (!rule.isInstallment || !rule.totalOccurrences || 
+               occurrenceCount < rule.totalOccurrences)
+            );
+            
+            if (shouldGenerate) {
+              const transactionAmount = rule.type === "EXPENSE" 
+                ? -Math.abs(Number(rule.amount))
+                : Math.abs(Number(rule.amount));
+                
+              const finalAmount = rule.isInstallment && rule.totalOccurrences
+                ? transactionAmount / rule.totalOccurrences
+                : transactionAmount;
+              
+              const description = rule.isInstallment && rule.totalOccurrences
+                ? `${rule.description} (${occurrenceCount + 1}/${rule.totalOccurrences})`
+                : rule.description;
+              
+              futureTransactions.push({
+                id: `simulated-${rule.id}-${currentDate.getTime()}`,
+                description,
+                amount: finalAmount,
+                date: new Date(currentDate),
+                subCategory: rule.subCategory,
+                moneyAccount: rule.moneyAccount,
+                notes: rule.notes,
+                isRecurringInstance: true,
+                recurringRuleId: rule.id,
+                transferId: null,
+                userId: rule.userId,
+                moneyAccountId: rule.moneyAccountId,
+                subCategoryId: rule.subCategoryId,
+              });
+              
+              occurrenceCount++;
+            }
+            
+            try {
+              const nextDate = calculateNextOccurrenceDate(
+                currentDate,
+                rule.frequencyType,
+                rule.frequencyInterval,
+                rule.dayOfMonth,
+                rule.dayOfWeek
+              );
+              
+              if (nextDate.getTime() <= currentDate.getTime()) {
+                break;
+              }
+              
+              currentDate = nextDate;
+            } catch (error) {
+              break;
+            }
+          }
+        }
+        
+        // @ts-expect-error - TODO: fix this
+        futureTransactions.sort((a, b) => b.date.getTime() - a.date.getTime());
+      } else {
+        // For past/current months, get real transactions
+        const filters: Prisma.TransactionWhereInput = {
+          userId,
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+          // Exclude transfers from monthly spending but include ALL transactions (income + expense)
+          transferId: null,
+        };
+        
+        // Add account filter if specified
+        if (accountId) {
+          filters.moneyAccountId = accountId;
+        }
+        
+        // Add macro category filter if specified
+        if (macroCategoryIds && macroCategoryIds.length > 0) {
+          filters.subCategory = {
+            macroCategoryId: {
+              in: macroCategoryIds
+            }
+          };
+        }
+        
+        // Get ALL transactions for the month (income + expenses)
+        realTransactions = await ctx.db.transaction.findMany({
+          where: filters,
+          include: {
+            subCategory: {
+              include: {
+                macroCategory: true,
+              }
+            },
+            moneyAccount: true,
+          },
+          orderBy: {
+            date: 'desc',
+          },
+          cache: { 
+            ttl: 300, // 5 minutes TTL for monthly spending
+            key: cacheKey 
+          }
+        });
       }
       
-      // Get ALL transactions for the month (income + expenses)
-      const transactions = await ctx.db.transaction.findMany({
-        where: filters,
-        include: {
-          subCategory: {
-            include: {
-              macroCategory: true,
-            }
-          },
-          moneyAccount: true,
-        },
-        orderBy: {
-          date: 'desc',
-        },
-        cache: { 
-          ttl: 300, // 5 minutes TTL for monthly spending
-          key: cacheKey 
-        }
-      });
-      
-      return transactions;
+      // Combine and return the appropriate transactions
+      return isFutureMonth ? futureTransactions : realTransactions;
     }),
 
   getCategoryBreakdown: protectedProcedure
@@ -595,6 +724,191 @@ export const queries = {
       };
     }),
 
+  // NEW: Query to get future transactions based on recurring rules
+  getFutureTransactions: protectedProcedure
+    .input(getFutureTransactionsSchema)
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { month, year, accountId, macroCategoryIds } = input;
+      
+      // Create date range for the specified month
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+      
+      // Create custom cache key for future transactions
+      const cacheKey = ctx.db.getKey({ 
+        params: [
+          { prisma: 'RecurringTransactionRule' }, 
+          { operation: 'getFutureTransactions' }, 
+          { userId }, 
+          { month: month.toString(), year: year.toString() },
+          { accountId: accountId || 'all' },
+          { macroCategoryIds: macroCategoryIds?.join(',') || 'all' }
+        ] 
+      });
+      
+      // Build filters for recurring rules
+      const filters: Prisma.RecurringTransactionRuleWhereInput = {
+        userId,
+        isActive: true,
+        // Only rules that haven't ended yet
+        OR: [
+          { endDate: null },
+          { endDate: { gte: startDate } }
+        ],
+        // Only rules that have started before or during this month
+        startDate: { lte: endDate }
+      };
+      
+      // Add account filter if specified
+      if (accountId) {
+        filters.moneyAccountId = accountId;
+      }
+      
+      // Add macro category filter if specified
+      if (macroCategoryIds && macroCategoryIds.length > 0) {
+        filters.subCategory = {
+          macroCategoryId: {
+            in: macroCategoryIds
+          }
+        };
+      }
+      
+      // Get all active recurring rules
+      const recurringRules = await ctx.db.recurringTransactionRule.findMany({
+        where: filters,
+        include: {
+          subCategory: {
+            include: {
+              macroCategory: true,
+            }
+          },
+          moneyAccount: true,
+        },
+        cache: { 
+          ttl: 600, // 10 minutes TTL for recurring rules (they don't change frequently)
+          key: cacheKey 
+        }
+      });
+      
+      // Generate simulated transactions for the specified month
+      const simulatedTransactions: Array<{
+        id: string;
+        description: string;
+        amount: number;
+        date: Date;
+        subCategory?: {
+          id: string;
+          name: string;
+          icon: string;
+          macroCategory: {
+            id: string;
+            name: string;
+            color: string;
+            icon: string;
+            type: 'INCOME' | 'EXPENSE';
+          };
+        } | null;
+        moneyAccount?: {
+          id: string;
+          name: string;
+          iconName?: string | null;
+          color?: string | null;
+          currency?: string | null;
+        } | null;
+        notes?: string | null;
+        isRecurringInstance: boolean;
+        recurringRuleId: string;
+        transferId?: null;
+        userId: string;
+        moneyAccountId?: string | null;
+        subCategoryId?: string | null;
+      }> = [];
+      
+      for (const rule of recurringRules) {
+        // Check if rule should be deactivated
+        const shouldDeactivate = (
+          (rule.endDate && new Date() > rule.endDate) ||
+          (rule.isInstallment && rule.totalOccurrences && 
+           rule.occurrencesGenerated >= rule.totalOccurrences)
+        );
+        
+        if (shouldDeactivate) continue;
+        
+        // Calculate all occurrences for this month
+        let currentDate = new Date(Math.max(rule.nextDueDate.getTime(), startDate.getTime()));
+        let occurrenceCount = rule.occurrencesGenerated;
+        
+        while (currentDate <= endDate) {
+          // Check if this occurrence should be generated
+          const shouldGenerate = (
+            (!rule.endDate || currentDate <= rule.endDate) &&
+            (!rule.isInstallment || !rule.totalOccurrences || 
+             occurrenceCount < rule.totalOccurrences)
+          );
+          
+          if (shouldGenerate) {
+            // Create simulated transaction
+            const transactionAmount = rule.type === "EXPENSE" 
+              ? -Math.abs(Number(rule.amount))
+              : Math.abs(Number(rule.amount));
+              
+            // For installments, calculate individual amount
+            const finalAmount = rule.isInstallment && rule.totalOccurrences
+              ? transactionAmount / rule.totalOccurrences
+              : transactionAmount;
+            
+            const description = rule.isInstallment && rule.totalOccurrences
+              ? `${rule.description} (${occurrenceCount + 1}/${rule.totalOccurrences})`
+              : rule.description;
+            
+            simulatedTransactions.push({
+              id: `simulated-${rule.id}-${currentDate.getTime()}`,
+              description,
+              amount: finalAmount,
+              date: new Date(currentDate),
+              subCategory: rule.subCategory,
+              moneyAccount: rule.moneyAccount,
+              notes: rule.notes,
+              isRecurringInstance: true,
+              recurringRuleId: rule.id,
+              transferId: null,
+              userId: rule.userId,
+              moneyAccountId: rule.moneyAccountId,
+              subCategoryId: rule.subCategoryId,
+            });
+            
+            occurrenceCount++;
+          }
+          
+          // Calculate next occurrence date
+          try {
+            const nextDate = calculateNextOccurrenceDate(
+              currentDate,
+              rule.frequencyType,
+              rule.frequencyInterval,
+              rule.dayOfMonth,
+              rule.dayOfWeek
+            );
+            
+            // Prevent infinite loop
+            if (nextDate.getTime() <= currentDate.getTime()) {
+              break;
+            }
+            
+            currentDate = nextDate;
+          } catch (error) {
+            // Break if date calculation fails
+            break;
+          }
+        }
+      }
+      
+      // Sort transactions by date descending (most recent first)
+      simulatedTransactions.sort((a, b) => b.date.getTime() - a.date.getTime());
+      
+      return simulatedTransactions;
+    }),
 
 }; 
 
