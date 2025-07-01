@@ -119,190 +119,64 @@ export const queries = {
       const startDate = new Date(year, month - 1, 1); // Month is 0-indexed in JS Date
       const endDate = new Date(year, month, 0); // Last day of the month
       
-      // Check if the requested month is in the future
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-      const isFutureMonth = year > currentYear || (year === currentYear && month > currentMonth);
-      
       // Create custom cache key for monthly spending
       const cacheKey = ctx.db.getKey({ 
         params: [
           { prisma: 'Transaction' }, 
-          { operation: isFutureMonth ? 'getFutureTransactions' : 'getMonthlySpending' }, 
+          { operation: 'getMonthlySpending' }, 
           { userId }, 
           { month: month.toString(), year: year.toString() },
           { accountId: accountId || 'all' },
+          { macroCategoryIds: macroCategoryIds?.join(',') || 'all' }
         ] 
       });
       
-      let realTransactions: unknown[] = [];
-      const futureTransactions: unknown[] = [];
+      // Build query filters
+      const filters: Prisma.TransactionWhereInput = {
+        userId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        // Exclude transfers from monthly spending but include ALL transactions (income + expense)
+        transferId: null,
+      };
       
-      if (isFutureMonth) {
-        // For future months, get simulated transactions from recurring rules
-        // Call the getFutureTransactions logic directly
-        const filters: Prisma.RecurringTransactionRuleWhereInput = {
-          userId,
-          isActive: true,
-          OR: [
-            { endDate: null },
-            { endDate: { gte: startDate } }
-          ],
-          startDate: { lte: endDate }
-        };
-        
-        if (accountId) {
-          filters.moneyAccountId = accountId;
-        }
-        
-        if (macroCategoryIds && macroCategoryIds.length > 0) {
-          filters.subCategory = {
-            macroCategoryId: {
-              in: macroCategoryIds
-            }
-          };
-        }
-        
-        const recurringRules = await ctx.db.recurringTransactionRule.findMany({
-          where: filters,
-          include: {
-            subCategory: {
-              include: {
-                macroCategory: true,
-              }
-            },
-            moneyAccount: true,
-          },
-          cache: { 
-            ttl: 600,
-            key: `${cacheKey}:recurringRules` 
-          }
-        });
-        
-        // Generate simulated transactions for the specified month
-        for (const rule of recurringRules) {
-          const shouldDeactivate = (
-            (rule.endDate && new Date() > rule.endDate) ||
-            (rule.isInstallment && rule.totalOccurrences && 
-             rule.occurrencesGenerated >= rule.totalOccurrences)
-          );
-          
-          if (shouldDeactivate) continue;
-          
-          let currentDate = new Date(Math.max(rule.nextDueDate.getTime(), startDate.getTime()));
-          let occurrenceCount = rule.occurrencesGenerated;
-          
-          while (currentDate <= endDate) {
-            const shouldGenerate = (
-              (!rule.endDate || currentDate <= rule.endDate) &&
-              (!rule.isInstallment || !rule.totalOccurrences || 
-               occurrenceCount < rule.totalOccurrences)
-            );
-            
-            if (shouldGenerate) {
-              const transactionAmount = rule.type === "EXPENSE" 
-                ? -Math.abs(Number(rule.amount))
-                : Math.abs(Number(rule.amount));
-                
-              const finalAmount = rule.isInstallment && rule.totalOccurrences
-                ? transactionAmount / rule.totalOccurrences
-                : transactionAmount;
-              
-              const description = rule.isInstallment && rule.totalOccurrences
-                ? `${rule.description} (${occurrenceCount + 1}/${rule.totalOccurrences})`
-                : rule.description;
-              
-              futureTransactions.push({
-                id: `simulated-${rule.id}-${currentDate.getTime()}`,
-                description,
-                amount: finalAmount,
-                date: new Date(currentDate),
-                subCategory: rule.subCategory,
-                moneyAccount: rule.moneyAccount,
-                notes: rule.notes,
-                isRecurringInstance: true,
-                recurringRuleId: rule.id,
-                transferId: null,
-                userId: rule.userId,
-                moneyAccountId: rule.moneyAccountId,
-                subCategoryId: rule.subCategoryId,
-              });
-              
-              occurrenceCount++;
-            }
-            
-            try {
-              const nextDate = calculateNextOccurrenceDate(
-                currentDate,
-                rule.frequencyType,
-                rule.frequencyInterval,
-                rule.dayOfMonth,
-                rule.dayOfWeek
-              );
-              
-              if (nextDate.getTime() <= currentDate.getTime()) {
-                break;
-              }
-              
-              currentDate = nextDate;
-            } catch (error) {
-              break;
-            }
-          }
-        }
-        
-        // @ts-expect-error - TODO: fix this
-        futureTransactions.sort((a, b) => b.date.getTime() - a.date.getTime());
-      } else {
-        // For past/current months, get real transactions
-        const filters: Prisma.TransactionWhereInput = {
-          userId,
-          date: {
-            gte: startDate,
-            lte: endDate,
-          },
-          // Exclude transfers from monthly spending but include ALL transactions (income + expense)
-          transferId: null,
-        };
-        
-        // Add account filter if specified
-        if (accountId) {
-          filters.moneyAccountId = accountId;
-        }
-        
-        // Add macro category filter if specified
-        if (macroCategoryIds && macroCategoryIds.length > 0) {
-          filters.subCategory = {
-            macroCategoryId: {
-              in: macroCategoryIds
-            }
-          };
-        }
-        
-        // Get ALL transactions for the month (income + expenses)
-        realTransactions = await ctx.db.transaction.findMany({
-          where: filters,
-          include: {
-            subCategory: {
-              include: {
-                macroCategory: true,
-              }
-            },
-            moneyAccount: true,
-          },
-          orderBy: {
-            date: 'desc',
-          },
-          cache: { 
-            ttl: 300, // 5 minutes TTL for monthly spending
-            key: cacheKey 
-          }
-        });
+      // Add account filter if specified
+      if (accountId) {
+        filters.moneyAccountId = accountId;
       }
       
-      // Combine and return the appropriate transactions
-      return isFutureMonth ? futureTransactions : realTransactions;
+      // Add macro category filter if specified
+      if (macroCategoryIds && macroCategoryIds.length > 0) {
+        filters.subCategory = {
+          macroCategoryId: {
+            in: macroCategoryIds
+          }
+        };
+      }
+      
+      // Get ALL transactions for the month (income + expenses)
+      const transactions = await ctx.db.transaction.findMany({
+        where: filters,
+        include: {
+          subCategory: {
+            include: {
+              macroCategory: true,
+            }
+          },
+          moneyAccount: true,
+        },
+        orderBy: {
+          date: 'desc',
+        },
+        cache: { 
+          ttl: 300, // 5 minutes TTL for monthly spending
+          key: cacheKey 
+        }
+      });
+      
+      return transactions;
     }),
 
   getCategoryBreakdown: protectedProcedure

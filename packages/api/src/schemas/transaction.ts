@@ -115,7 +115,7 @@ export const getBudgetInfoSchema = z.object({
   categoryId: z.string(),
   month: z.number().min(1).max(12),
   year: z.number().min(1970),
-});
+}); 
 
 // Schema for getting future transactions based on recurring rules
 export const getFutureTransactionsSchema = z.object({
