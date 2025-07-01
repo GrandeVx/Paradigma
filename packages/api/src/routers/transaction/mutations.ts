@@ -66,6 +66,17 @@ export const mutations = {
           // Invalidate relevant caches after creating a transaction
           uncache: {
             uncacheKeys: [
+              ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getMonthlySpending' }, 
+                  { userId }, 
+                  { month: (transactionDate.getMonth() + 1).toString(), year: transactionDate.getFullYear().toString() },
+                  { accountId: input.accountId },
+                ] 
+              }),
+
+
               // === ACCOUNT BALANCE CACHES ===
               ctx.db.getKey({ 
                 params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
@@ -418,6 +429,15 @@ export const mutations = {
             uncacheKeys: [
               // === ACCOUNT BALANCE CACHES ===
               ctx.db.getKey({ 
+                params: [
+                  { prisma: 'Transaction' }, 
+                  { operation: 'getMonthlySpending' }, 
+                  { userId }, 
+                  { month: (transactionDate.getMonth() + 1).toString(), year: transactionDate.getFullYear().toString() },
+                  { accountId: input.accountId },
+                ] 
+              }),
+              ctx.db.getKey({ 
                 params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
               }),
               ctx.db.getKey({ 
@@ -683,6 +703,17 @@ export const mutations = {
         data: {}, // No changes needed, just triggering cache invalidation
         uncache: {
           uncacheKeys: [
+
+            ctx.db.getKey({ 
+              params: [
+                { prisma: 'Transaction' }, 
+                { operation: 'getMonthlySpending' }, 
+                { userId }, 
+                { month: (transactionDate.getMonth() + 1).toString(), year: transactionDate.getFullYear().toString() },
+                { accountId: input.accountId },
+              ] 
+            }),
+
             // === ACCOUNT BALANCE CACHES ===
             ctx.db.getKey({ 
               params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 

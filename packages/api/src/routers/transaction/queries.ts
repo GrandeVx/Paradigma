@@ -10,8 +10,9 @@ import {
   getDailyTransactionsSchema,
   getCategoryTransactionsSchema,
   getBudgetInfoSchema,
-  getFutureTransactionsSchema
+  getFutureTransactionsSchema,
 } from "../../schemas/transaction";
+
 import { notFoundError } from "../../utils/errors";
 import type { Prisma } from "@paradigma/db";
 import { calculateNextOccurrenceDate } from "../../utils/dateCalculations";
@@ -128,11 +129,10 @@ export const queries = {
       const cacheKey = ctx.db.getKey({ 
         params: [
           { prisma: 'Transaction' }, 
-          { operation: isFutureMonth ? 'getMonthlySpendingWithFuture' : 'getMonthlySpending' }, 
+          { operation: isFutureMonth ? 'getFutureTransactions' : 'getMonthlySpending' }, 
           { userId }, 
           { month: month.toString(), year: year.toString() },
           { accountId: accountId || 'all' },
-          { macroCategoryIds: macroCategoryIds?.join(',') || 'all' }
         ] 
       });
       
