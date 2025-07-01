@@ -33,11 +33,6 @@ export default function Home() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
 
-  // Health check query
-  const { data: healthCheckResult } = api.util.healthCheck.useQuery();
-
-  // Email service check query
-  const { data: emailCheckResult } = api.util.emailCheck.useQuery();
 
   // Whitelist mutation
   const addToWhitelistMutation = api.util.addToWhitelist.useMutation({
@@ -244,24 +239,6 @@ export default function Home() {
             )}
           </div>
         </div>
-
-        {/* Status Indicators */}
-        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-4 text-xs opacity-70">
-          {/* API Status */}
-          {healthCheckResult?.status === "ok" && (
-            <span className="text-success-500">
-              API: OK
-            </span>
-          )}
-
-          {/* Email Status */}
-          {emailCheckResult && (
-            <span className={emailCheckResult.status === "ok" ? "text-success-500" : "text-yellow-500"}>
-              EMAIL: {emailCheckResult.status === "ok" ? "OK" : "CONFIG"}
-            </span>
-          )}
-        </div>
-
       </div>
     </main>
   );
