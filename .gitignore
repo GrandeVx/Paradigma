@@ -204,3 +204,4 @@ tasks/
 .taskmasterconfig
 docs/*
 
+.mcp.json
