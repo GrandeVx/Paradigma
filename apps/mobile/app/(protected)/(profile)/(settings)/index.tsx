@@ -165,7 +165,7 @@ export default function RecurringTransactionsScreen() {
         }
         contentContainerStyle={{
           backgroundColor: '#F9FAFB',
-          height: '100%',
+          flex: 1,
         }}
       >
         {isLoading ? (
@@ -182,6 +182,48 @@ export default function RecurringTransactionsScreen() {
           ))
         ) : (
           <View style={styles.emptyContainer}>
+            {/* Emoji Cards con sovrapposizione e rotazione */}
+            <View style={styles.emojiCardsContainer}>
+              <View
+                style={[
+                  styles.emojiCard,
+                  styles.emojiCardLeft,
+                  {
+                    backgroundColor: '#FEF6F5',
+                    transform: [{ rotate: '-8deg' }],
+                    zIndex: 1
+                  }
+                ]}
+              >
+                <Text style={styles.emoji}>🔄</Text>
+              </View>
+              <View
+                style={[
+                  styles.emojiCard,
+                  styles.emojiCardCenter,
+                  {
+                    backgroundColor: '#FFFCF5',
+                    zIndex: 3
+                  }
+                ]}
+              >
+                <Text style={styles.emoji}>💰</Text>
+              </View>
+              <View
+                style={[
+                  styles.emojiCard,
+                  styles.emojiCardRight,
+                  {
+                    backgroundColor: '#F5FAFF',
+                    transform: [{ rotate: '8deg' }],
+                    zIndex: 2
+                  }
+                ]}
+              >
+                <Text style={styles.emoji}>📅</Text>
+              </View>
+            </View>
+
             <Text style={styles.emptyText}>Nessuna transazione ricorrente trovata</Text>
             <Text style={styles.emptySubtext}>
               Le tue ricorrenze appariranno qui quando ne creerai una
@@ -215,18 +257,52 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 100,
+    gap: 16,
+  },
+  emojiCardsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    height: 84,
+  },
+  emojiCard: {
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 6,
+  },
+  emojiCardLeft: {
+    position: 'absolute',
+    left: 48,
+  },
+  emojiCardCenter: {
+    // Centro, nessuna posizione assoluta
+  },
+  emojiCardRight: {
+    position: 'absolute',
+    right: 48,
+  },
+  emoji: {
+    fontSize: 40,
   },
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#374151',
     textAlign: 'center',
-    marginBottom: 8,
+    fontFamily: 'DM Sans',
+    lineHeight: 24,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#6B7280',
     textAlign: 'center',
+    fontFamily: 'DM Sans',
+    lineHeight: 20,
   },
   card: {
     backgroundColor: '#FFFFFF',

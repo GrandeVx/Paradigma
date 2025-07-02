@@ -194,7 +194,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
       <View
         style={{
           height: headerHeight,
-          paddingTop: insets.top - 20,
+          paddingTop: insets.top - 10,
           paddingHorizontal: 15,
         }}
 

@@ -390,6 +390,7 @@ export default function InstallmentsScreen() {
         contentContainerStyle={{
           backgroundColor: '#F9FAFB',
           paddingBottom: 100,
+          flex: 1,
         }}
       >
         {isLoading ? (
@@ -402,6 +403,48 @@ export default function InstallmentsScreen() {
           </View>
         ) : (
           <View style={styles.emptyContainer}>
+            {/* Emoji Cards con sovrapposizione e rotazione */}
+            <View style={styles.emojiCardsContainer}>
+              <View
+                style={[
+                  styles.emojiCard,
+                  styles.emojiCardLeft,
+                  {
+                    backgroundColor: '#FEF6F5',
+                    transform: [{ rotate: '-8deg' }],
+                    zIndex: 1
+                  }
+                ]}
+              >
+                <Text style={styles.emoji}>💳</Text>
+              </View>
+              <View
+                style={[
+                  styles.emojiCard,
+                  styles.emojiCardCenter,
+                  {
+                    backgroundColor: '#FFFCF5',
+                    zIndex: 3
+                  }
+                ]}
+              >
+                <Text style={styles.emoji}>💰</Text>
+              </View>
+              <View
+                style={[
+                  styles.emojiCard,
+                  styles.emojiCardRight,
+                  {
+                    backgroundColor: '#F5FAFF',
+                    transform: [{ rotate: '8deg' }],
+                    zIndex: 2
+                  }
+                ]}
+              >
+                <Text style={styles.emoji}>📊</Text>
+              </View>
+            </View>
+
             <Text style={styles.emptyTitle}>Nessuna rata trovata</Text>
             <Text style={styles.emptyDescription}>
               Non hai ancora nessuna rata configurata.
@@ -654,19 +697,55 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+
+    height: '100%',
     padding: 32,
+    gap: 16,
+  },
+  emojiCardsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    height: 84,
+  },
+  emojiCard: {
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 6,
+  },
+  emojiCardLeft: {
+    position: 'absolute',
+    left: 48,
+  },
+  emojiCardCenter: {
+    // Centro, nessuna posizione assoluta
+  },
+  emojiCardRight: {
+    position: 'absolute',
+    right: 48,
+  },
+  emoji: {
+    fontSize: 40,
   },
   emptyTitle: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '600',
     color: '#000000',
-    marginBottom: 8,
+    textAlign: 'center',
+    fontFamily: 'DM Sans',
+    lineHeight: 24,
   },
   emptyDescription: {
     fontSize: 16,
     color: '#6B7280',
     textAlign: 'center',
-    lineHeight: 24,
+    fontFamily: 'DM Sans',
+    lineHeight: 20,
   },
   dateFrame: {
     backgroundColor: '#F3F4F6',
