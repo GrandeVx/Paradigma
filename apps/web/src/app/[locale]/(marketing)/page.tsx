@@ -138,25 +138,29 @@ export default function Home() {
       <div className="relative z-10 w-full h-screen">
 
         {/* Budget Tracker Component - Top Left */}
-        <div className="absolute md:-top-64 rotate-6 md:-rotate-6 left-8 md:left-16 lg:-left-8 hidden md:block">
-          <AnimatedBudgetComponent />
+        <div className="absolute md:-top-64 rotate-6 md:-rotate-6 left-8 md:left-16 lg:-left-8 hidden lg:block">
+          <div className="relative z-10">
+            <AnimatedBudgetComponent />
+          </div>
         </div>
 
         {/* Number Reveal Component - Top Right with Background Effects */}
-        <div className="absolute top-24 md:-top-52 right-8 md:right-16 lg:right-2 -rotate-6">
+        <div className="absolute top-[25vh] md:-top-52 right-8 md:right-16 lg:right-2 -rotate-6 ">
           <div className="relative z-10">
             <AnimatedNumberRevealComponent />
           </div>
         </div>
 
         {/* Savings Component - Bottom Center */}
-        <div className="absolute bottom-56 rotate-3 left-1/2 transform -translate-x-1/2 hidden md:block">
-          <SavingsAnimation />
+        <div className="absolute bottom-40 rotate-3 left-1/2 transform -translate-x-1/2 hidden lg:block z-10">
+          <div className="relative z-10">
+            <SavingsAnimation />
+          </div>
         </div>
 
 
         {/* Call to Action Section - Bottom Center */}
-        <div className="absolute top-1/4 md:top-1/3 left-1/2 transform -translate-y-1/2 -translate-x-1/2 w-full max-w-lg px-4 md:px-0 z-30">
+        <div className="absolute top-1/4 md:top-1/3 left-1/2 transform -translate-y-1/2 -translate-x-1/2 w-full max-w-lg px-4 md:px-0 z-40">
 
           {/* Main Heading */}
           <div className="space-y-4 mb-8 text-center">
