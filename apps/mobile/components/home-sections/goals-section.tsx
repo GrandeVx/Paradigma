@@ -308,13 +308,76 @@ export const GoalsSection: React.FC = () => {
             />
           }
         >
-          <View className="items-center justify-center py-8">
-            <Text className="text-gray-500 text-center mb-4">Nessun obiettivo di risparmio trovato</Text>
+          <View className="items-center justify-center py-8 gap-4">
+            {/* Emoji Cards */}
+            <View className="flex-row items-center justify-center mb-2" style={{ height: 84 }}>
+              <View 
+                className="absolute rounded-xl p-4" 
+                style={{ 
+                  backgroundColor: '#FEF6F5',
+                  transform: [{ rotate: '-8deg' }],
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 24,
+                  elevation: 6,
+                  zIndex: 1
+                }}
+              >
+                <Text className="text-3xl">🎯</Text>
+              </View>
+              <View 
+                className="rounded-xl p-4" 
+                style={{ 
+                  backgroundColor: '#FFFCF5',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 24,
+                  elevation: 6,
+                  zIndex: 3
+                }}
+              >
+                <Text className="text-3xl">💰</Text>
+              </View>
+              <View 
+                className="absolute rounded-xl p-4" 
+                style={{ 
+                  backgroundColor: '#F5FAFF',
+                  transform: [{ rotate: '8deg' }],
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 24,
+                  elevation: 6,
+                  zIndex: 2
+                }}
+              >
+                <Text className="text-3xl">🏆</Text>
+              </View>
+            </View>
+            
+            {/* Main Title */}
+            <Text 
+              className="text-black text-center font-medium text-lg" 
+              style={{ fontFamily: 'DM Sans', fontSize: 18, lineHeight: 24 }}
+            >
+              Nessun obiettivo impostato
+            </Text>
+            
+            {/* Subtitle */}
+            <Text 
+              className="text-gray-500 text-center mb-4" 
+              style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 20 }}
+            >
+              Crea il tuo primo obiettivo di risparmio
+            </Text>
+            
             <Pressable
               className="bg-blue-500 px-6 py-3 rounded-full"
               onPress={() => router.push('/(protected)/(creation-flow)/name')}
             >
-              <Text className="text-white font-semibold">Crea il tuo primo obiettivo</Text>
+              <Text className="text-white font-semibold">Inizia ora</Text>
             </Pressable>
           </View>
         </ScrollView>

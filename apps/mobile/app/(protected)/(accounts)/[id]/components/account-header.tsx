@@ -13,6 +13,7 @@ interface AccountHeaderProps {
   onNamePress: () => void;
   onIconPress: () => void;
   onColorPress: () => void;
+  onBalancePress: () => void;
 }
 
 // Memoized AccountHeader component for performance
@@ -23,7 +24,8 @@ export const AccountHeader = React.memo<AccountHeaderProps>(({
   balance,
   onNamePress,
   onIconPress,
-  onColorPress
+  onColorPress,
+  onBalancePress
 }) => {
   const { getCurrencySymbol } = useCurrency();
   // Format currency helper - optimized to prevent recalculation
@@ -65,7 +67,7 @@ export const AccountHeader = React.memo<AccountHeaderProps>(({
       </View>
 
       {/* Balance Section */}
-      <View className="bg-gray-50 rounded-xl p-4">
+      <Pressable className="bg-gray-50 rounded-xl p-4" onPress={onBalancePress}>
         <Text className="text-gray-500 text-xs font-medium mb-2">BILANCIO ATTUALE</Text>
         <View className="flex-row items-baseline gap-1">
           <Text className="text-gray-400 text-lg font-normal">{getCurrencySymbol()}</Text>
@@ -76,7 +78,7 @@ export const AccountHeader = React.memo<AccountHeaderProps>(({
             ,{formatCurrency.decimal}
           </Text>
         </View>
-      </View>
+      </Pressable>
     </View>
   );
 }); 

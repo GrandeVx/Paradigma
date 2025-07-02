@@ -166,7 +166,7 @@ export default function Home() {
   return (
     <HeaderContainer variant="secondary" customTitle={t("home.title")}>
       <MonthProvider>
-        <View className="flex-1 bg-gray-50">
+        <View className="flex-1">
           {/* Animated Tab Navigation */}
           <TabBar
             tabs={homeTabs}

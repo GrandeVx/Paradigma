@@ -1,5 +1,5 @@
-import React, { useState, useRef, RefObject, useMemo } from "react";
-import { View, TextInput, KeyboardAvoidingView, Platform, Pressable } from "react-native";
+import React, { useState, useRef, RefObject, useMemo, useEffect } from "react";
+import { View, TextInput, KeyboardAvoidingView, Platform, Pressable, Keyboard } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -21,15 +21,39 @@ export default function SignInVerify(
   const { mutate: updateProfile } = api.user.updateProfile.useMutation();
   const router = useRouter();
   const [otp, setOtp] = useState("");
+  const [countdown, setCountdown] = useState(60);
+  const [canResend, setCanResend] = useState(false);
   const otpInputRef = useRef<TextInput>(null);
-  const { signInWithVerificationOtp } = useSupabase();
+  const { signInWithVerificationOtp, sendVerificationOtp } = useSupabase();
 
   const snapPointsNotifications = useMemo(() => ["85%"], []);
   const bottomSheetNotificationsRef = useRef<BottomSheet>(null);
   const handleOpenNotificationsBottomSheet = () => bottomSheetNotificationsRef.current?.expand();
   const handleCloseNotificationsBottomSheet = () => bottomSheetNotificationsRef.current?.close();
 
+  // Timer countdown effect
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true);
+    }
+  }, [countdown]);
 
+  // Resend verification code
+  const handleResendCode = async () => {
+    try {
+      await sendVerificationOtp(params.email);
+      setCountdown(60);
+      setCanResend(false);
+      console.log('[🚥 SignInVerify] Verification code resent successfully');
+    } catch (error) {
+      console.error('[🚥 SignInVerify] Error resending verification code:', error);
+    }
+  };
 
   // Complete authentication flow after notifications modal
   const completeAuthenticationFlow = async () => {
@@ -137,6 +161,8 @@ export default function SignInVerify(
   };
 
   const handleContinue = async () => {
+    // close the keyboard
+    Keyboard.dismiss();
     console.log("[🚥 SignInVerify] Opening notifications modal before authentication");
     handleOpenNotificationsBottomSheet();
   };
@@ -155,7 +181,7 @@ export default function SignInVerify(
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           className="flex-1"
-          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Adjust offset as needed
+          keyboardVerticalOffset={Platform.OS === "ios" ? 150 : 0} // Adjust offset as needed
         >
           <View className="flex-1 justify-between p-4 bg-white gap-2">
             <View className="flex-1 justify-center items-center w-max ">
@@ -173,16 +199,17 @@ export default function SignInVerify(
                     value={otp}
                     onChangeText={setOtp}
                     autoCapitalize="none"
-                    keyboardType="email-address"
-                    returnKeyType="next" // Or "done" if this is the last step initially
-                    onSubmitEditing={handleContinue} // Submit on pressing return/next
-                    autoComplete="email"
+                    keyboardType="phone-pad"
+                    maxLength={6}
+                    autoComplete="off"
                     spellCheck={false}
-                    style={{ fontSize: 34 }} // Ensure font size prevents iOS zoom
-                    blurOnSubmit={false} // Keep keyboard open
+                    style={{ fontSize: 34 }}
+                    blurOnSubmit={false}
                   />
                   {/* Optional: Add an animated cursor or indicator if needed */}
                 </View>
+
+
               </Pressable>
             </View>
 
@@ -199,6 +226,20 @@ export default function SignInVerify(
                   {t("auth.actions.continue", "Continua")}
                 </Text>
               </Button>
+              {/* Resend Code Section */}
+              <View className="items-center">
+                {!canResend ? (
+                  <Text className="text-gray-500 text-sm font-sans">
+                    {t("auth.verify.resend_timer", "Reinvia il codice tra")} {countdown}s
+                  </Text>
+                ) : (
+                  <Pressable onPress={handleResendCode}>
+                    <Text className="text-primary-600 text-sm font-sans font-semibold ">
+                      {t("auth.verify.resend", "Reinvia il codice")}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
             </Animated.View>
           </View>
         </KeyboardAvoidingView>

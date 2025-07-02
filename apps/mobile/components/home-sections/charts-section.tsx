@@ -131,8 +131,6 @@ const MonthSelector: React.FC<{
     }
   };
 
-  const lastMonth = new Date().getMonth() + 1;
-
   return (
     <View className="flex-row items-center justify-between">
       <View
@@ -148,10 +146,9 @@ const MonthSelector: React.FC<{
 
       <Pressable
         onPress={goToNextMonth}
-        disabled={currentMonth === lastMonth}
-        className={`w-10 h-10 items-center justify-center ${currentMonth === lastMonth ? 'opacity-50' : ''}`}
+        className="w-10 h-10 items-center justify-center"
       >
-        <RightIcon size={14} className={`text-black ${currentMonth === lastMonth ? 'text-gray-400' : 'text-black'}`} />
+        <RightIcon size={14} className="text-black" />
       </Pressable>
     </View>
   );
@@ -551,9 +548,71 @@ export const ChartsSection: React.FC = () => {
 
         <Animated.View
           entering={FadeIn.delay(300).duration(600)}
-          className="items-center justify-center py-12 flex-1"
+          className="items-center justify-center flex-1 gap-4 pb-24 px-10"
         >
-          <Text className="text-center text-gray-500">Nessun dato disponibile per questo mese</Text>
+          {/* Emoji Cards */}
+          <View className="flex-row items-center justify-center mb-2" style={{ height: 84 }}>
+            <View
+              className="absolute right-12 rounded-xl p-4"
+              style={{
+                backgroundColor: '#FEF6F5',
+                transform: [{ rotate: '-8deg' }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+                elevation: 6,
+                zIndex: 1
+              }}
+            >
+              <Text className="text-3xl">📊</Text>
+            </View>
+            <View
+              className="rounded-xl p-4"
+              style={{
+                backgroundColor: '#FFFCF5',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+                elevation: 6,
+                zIndex: 3
+              }}
+            >
+              <Text className="text-3xl">📈</Text>
+            </View>
+            <View
+              className="absolute left-12 rounded-xl p-4"
+              style={{
+                backgroundColor: '#F5FAFF',
+                transform: [{ rotate: '8deg' }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+                elevation: 6,
+                zIndex: 2
+              }}
+            >
+              <Text className="text-3xl">💹</Text>
+            </View>
+          </View>
+
+          {/* Main Title */}
+          <Text
+            className="text-black text-center font-medium text-lg"
+            style={{ fontFamily: 'DM Sans', fontSize: 18, lineHeight: 24 }}
+          >
+            Nessun grafico da mostrare
+          </Text>
+
+          {/* Subtitle */}
+          <Text
+            className="text-gray-500 text-center"
+            style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 20 }}
+          >
+            Inizia ad aggiungere spese per vedere i tuoi grafici
+          </Text>
         </Animated.View>
       </Animated.View>
     );
@@ -627,9 +686,60 @@ export const ChartsSection: React.FC = () => {
               ) : (
                 <Animated.View
                   entering={FadeIn.delay(400).duration(600)}
-                  className="py-8 items-center"
+                  className="py-8 items-center gap-4"
                 >
-                  <Text className="text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+                  {/* Emoji Cards */}
+                  <View className="flex-row items-center justify-center mb-2" style={{ height: 70 }}>
+                    <View
+                      className="absolute rounded-xl p-3"
+                      style={{
+                        backgroundColor: '#FEF6F5',
+                        transform: [{ rotate: '-8deg' }],
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 24,
+                        elevation: 6,
+                        zIndex: 1
+                      }}
+                    >
+                      <Text className="text-2xl">📊</Text>
+                    </View>
+                    <View
+                      className="rounded-xl p-3"
+                      style={{
+                        backgroundColor: '#FFFCF5',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 24,
+                        elevation: 6,
+                        zIndex: 3
+                      }}
+                    >
+                      <Text className="text-2xl">📈</Text>
+                    </View>
+                    <View
+                      className="absolute rounded-xl p-3"
+                      style={{
+                        backgroundColor: '#F5FAFF',
+                        transform: [{ rotate: '8deg' }],
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 24,
+                        elevation: 6,
+                        zIndex: 2
+                      }}
+                    >
+                      <Text className="text-2xl">💹</Text>
+                    </View>
+                  </View>
+
+                  <Text
+                    className="text-gray-500 text-center"
+                    style={{ fontFamily: 'DM Sans', fontSize: 16 }}
+                  >
                     Nessuna spesa registrata questo mese
                   </Text>
                 </Animated.View>

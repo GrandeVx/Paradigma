@@ -37,6 +37,8 @@ interface SwipeableTransactionItemProps {
     };
     subCategory?: {
       name: string;
+      icon: string;
+
     };
   };
   onDelete?: (id: string) => void;
@@ -68,7 +70,7 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
 
   const isIncome = transaction.type === 'income';
   const categoryColor = transaction.category?.color || '#6B7280';
-  const categoryEmoji = transaction.category?.icon || '💰';
+  const categoryEmoji = transaction.subCategory?.icon || '💰';
 
   const handleEdit = () => {
     // Reset position first

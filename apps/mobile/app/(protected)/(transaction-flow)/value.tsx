@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import * as Haptics from 'expo-haptics';
 
 import { NumericKeyboard } from '@/components/primitives/NumericKeyboard';
 import HeaderContainer from '@/components/layouts/_header';
@@ -14,6 +15,7 @@ export default function ValueScreen() {
   const [amount, setAmount] = useState('0');
   const [transactionType, setTransactionType] = useState<TransactionType>('expense');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isDecimalActive, setIsDecimalActive] = useState(false);
   const router = useRouter();
   const { getCurrencySymbol } = useCurrency();
 
@@ -25,7 +27,7 @@ export default function ValueScreen() {
       setAmount('0');
       setTransactionType('expense');
       setIsAnimating(false);
-
+      setIsDecimalActive(false);
       return () => {
         // Cleanup se necessario
       };
@@ -54,7 +56,12 @@ export default function ValueScreen() {
 
   const handleDeletePress = () => {
     if (amount.length > 1) {
+      const toRemove = amount[amount.length - 1];
+      console.log(toRemove);
       setAmount((prev) => prev.slice(0, -1));
+      if (toRemove == '.') {
+        setIsDecimalActive(false);
+      }
     } else {
       setAmount('0');
     }
@@ -62,7 +69,9 @@ export default function ValueScreen() {
 
   const handleCommaPress = () => {
     if (!amount.includes('.')) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setAmount((prev) => prev + '.');
+      setIsDecimalActive(true);
     }
   };
 
@@ -111,10 +120,10 @@ export default function ValueScreen() {
               <Text className={`text-9xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700'}`}>
                 {formattedAmount.split('.')[0]}
               </Text>
-              <Text className={`text-4xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700'}`}>
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
                 ,
               </Text>
-              <Text className={`text-4xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700'}`}>
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
                 {formattedAmount.split('.')[1]}
               </Text>
             </View>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Pressable, TextInput, Alert } from 'react-native';
+import { View, Pressable, Alert, Image } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import BottomSheet, { BottomSheetBackdropProps, BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -9,6 +9,8 @@ import { notificationUtils } from '@/lib/mmkv-storage';
 import { api } from '@/lib/api';
 import * as Notifications from 'expo-notifications';
 import * as Haptics from 'expo-haptics';
+import DatePicker from 'react-native-modern-datepicker';
+
 
 interface NotificationsBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheet>;
@@ -36,6 +38,10 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
   const [recurringNotificationsEnabled, setRecurringNotificationsEnabled] = useState(initialNotifications);
   const [reminderTime, setReminderTime] = useState('19:00');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Time picker states
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   // Tab bar context
   const { hideTabBar, showTabBar } = useTabBar();
@@ -65,25 +71,56 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
       setReminderTime(dailyTime);
       setRecurringNotificationsEnabled(initialNotifications);
     }
+
+    // Debug: Check existing scheduled notifications on component mount
+    const checkScheduledNotifications = async () => {
+      try {
+        const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+        console.log(`[📅 Notifications Debug] Found ${scheduledNotifications.length} scheduled notifications on mount:`);
+        scheduledNotifications.forEach((notification, index) => {
+          console.log(`[📅 Notifications Debug] Notification ${index + 1}:`, {
+            id: notification.identifier,
+            trigger: notification.trigger,
+            content: notification.content
+          });
+        });
+      } catch (error) {
+        console.error('[📅 Notifications Debug] Error checking scheduled notifications:', error);
+      }
+    };
+
+    checkScheduledNotifications();
   }, [mode, initialNotifications]);
 
-  // Format time input
-  const formatTimeInput = (text: string) => {
-    // Remove all non-numeric characters
-    const numbers = text.replace(/[^\d]/g, '');
+  // Initialize selectedTime from reminderTime when component mounts
+  React.useEffect(() => {
+    const [hours, minutes] = reminderTime.split(':').map(Number);
+    const timeDate = new Date();
+    timeDate.setHours(hours, minutes, 0, 0);
+    setSelectedTime(timeDate);
+  }, [reminderTime]);
 
-    if (numbers.length === 0) return '';
-    if (numbers.length <= 2) return numbers;
-    if (numbers.length <= 4) {
-      const hours = numbers.slice(0, 2);
-      const minutes = numbers.slice(2);
-      return `${hours}:${minutes}`;
-    }
+  // Time picker functions
+  const handleOpenTimePicker = () => {
+    setShowTimePicker(true);
+  };
 
-    // Limit to 4 digits (HHMM)
-    const hours = numbers.slice(0, 2);
-    const minutes = numbers.slice(2, 4);
-    return `${hours}:${minutes}`;
+  const handleTimeChange = (date: Date) => {
+    setSelectedTime(date);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    setReminderTime(`${hours}:${minutes}`);
+  };
+
+  // Handle time picker change
+  const handleTimePickerChange = (timeString: string) => {
+    // Parse the time string from the picker (format could be different)
+    // For time mode, react-native-modern-datepicker returns time in HH:mm format
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const newDate = new Date(selectedTime);
+    newDate.setHours(hours, minutes, 0, 0);
+    handleTimeChange(newDate);
+    setShowTimePicker(false); // Hide time picker after selection
   };
 
 
@@ -122,31 +159,67 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
   // Schedule daily reminder notification
   const scheduleDailyReminder = async (time: string) => {
     try {
+      console.log(`[📅 Notifications] Starting scheduleDailyReminder for time: ${time}, enabled: ${dailyReminderEnabled}`);
+
       // Cancel all existing scheduled notifications
       await Notifications.cancelAllScheduledNotificationsAsync();
+      console.log('[📅 Notifications] Canceled all existing scheduled notifications');
 
       if (!dailyReminderEnabled) {
+        console.log('[📅 Notifications] Daily reminder disabled, skipping scheduling');
         return;
       }
 
       const [hours, minutes] = time.split(':').map(Number);
 
-      await Notifications.scheduleNotificationAsync({
+      // Validate time format
+      if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        console.error(`[📅 Notifications] Invalid time format: ${time}`);
+        return;
+      }
+
+      // Calculate next occurrence of this time
+      const now = new Date();
+      const nextNotification = new Date();
+      nextNotification.setHours(hours, minutes, 0, 0);
+      
+      // If the time has already passed today, schedule for tomorrow
+      if (nextNotification <= now) {
+        nextNotification.setDate(nextNotification.getDate() + 1);
+      }
+
+      console.log(`[📅 Notifications] Scheduling notification for ${hours}:${minutes.toString().padStart(2, '0')}`);
+      console.log(`[📅 Notifications] Next notification will fire at: ${nextNotification.toLocaleString()}`);
+
+      const notificationRequest = await Notifications.scheduleNotificationAsync({
         content: {
           title: 'Balance',
           body: 'Hai aggiunto le tue spese oggi? 👀',
           sound: 'default',
         },
         trigger: {
+          type: 'calendar',
+          repeats: true,
           hour: hours,
           minute: minutes,
-          repeats: true,
-        } as Notifications.NotificationTriggerInput,
+        },
       });
 
-      console.log(`Daily reminder scheduled for ${time}`);
+      console.log(`[📅 Notifications] Daily reminder scheduled successfully with ID: ${notificationRequest}`);
+
+      // Verify scheduled notifications
+      const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+      console.log(`[📅 Notifications] Total scheduled notifications: ${scheduledNotifications.length}`);
+      scheduledNotifications.forEach((notification, index) => {
+        console.log(`[📅 Notifications] Scheduled notification ${index + 1}:`, {
+          id: notification.identifier,
+          trigger: notification.trigger,
+          content: notification.content
+        });
+      });
+
     } catch (error) {
-      console.error('Error scheduling daily reminder:', error);
+      console.error('[📅 Notifications] Error scheduling daily reminder:', error);
     }
   };
 
@@ -192,7 +265,8 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
       // Schedule daily reminder if enabled (both modes)
       await scheduleDailyReminder(reminderTime);
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Use impact feedback instead of notification feedback to avoid test notification
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       handleClosePress();
       onSaveComplete?.();
     } catch (error) {
@@ -282,18 +356,42 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
 
             {/* Time Input when Daily Reminder is enabled */}
             {dailyReminderEnabled && (
-              <View className="bg-gray-50 rounded-xl p-3 flex-row justify-center items-center gap-x-2">
-                <Text className="text-gray-500 text-base font-semibold">Orario</Text>
-                <TextInput
-                  className="text-black text-base font-medium text-right min-w-[60px]"
-                  value={reminderTime}
-                  onChangeText={(text) => setReminderTime(formatTimeInput(text))}
-                  placeholder="19:00"
-                  keyboardType="numeric"
-                  maxLength={5}
-                  style={{ fontFamily: 'Apfel Grotezk' }}
-                />
-              </View>
+              <>
+                <Pressable
+                  onPress={handleOpenTimePicker}
+                  className="bg-gray-50 rounded-xl p-3 flex-row justify-center items-center gap-x-2"
+                >
+                  <Text className="text-gray-500 text-base font-semibold">Orario</Text>
+                  <Text className="text-black text-base font-medium text-right min-w-[60px]" style={{ fontFamily: 'Apfel Grotezk' }}>
+                    {reminderTime}
+                  </Text>
+                  <SvgIcon name={showTimePicker ? "up" : "down"} size={16} color="#6B7280" />
+                </Pressable>
+
+                {/* Inline Time Picker */}
+                {showTimePicker && (
+                  <View className="">
+                    <DatePicker
+                      options={{
+                        textHeaderColor: '#000000',
+                        textDefaultColor: '#000000',
+                        selectedTextColor: '#fff',
+                        mainColor: '#005EFD',
+                        textSecondaryColor: '#000000',
+                        borderColor: 'rgba(122, 146, 165, 0.1)',
+                      }}
+                      current={reminderTime}
+                      selected={reminderTime}
+                      locale="it"
+                      isGregorian={true}
+                      mode="time"
+                      minuteInterval={15}
+                      style={{ borderRadius: 10 }}
+                      onTimeChange={handleTimePickerChange}
+                    />
+                  </View>
+                )}
+              </>
             )}
 
             {/* Recurring Notifications Section */}
@@ -319,9 +417,11 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
               </Text>
 
               <View className="bg-gray-100/90 rounded-[20px] p-3 flex-row items-center gap-x-3">
-                <View className="w-[38px] h-[38px] bg-blue-500 rounded-lg items-center justify-center">
-                  <Text className="text-white text-lg font-semibold">B</Text>
-                </View>
+                <Image
+                  source={require("@/assets/images/icon.png")}
+                  className="w-12 h-12 rounded-xl"
+                  resizeMode="contain"
+                />
 
                 <View className="flex-1 gap-y-[-4px] py-1">
                   <View className="flex-row justify-between items-center gap-x-1 py-1">

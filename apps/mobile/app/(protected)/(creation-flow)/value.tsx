@@ -4,6 +4,7 @@ import { Text } from "@/components/ui/text";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Haptics from 'expo-haptics';
 
 import { IconName } from "@/components/ui/icons";
 import { SvgIcon } from "@/components/ui/svg-icon";
@@ -16,6 +17,7 @@ export default function ValueStepFlow() {
   const { getCurrencySymbol } = useCurrency();
   const [amount, setAmount] = useState('0');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isDecimalActive, setIsDecimalActive] = useState(false);
   const params = useLocalSearchParams<{ name: string, icon: string, color: string, firstAccount: string }>();
 
   // Trigger animation when amount changes
@@ -39,15 +41,22 @@ export default function ValueStepFlow() {
 
   const handleDeletePress = () => {
     if (amount.length > 1) {
+      const toRemove = amount[amount.length - 1];
       setAmount((prev) => prev.slice(0, -1));
+      if (toRemove === '.') {
+        setIsDecimalActive(false);
+      }
     } else {
       setAmount('0');
+      setIsDecimalActive(false);
     }
   };
 
   const handleCommaPress = () => {
     if (!amount.includes('.')) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setAmount((prev) => prev + '.');
+      setIsDecimalActive(true);
     }
   };
 
@@ -65,10 +74,10 @@ export default function ValueStepFlow() {
   };
 
   // Format amount with currency symbol
-  const formattedAmount = `${parseFloat(amount).toLocaleString('it-IT', {
+  const formattedAmount = `${parseFloat(amount).toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).replace('.', ',')}`;
+  })}`;
 
   return (
     <HeaderContainer variant="secondary" customTitle={t(params.firstAccount === "true" ? "flow.name.firstAccount" : "flow.name.title")}>
@@ -85,14 +94,14 @@ export default function ValueStepFlow() {
           <View className="flex flex-row items-center gap-2 justify-center">
             <Text className="text-gray-400 text-5xl font-bold">{getCurrencySymbol()}</Text>
             <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
-              <Text className={`text-7xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
-                {formattedAmount.split(',')[0]}
+              <Text className={`text-7xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
+                {formattedAmount.split('.')[0]}
               </Text>
-              <Text className={`text-4xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
                 ,
               </Text>
-              <Text className={`text-4xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
-                {formattedAmount.split(',')[1]}
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
+                {formattedAmount.split('.')[1]}
               </Text>
             </View>
           </View>

@@ -8,6 +8,7 @@ import { NumericKeyboard } from "@/components/primitives/NumericKeyboard";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { api } from "@/lib/api";
 import { IconName } from "@/components/ui";
+import * as Haptics from 'expo-haptics';
 
 export default function EditAccountBalance() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export default function EditAccountBalance() {
 
   const [amount, setAmount] = useState('0');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isDecimalActive, setIsDecimalActive] = useState(false);
   const [currentBalance, setCurrentBalance] = useState(0);
   const [accountName, setAccountName] = useState('');
   const [accountIcon, setAccountIcon] = useState('bank-card');
@@ -81,6 +83,10 @@ export default function EditAccountBalance() {
         const balance = Number(accountWithBalance.balance);
         setCurrentBalance(balance);
         setAmount(balance.toString());
+        // If balance has decimals, activate decimal mode
+        if (balance.toString().includes('.')) {
+          setIsDecimalActive(true);
+        }
       }
     }
   }, [balanceData, id]);
@@ -106,10 +112,10 @@ export default function EditAccountBalance() {
 
   const handleDeletePress = () => {
     if (amount.length > 1) {
-      if (amount[amount.length - 1] === '.') {
-        setAmount((prev) => prev.slice(0, -2));
-      } else {
-        setAmount((prev) => prev.slice(0, -1));
+      const toRemove = amount[amount.length - 1];
+      setAmount((prev) => prev.slice(0, -1));
+      if (toRemove === '.') {
+        setIsDecimalActive(false);
       }
     } else {
       setAmount('0');
@@ -118,7 +124,9 @@ export default function EditAccountBalance() {
 
   const handleCommaPress = () => {
     if (!amount.includes('.')) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setAmount((prev) => prev + '.');
+      setIsDecimalActive(true);
     }
   };
 
@@ -164,7 +172,10 @@ export default function EditAccountBalance() {
   };
 
   // Format amount with currency symbol
-  const formattedAmount = `${parseFloat(amount)}`;
+  const formattedAmount = `${parseFloat(amount).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 
   if (isLoadingAccount || isLoadingBalance) {
     return (
@@ -191,12 +202,14 @@ export default function EditAccountBalance() {
           <View className="flex flex-row items-center gap-2 justify-center">
             <Text className="text-gray-400 text-5xl font-bold">€</Text>
             <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
-              <Text className={`text-7xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
-                {formattedAmount.split(',')[0]}
+              <Text className={`text-7xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
+                {formattedAmount.split('.')[0]}
               </Text>
-
-              <Text className={`text-4xl font-bold ${formattedAmount.split(',')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
-                {formattedAmount.split(',')[1]}
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
+                ,
+              </Text>
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
+                {formattedAmount.split('.')[1]}
               </Text>
             </View>
           </View>

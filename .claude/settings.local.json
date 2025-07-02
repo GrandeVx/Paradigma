@@ -1,0 +1,13 @@
+{
+  "enabledMcpjsonServers": [
+    "figma-work-mcp",
+    "figma-personal-mcp",
+    "sequential-thinking",
+    "taskmaster-ai",
+    "redis",
+    "ios-simulator"
+  ],
+  "disabledMcpjsonServers": [
+    "dbhub"
+  ]
+}

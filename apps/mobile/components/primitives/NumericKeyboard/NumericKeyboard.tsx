@@ -207,6 +207,7 @@ const NumericKeyboard: React.FC<NumericKeyboardProps> = ({
           onNumberPress(value);
         }}
         disabled={disabled}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
         <View className="h-16 w-24 items-center justify-center m-1">
           <Text className="text-3xl font-medium text-gray-700 z-10">{value}</Text>
@@ -216,7 +217,7 @@ const NumericKeyboard: React.FC<NumericKeyboardProps> = ({
   };
 
   return (
-    <View className={cn("flex-1 pb-20", continuePosition === "top" && "gap-4 p-4 pb-20")}>
+    <View className={cn("flex-1 pb-28", continuePosition === "top" && "gap-4 p-4 pb-20")}>
       {
         continuePosition === "top" && (
           <Button onPress={onContinuePress} disabled={continueDisabled} variant="primary" size="lg" rounded="default">
@@ -255,7 +256,10 @@ const NumericKeyboard: React.FC<NumericKeyboardProps> = ({
           {renderNumberKey('9')}
         </View>
         <View className="flex-row justify-between mb-6">
-          <TouchableWithoutFeedback onPress={onCommaPress}>
+          <TouchableWithoutFeedback
+            onPress={onCommaPress}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <View className="h-16 w-24 items-center justify-start m-1">
               <Text className="text-3xl font-medium text-black z-10">,</Text>
             </View>
@@ -264,6 +268,7 @@ const NumericKeyboard: React.FC<NumericKeyboardProps> = ({
           <TouchableWithoutFeedback
             onPress={onDeletePress}
             disabled={disabled}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <View className="h-16 w-24 items-center justify-center m-1">
               <SvgIcon name={"delete-back"} width={24} height={24} color={"#000000"} style={{ zIndex: 10 }} />

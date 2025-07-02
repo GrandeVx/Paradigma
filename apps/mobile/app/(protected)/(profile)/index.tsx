@@ -271,8 +271,8 @@ export default function ProfileScreen() {
 
   // Get user display name - fallback to email prefix if no name
   const getUserDisplayName = () => {
-    if (user?.user_metadata?.name) {
-      return user.user_metadata.name;
+    if (userInfo?.name) {
+      return userInfo.name;
     }
     if (user?.email) {
       return user.email.split('@')[0];

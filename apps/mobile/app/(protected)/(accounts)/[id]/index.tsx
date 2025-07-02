@@ -368,6 +368,7 @@ export default function AccountDetailsScreen() {
                             onNamePress={() => router.push(`/(protected)/(accounts)/${id}/edit-name`)}
                             onIconPress={() => setShowIconOverlay(true)}
                             onColorPress={() => setShowColorOverlay(true)}
+                            onBalancePress={() => router.push(`/(protected)/(accounts)/${id}/edit-balance`)}
                         />
 
                         {/* Progress bar for savings accounts */}

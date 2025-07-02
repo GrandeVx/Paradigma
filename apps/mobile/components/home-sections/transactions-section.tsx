@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { View, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
+import { View, TouchableOpacity, FlatList, RefreshControl, Pressable } from 'react-native';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -41,6 +41,7 @@ interface TransactionItem {
   };
   subCategory?: {
     name: string;
+    icon: string;
   };
   type: 'income' | 'expense';
 }
@@ -61,6 +62,7 @@ interface FlatListTransaction {
   data: TransactionItem;
   groupIndex: number;
   transactionIndex: number;
+  isLast: boolean;
 }
 
 type FlatListItem = FlatListHeader | FlatListTransaction;
@@ -205,9 +207,6 @@ const MonthSelector: React.FC<{
     }
   };
 
-  const lastMonth = new Date().getMonth() + 1
-
-
   return (
     <View className="flex-row items-center justify-between">
       <TouchableOpacity
@@ -223,10 +222,9 @@ const MonthSelector: React.FC<{
 
       <TouchableOpacity
         onPress={goToNextMonth}
-        disabled={currentMonth === lastMonth}
-        className={`w-10 h-10 items-center justify-center ${currentMonth === lastMonth ? 'opacity-50' : ''}`}
+        className="w-10 h-10 items-center justify-center"
       >
-        <RightIcon size={14} className={`text-black ${currentMonth === lastMonth ? 'text-gray-400' : 'text-black'}`} />
+        <RightIcon size={14} className="text-black" />
       </TouchableOpacity>
     </View>
   );
@@ -283,10 +281,6 @@ const SummaryContainer: React.FC<{
   );
 };
 
-
-
-
-
 // Convert grouped transactions to flat list format
 const convertToFlatListData = (groupedTransactions: TransactionGroup[]): FlatListItem[] => {
   const flatData: FlatListItem[] = [];
@@ -310,6 +304,7 @@ const convertToFlatListData = (groupedTransactions: TransactionGroup[]): FlatLis
         data: transaction,
         groupIndex,
         transactionIndex,
+        isLast: transactionIndex === group.transactions.length - 1,
       });
     });
   });
@@ -329,7 +324,7 @@ const FlatListHeaderComponent: React.FC<{
       entering={FadeInDown.delay(item.groupIndex * 100).duration(500).springify()}
       exiting={FadeOutUp.duration(300)}
       layout={Layout.springify().damping(15).stiffness(100)}
-      className="border-b border-gray-200 pb-1 mb-1"
+      className="mb-1"
     >
       <View className="flex-row justify-between items-center py-1">
         <Text className="text-sm font-normal text-gray-500" style={{ fontFamily: 'DM Sans' }}>
@@ -356,6 +351,7 @@ const FlatListTransactionComponent: React.FC<{
       entering={FadeInDown.delay(item.groupIndex * 100 + item.transactionIndex * 50).duration(400).springify()}
       exiting={FadeOutUp.duration(300)}
       layout={Layout.springify().damping(15).stiffness(100)}
+      className={item.isLast ? "border-b border-gray-200 pb-1" : ""}
     >
       <SwipeableTransactionItem
         transaction={item.data}
@@ -364,8 +360,6 @@ const FlatListTransactionComponent: React.FC<{
     </Animated.View>
   );
 };
-
-
 
 export const TransactionsSection: React.FC = () => {
   // Use shared month context
@@ -387,11 +381,35 @@ export const TransactionsSection: React.FC = () => {
   // API utils for invalidation
   const utils = api.useContext();
 
-  // Query for monthly transactions
-  const { data: transactions, isLoading, error, refetch } = api.transaction.getMonthlySpending.useQuery({
+  // Check if the current month is in the future
+  const now = new Date();
+  const currentActualMonth = now.getMonth() + 1;
+  const currentActualYear = now.getFullYear();
+  const isFutureMonth = currentYear > currentActualYear || (currentYear === currentActualYear && currentMonth > currentActualMonth);
+
+  // Query for current/past months
+  const { data: realTransactions, isLoading: isLoadingReal, error: errorReal, refetch: refetchReal } = api.transaction.getMonthlySpending.useQuery({
     month: currentMonth,
     year: currentYear,
+  }, {
+    enabled: !isFutureMonth, // Only fetch for current/past months
   });
+
+  // Query for future months
+  const { data: futureTransactions, isLoading: isLoadingFuture, error: errorFuture, refetch: refetchFuture } = api.transaction.getFutureTransactions.useQuery({
+    month: currentMonth,
+    year: currentYear,
+  }, {
+    enabled: isFutureMonth, // Only fetch for future months
+  });
+
+  // Combine loading states
+  const isLoading = isFutureMonth ? isLoadingFuture : isLoadingReal;
+  const error = isFutureMonth ? errorFuture : errorReal;
+  const refetch = isFutureMonth ? refetchFuture : refetchReal;
+
+  // Use appropriate data source
+  const transactions = isFutureMonth ? futureTransactions : realTransactions;
 
   // Delete mutation with comprehensive invalidations
   const deleteMutation = api.transaction.delete.useMutation({
@@ -455,14 +473,15 @@ export const TransactionsSection: React.FC = () => {
 
   // Update cache when new data loads
   useEffect(() => {
-    if (transactions && transactions.length > 0) {
-      transactionUtils.setTransactionCacheData(transactions, currentMonth, currentYear);
+    // Only cache real transactions, not simulated ones
+    if (!isFutureMonth && realTransactions && realTransactions.length > 0) {
+      transactionUtils.setTransactionCacheData(realTransactions, currentMonth, currentYear);
 
       // Update local cache state
       const dailyGroupsCount = transactionUtils.getDailyGroupsCountFromCache(currentMonth, currentYear);
       setCachedDailyGroupsCount(dailyGroupsCount);
     }
-  }, [transactions, currentMonth, currentYear]);
+  }, [realTransactions, currentMonth, currentYear, isFutureMonth]);
 
   // Animate content when data loads
   useEffect(() => {
@@ -527,7 +546,7 @@ export const TransactionsSection: React.FC = () => {
     }
 
     // Filter out transactions with invalid dates and log issues for debugging
-    const validTransactions = transactions.filter(transaction => {
+    const validTransactions = transactions.filter((transaction: typeof transactions[0]) => {
       const isValid = transaction.date &&
         typeof transaction.date !== 'undefined' &&
         (transaction.date instanceof Date || typeof transaction.date === 'string' || typeof transaction.date === 'object');
@@ -545,17 +564,17 @@ export const TransactionsSection: React.FC = () => {
 
     // Calculate summary - convert Decimal to number
     const income = validTransactions
-      .filter(t => Number(t.amount) > 0)
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+      .filter((t: typeof transactions[0]) => Number(t.amount) > 0)
+      .reduce((sum: number, t: typeof transactions[0]) => sum + Number(t.amount), 0);
 
     const expenses = Math.abs(validTransactions
-      .filter(t => Number(t.amount) < 0)
-      .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0));
+      .filter((t: typeof transactions[0]) => Number(t.amount) < 0)
+      .reduce((sum: number, t: typeof transactions[0]) => sum + Math.abs(Number(t.amount)), 0));
 
     const remaining = income - expenses;
 
     // Group by date
-    const grouped = validTransactions.reduce((acc, transaction) => {
+    const grouped = validTransactions.reduce((acc: Record<string, TransactionGroup>, transaction: typeof transactions[0]) => {
       // Safely convert date to Date object
       let dateObj: Date;
       try {
@@ -597,6 +616,7 @@ export const TransactionsSection: React.FC = () => {
         } : undefined,
         subCategory: transaction.subCategory ? {
           name: transaction.subCategory.name,
+          icon: transaction.subCategory.icon,
         } : undefined,
       };
 
@@ -665,7 +685,14 @@ export const TransactionsSection: React.FC = () => {
         entering={FadeIn.duration(400)}
         className="flex-1 p-4"
       >
-        <Text className="text-center text-red-500">Errore nel caricamento delle transazioni</Text>
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-center text-red-500">Errore nel caricamento delle transazioni</Text>
+          <Pressable onPress={() => {
+            refetch();
+          }}>
+            <Text className="text-center text-primary-500">Riprova</Text>
+          </Pressable>
+        </View>
       </Animated.View>
     );
   }
@@ -700,10 +727,70 @@ export const TransactionsSection: React.FC = () => {
       {shouldShowEmptyState || flatListData.length === 0 ? (
         <Animated.View
           entering={FadeIn.delay(300).duration(600)}
-          className="items-center justify-center py-12 flex-1"
+          className="items-center justify-center flex-1 gap-4 pb-24 px-10"
         >
-          <Text className="text-gray-500 text-center" style={{ fontFamily: 'DM Sans' }}>
-            Nessuna transazione per questo mese.
+          {/* Emoji Cards */}
+          <View className="flex-row items-center justify-center mb-2" style={{ height: 84 }}>
+            <View
+              className="absolute left-12 rounded-xl p-4"
+              style={{
+                backgroundColor: '#FEF6F5',
+                transform: [{ rotate: '-8deg' }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+                elevation: 6,
+                zIndex: 1
+              }}
+            >
+              <Text className="text-3xl">🏠</Text>
+            </View>
+            <View
+              className="rounded-xl p-4"
+              style={{
+                backgroundColor: '#FFFCF5',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+                elevation: 6,
+                zIndex: 3
+              }}
+            >
+              <Text className="text-3xl">☕</Text>
+            </View>
+            <View
+              className="absolute right-12 rounded-xl p-4"
+              style={{
+                backgroundColor: '#F5FAFF',
+                transform: [{ rotate: '8deg' }],
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 24,
+                elevation: 6,
+                zIndex: 2
+              }}
+            >
+              <Text className="text-3xl">👕</Text>
+            </View>
+          </View>
+
+          {/* Main Title */}
+          <Text
+            className="text-black text-center font-medium text-lg"
+            style={{ fontFamily: 'DM Sans', fontSize: 18, lineHeight: 24 }}
+          >
+            Tutto tace... per ora
+          </Text>
+
+          {/* Subtitle */}
+          <Text
+            className="text-gray-500 text-center"
+            style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 20 }}
+          >
+            Aggiungi una transazione per visualizzare il tuo andamento
           </Text>
         </Animated.View>
       ) : (
