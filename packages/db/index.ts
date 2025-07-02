@@ -105,7 +105,7 @@ export const db = prismaBase.$extends(
 
 // Esporta tutti gli schemi Zod generati
 export * from "./prisma/zod";
-export { Decimal, Prisma };
+export { Decimal, Prisma, db as PrismaClient };
 
 // Gestione dell'istanza Prisma in sviluppo per evitare multiple istanze con HMR
 // @ts-expect-error - PrismaClient con estensione Redis potrebbe non essere perfettamente tipizzato per globalThis

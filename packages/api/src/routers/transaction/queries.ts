@@ -16,6 +16,7 @@ import {
 import { notFoundError } from "../../utils/errors";
 import type { Prisma } from "@paradigma/db";
 import { calculateNextOccurrenceDate } from "../../utils/dateCalculations";
+import { CacheKeys, CacheTTL, formatCacheKeyParams } from "../../utils/cacheKeys";
 
 export const queries = {
   list: protectedProcedure
@@ -121,14 +122,9 @@ export const queries = {
       
       // Create custom cache key for monthly spending
       const cacheKey = ctx.db.getKey({ 
-        params: [
-          { prisma: 'Transaction' }, 
-          { operation: 'getMonthlySpending' }, 
-          { userId }, 
-          { month: month.toString(), year: year.toString() },
-          { accountId: accountId || 'all' },
-          { macroCategoryIds: macroCategoryIds?.join(',') || 'all' }
-        ] 
+        params: formatCacheKeyParams(
+          CacheKeys.transaction.getMonthlySpending(userId, month, year, accountId, macroCategoryIds)
+        )
       });
       
       // Build query filters
@@ -171,7 +167,7 @@ export const queries = {
           date: 'desc',
         },
         cache: { 
-          ttl: 300, // 5 minutes TTL for monthly spending
+          ttl: CacheTTL.monthlySpending,
           key: cacheKey 
         }
       });
@@ -191,14 +187,9 @@ export const queries = {
       
       // Create custom cache key for category breakdown
       const cacheKey = ctx.db.getKey({ 
-        params: [
-          { prisma: 'Transaction' }, 
-          { operation: 'getCategoryBreakdown' }, 
-          { userId }, 
-          { month: month.toString(), year: year.toString() },
-          { type },
-          { accountId: accountId || 'all' }
-        ] 
+        params: formatCacheKeyParams(
+          CacheKeys.transaction.getCategoryBreakdown(userId, month, year, type, accountId)
+        )
       });
       
       // Build query filters
@@ -230,7 +221,7 @@ export const queries = {
           },
         },
         cache: { 
-          ttl: 300, // 5 minutes TTL for category breakdown
+          ttl: CacheTTL.categoryBreakdown,
           key: cacheKey 
         }
       });
@@ -307,13 +298,9 @@ export const queries = {
       
       // Create custom cache key for monthly summary
       const cacheKey = ctx.db.getKey({ 
-        params: [
-          { prisma: 'Transaction' }, 
-          { operation: 'getMonthlySummary' }, 
-          { userId }, 
-          { month: month.toString(), year: year.toString() },
-          { accountId: accountId || 'all' }
-        ] 
+        params: formatCacheKeyParams(
+          CacheKeys.transaction.getMonthlySummary(userId, month, year, accountId)
+        )
       });
       
       // Build base query filters
@@ -340,7 +327,7 @@ export const queries = {
         },
         select: { amount: true },
         cache: { 
-          ttl: 300, // 5 minutes TTL for monthly summary
+          ttl: CacheTTL.monthlySummary,
           key: `${cacheKey}:income` 
         }
       });
@@ -353,7 +340,7 @@ export const queries = {
         },
         select: { amount: true },
         cache: { 
-          ttl: 300, // 5 minutes TTL for monthly summary
+          ttl: CacheTTL.monthlySummary,
           key: `${cacheKey}:expenses` 
         }
       });
@@ -385,14 +372,9 @@ export const queries = {
       
       // Create custom cache key for sub-category breakdown
       const cacheKey = ctx.db.getKey({ 
-        params: [
-          { prisma: 'Transaction' }, 
-          { operation: 'getSubCategoryBreakdown' }, 
-          { userId }, 
-          { month: month.toString(), year: year.toString() },
-          { macroCategoryId },
-          { accountId: accountId || 'all' }
-        ] 
+        params: formatCacheKeyParams(
+          CacheKeys.transaction.getSubCategoryBreakdown(userId, month, year, macroCategoryId, accountId)
+        )
       });
       
       // Build query filters
@@ -428,7 +410,7 @@ export const queries = {
           },
         },
         cache: { 
-          ttl: 300, // 5 minutes TTL for sub-category breakdown
+          ttl: CacheTTL.subCategoryBreakdown,
           key: cacheKey 
         }
       });
@@ -500,13 +482,9 @@ export const queries = {
       
       // Create custom cache key for daily spending
       const cacheKey = ctx.db.getKey({ 
-        params: [
-          { prisma: 'Transaction' }, 
-          { operation: 'getDailySpending' }, 
-          { userId }, 
-          { month: month.toString(), year: year.toString() },
-          { accountId: accountId || 'all' }
-        ] 
+        params: formatCacheKeyParams(
+          CacheKeys.transaction.getDailySpending(userId, month, year, accountId)
+        )
       });
       
       // Build query filters
@@ -535,7 +513,7 @@ export const queries = {
           date: true,
         },
         cache: { 
-          ttl: 300, // 5 minutes TTL for daily spending
+          ttl: CacheTTL.dailySpending,
           key: cacheKey 
         }
       });
@@ -611,14 +589,9 @@ export const queries = {
       
       // Create custom cache key for future transactions
       const cacheKey = ctx.db.getKey({ 
-        params: [
-          { prisma: 'RecurringTransactionRule' }, 
-          { operation: 'getFutureTransactions' }, 
-          { userId }, 
-          { month: month.toString(), year: year.toString() },
-          { accountId: accountId || 'all' },
-          { macroCategoryIds: macroCategoryIds?.join(',') || 'all' }
-        ] 
+        params: formatCacheKeyParams(
+          CacheKeys.recurringRule.getFutureTransactions(userId, month, year, accountId, macroCategoryIds)
+        )
       });
       
       // Build filters for recurring rules
@@ -660,7 +633,7 @@ export const queries = {
           moneyAccount: true,
         },
         cache: { 
-          ttl: 600, // 10 minutes TTL for recurring rules (they don't change frequently)
+          ttl: CacheTTL.recurringRules,
           key: cacheKey 
         }
       });
@@ -794,13 +767,9 @@ export const getDailyTransactions = protectedProcedure
     
     // Create custom cache key for daily transactions
     const cacheKey = ctx.db.getKey({ 
-      params: [
-        { prisma: 'Transaction' }, 
-        { operation: 'getDailyTransactions' }, 
-        { userId }, 
-        { date: input.date },
-        { accountId: input.accountId || 'all' }
-      ] 
+      params: formatCacheKeyParams(
+        CacheKeys.transaction.getDailyTransactions(userId, input.date, input.accountId)
+      )
     });
     
     const startDate = new Date(input.date);
@@ -835,7 +804,7 @@ export const getDailyTransactions = protectedProcedure
         date: 'desc',
       },
       cache: { 
-        ttl: 180, // 3 minutes TTL for daily transactions (more dynamic)
+        ttl: CacheTTL.dailyTransactions,
         key: cacheKey 
       }
     });
@@ -859,14 +828,9 @@ export const getCategoryTransactions = protectedProcedure
     
     // Create custom cache key for category transactions
     const cacheKey = ctx.db.getKey({ 
-      params: [
-        { prisma: 'Transaction' }, 
-        { operation: 'getCategoryTransactions' }, 
-        { userId }, 
-        { categoryId: input.categoryId },
-        { month: input.month.toString(), year: input.year.toString() },
-        { accountId: input.accountId || 'all' }
-      ] 
+      params: formatCacheKeyParams(
+        CacheKeys.transaction.getCategoryTransactions(userId, input.categoryId, input.month, input.year, input.accountId)
+      )
     });
     
     const startDate = new Date(input.year, input.month - 1, 1);
@@ -881,7 +845,7 @@ export const getCategoryTransactions = protectedProcedure
         subCategories: true,
       },
       cache: { 
-        ttl: 86400, // 1 day TTL for macro category (rarely changes)
+        ttl: CacheTTL.categories,
         key: `${cacheKey}:macroCategory` 
       }
     });
@@ -921,7 +885,7 @@ export const getCategoryTransactions = protectedProcedure
         date: 'desc',
       },
       cache: { 
-        ttl: 300, // 5 minutes TTL for category transactions
+        ttl: CacheTTL.categoryTransactions,
         key: `${cacheKey}:transactions` 
       }
     });
@@ -965,13 +929,9 @@ export const getBudgetInfo = protectedProcedure
 
     // Create custom cache key for budget info
     const cacheKey = ctx.db.getKey({ 
-      params: [
-        { prisma: 'Transaction' }, 
-        { operation: 'getBudgetInfo' }, 
-        { userId }, 
-        { categoryId: input.categoryId },
-        { month: input.month.toString(), year: input.year.toString() }
-      ] 
+      params: formatCacheKeyParams(
+        CacheKeys.transaction.getBudgetInfo(userId, input.categoryId, input.month, input.year)
+      )
     });
 
     // Check if budget exists for this category and month
@@ -981,7 +941,7 @@ export const getBudgetInfo = protectedProcedure
         macroCategoryId: input.categoryId,
       },
       cache: { 
-        ttl: 600, // 10 minutes TTL for budget settings
+        ttl: CacheTTL.budgetSettings,
         key: `${cacheKey}:budget` 
       }
     });
@@ -999,7 +959,7 @@ export const getBudgetInfo = protectedProcedure
         subCategories: true,
       },
       cache: { 
-        ttl: 86400, // 1 day TTL for macro category (rarely changes)
+        ttl: CacheTTL.categories,
         key: `${cacheKey}:macroCategory` 
       }
     });
@@ -1029,7 +989,7 @@ export const getBudgetInfo = protectedProcedure
         },
       },
       cache: { 
-        ttl: 300, // 5 minutes TTL for spent amount calculation
+        ttl: CacheTTL.budgetInfo,
         key: `${cacheKey}:spentTransactions` 
       }
     });

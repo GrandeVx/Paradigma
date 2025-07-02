@@ -1,5 +1,6 @@
 import { protectedProcedure } from "../../trpc";
 import { getCurrentBudgetSettingsSchema } from "../../schemas/budget";
+import { CacheKeys, CacheTTL, formatCacheKeyParams } from "../../utils/cacheKeys";
 
 export const queries = {
   getCurrentSettings: protectedProcedure
@@ -9,7 +10,9 @@ export const queries = {
       
       // Create custom cache key for this user's budget list
       const cacheKey = ctx.db.getKey({ 
-        params: [{ prisma: 'Budget' }, { operation: 'getCurrentSettings' }, { userId: userId }] 
+        params: formatCacheKeyParams(
+          CacheKeys.budget.getCurrentSettings(userId)
+        )
       });
       
       // Get all budget settings for the user, including macro category details
@@ -21,7 +24,7 @@ export const queries = {
           macroCategory: true,
         },
         cache: { 
-          ttl: 300, // 5 minutes TTL for budget lists
+          ttl: CacheTTL.budgetList,
           key: cacheKey 
         }
       });

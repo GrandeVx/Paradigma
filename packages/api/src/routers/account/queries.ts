@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../../trpc";
 import { getAccountByIdSchema, listAccountsSchema } from "../../schemas/account";
+import { CacheKeys, CacheTTL, formatCacheKeyParams } from "../../utils/cacheKeys";
 
 export const queries = {
   listWithBalances: protectedProcedure
@@ -10,7 +11,9 @@ export const queries = {
       
       // Create custom cache key for this user's account list
       const cacheKey = ctx.db.getKey({ 
-        params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
+        params: formatCacheKeyParams(
+          CacheKeys.account.listWithBalances(userId)
+        )
       });
       
       // Get all accounts for the user with custom cache key
@@ -22,7 +25,7 @@ export const queries = {
           name: "asc",
         },
         cache: { 
-          ttl: 300, // 5 minutes TTL for account lists
+          ttl: CacheTTL.accountList,
           key: cacheKey 
         }
       });
@@ -32,7 +35,9 @@ export const queries = {
         accounts.map(async (account) => {
           // Create custom cache key for transactions per account
           const transactionsCacheKey = ctx.db.getKey({ 
-            params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: account.id }] 
+            params: formatCacheKeyParams(
+              CacheKeys.transaction.findManyForBalance(account.id)
+            )
           });
           
           const transactions = await ctx.db.transaction.findMany({
@@ -43,7 +48,7 @@ export const queries = {
               amount: true,
             },
             cache: { 
-              ttl: 180, // 3 minutes TTL for transaction amounts
+              ttl: CacheTTL.transactionAmounts,
               key: transactionsCacheKey 
             }
           });
@@ -73,7 +78,9 @@ export const queries = {
       
       // Create custom cache key for specific account
       const cacheKey = ctx.db.getKey({ 
-        params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
+        params: formatCacheKeyParams(
+          CacheKeys.account.getById(userId, input.accountId)
+        )
       });
       
       const account = await ctx.db.moneyAccount.findFirst({
@@ -82,7 +89,7 @@ export const queries = {
           userId,
         },
         cache: { 
-          ttl: 600, // 10 minutes TTL for individual accounts
+          ttl: CacheTTL.individualAccount,
           key: cacheKey 
         }
       });

@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../../trpc";
 import { setBudgetAmountSchema } from "../../schemas/budget";
+import { getBudgetInvalidationKeys } from "../../utils/cacheInvalidation";
 
 export const mutations = {
   setAmount: protectedProcedure
@@ -30,11 +31,6 @@ export const mutations = {
         });
       }
       
-      // Create precise cache keys for invalidation
-      const budgetListCacheKey = ctx.db.getKey({ 
-        params: [{ prisma: 'Budget' }, { operation: 'getCurrentSettings' }, { userId: userId }] 
-      });
-      
       // Use upsert to create or update the budget
       const budget = await ctx.db.budget.upsert({
         where: {
@@ -53,15 +49,7 @@ export const mutations = {
         },
         // Invalidate budget-related caches
         uncache: {
-          uncacheKeys: [
-            // Invalidate user's budget list with precise key
-            budgetListCacheKey,
-            
-            // Keep pattern-based invalidation for transaction aggregates
-            `balanceapp:transaction:operation:aggregate:macro_category_id:${input.macroCategoryId}*`,
-            `balanceapp:transaction:op:aggregate:user_id:${userId}:*`
-          ],
-          hasPattern: true
+          uncacheKeys: getBudgetInvalidationKeys(ctx.db, userId, input.macroCategoryId)
         }
       });
       

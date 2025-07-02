@@ -1,5 +1,6 @@
 import { protectedProcedure } from "../../trpc";
 import { listCategoriesSchema } from "../../schemas/category";
+import { CacheKeys, CacheTTL, formatCacheKeyParams } from "../../utils/cacheKeys";
 
 export const queries = {
   list: protectedProcedure
@@ -7,7 +8,9 @@ export const queries = {
     .query(async ({ ctx, input }) => {
       // Create custom cache key for category list
       const cacheKey = ctx.db.getKey({ 
-        params: [{ prisma: 'MacroCategory' }, { operation: 'list' }, { type: input.type || 'all' }] 
+        params: formatCacheKeyParams(
+          CacheKeys.category.list(input.type)
+        )
       });
       
       // Fetch all macro categories with their subcategories
@@ -22,7 +25,7 @@ export const queries = {
           name: "asc",
         },
         cache: { 
-          ttl: 86400, // 1 day TTL for categories (rarely change)
+          ttl: CacheTTL.categories,
           key: cacheKey 
         }
       });

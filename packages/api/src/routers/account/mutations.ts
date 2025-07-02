@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../../trpc";
 import { createAccountSchema, deleteAccountSchema, updateAccountSchema } from "../../schemas/account";
+import { getAccountInvalidationKeys } from "../../utils/cacheInvalidation";
 
 export const mutations = {
   create: protectedProcedure
@@ -30,13 +31,7 @@ export const mutations = {
         },
         // Precise cache invalidation using custom keys
         uncache: {
-          uncacheKeys: [
-            // Invalidate the user's account list cache
-            ctx.db.getKey({ 
-              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
-            }),
-          ],
-          hasPattern: false
+          uncacheKeys: getAccountInvalidationKeys(ctx.db, userId)
         }
       });
       
@@ -111,12 +106,7 @@ export const mutations = {
             },
             // Invalidate account list when changing default status
             uncache: {
-              uncacheKeys: [
-                ctx.db.getKey({ 
-                  params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
-                }),
-              ],
-              hasPattern: false
+              uncacheKeys: getAccountInvalidationKeys(ctx.db, userId)
             }
           });
           
@@ -146,17 +136,7 @@ export const mutations = {
           data: updateData,
           // Precise cache invalidation for both list and specific account
           uncache: {
-            uncacheKeys: [
-              // Invalidate the user's account list cache
-              ctx.db.getKey({ 
-                params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
-              }),
-              // Invalidate specific account cache
-              ctx.db.getKey({ 
-                params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
-              }),
-            ],
-            hasPattern: false
+            uncacheKeys: getAccountInvalidationKeys(ctx.db, userId, input.accountId)
           }
         });
         
@@ -220,21 +200,7 @@ export const mutations = {
         },
         // Precise invalidation for accounts and related transactions
         uncache: {
-          uncacheKeys: [
-            // Invalidate the user's account list cache
-            ctx.db.getKey({ 
-              params: [{ prisma: 'MoneyAccount' }, { operation: 'listWithBalances' }, { userId: userId }] 
-            }),
-            // Invalidate specific account cache
-            ctx.db.getKey({ 
-              params: [{ prisma: 'MoneyAccount' }, { operation: 'getById' }, { userId: userId }, { accountId: input.accountId }] 
-            }),
-            // Invalidate transaction cache for this account (balances will change)
-            ctx.db.getKey({ 
-              params: [{ prisma: 'Transaction' }, { operation: 'findManyForBalance' }, { accountId: input.accountId }] 
-            }),
-          ],
-          hasPattern: false
+          uncacheKeys: getAccountInvalidationKeys(ctx.db, userId, input.accountId)
         }
       });
       

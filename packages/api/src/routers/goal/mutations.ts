@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../../trpc";
 import { createGoalSchema, deleteGoalSchema, updateGoalSchema } from "../../schemas/goal";
+import { getGoalInvalidationKeys } from "../../utils/cacheInvalidation";
 
 export const mutations = {
   create: protectedProcedure
@@ -15,12 +16,7 @@ export const mutations = {
         },
         // Invalidate goals list cache
         uncache: {
-          uncacheKeys: [
-            // Invalidate user's goals list
-            `balanceapp:goal:user_id:${userId}*`,
-            `balanceapp:money_account:user_id:${userId}*`
-          ],
-          hasPattern: true
+          uncacheKeys: getGoalInvalidationKeys(ctx.db, userId)
         }
       });
       
@@ -65,15 +61,7 @@ export const mutations = {
         data: updateData,
         // Invalidate goal caches
         uncache: {
-          uncacheKeys: [
-            // Invalidate specific goal cache
-            `balanceapp:goal:id:${input.goalId}*`,
-            // Invalidate user's goals list
-            `balanceapp:goal:user_id:${userId}*`,
-            // Invalidate goal progress aggregates
-            `balanceapp:transaction:operation:aggregate:goal_id:${input.goalId}*`
-          ],
-          hasPattern: true
+          uncacheKeys: getGoalInvalidationKeys(ctx.db, userId, input.goalId)
         }
       });
       
@@ -108,16 +96,6 @@ export const mutations = {
         },
         data: {
           goalId: null,
-        },
-        // Invalidate transaction caches
-        uncache: {
-          uncacheKeys: [
-            // Invalidate transaction lists for this user
-            `balanceapp:transaction:user_id:${userId}*`,
-            // Invalidate transactions with this goal
-            `balanceapp:transaction:goal_id:${input.goalId}*`
-          ],
-          hasPattern: true
         }
       });
       
@@ -129,16 +107,6 @@ export const mutations = {
         },
         data: {
           goalId: null,
-        },
-        // Invalidate recurring rule caches
-        uncache: {
-          uncacheKeys: [
-            // Invalidate recurring rules for this user
-            `balanceapp:recurring_transaction_rule:user_id:${userId}*`,
-            // Invalidate recurring rules with this goal
-            `balanceapp:recurring_transaction_rule:goal_id:${input.goalId}*`
-          ],
-          hasPattern: true
         }
       });
       
@@ -149,15 +117,7 @@ export const mutations = {
         },
         // Invalidate goal caches
         uncache: {
-          uncacheKeys: [
-            // Invalidate specific goal cache
-            `balanceapp:goal:id:${input.goalId}*`,
-            // Invalidate user's goals list
-            `balanceapp:goal:user_id:${userId}*`,
-            // Invalidate goal progress aggregates
-            `balanceapp:transaction:operation:aggregate:goal_id:${input.goalId}*`
-          ],
-          hasPattern: true
+          uncacheKeys: getGoalInvalidationKeys(ctx.db, userId, input.goalId)
         }
       });
       
