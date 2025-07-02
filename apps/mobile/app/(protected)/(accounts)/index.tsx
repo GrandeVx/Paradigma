@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
+import React, { useMemo, useCallback } from 'react';
+import { View, ScrollView, Pressable, RefreshControl, FlatList } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { IconName } from '@/components/ui/icons';
@@ -43,7 +43,7 @@ interface UnifiedAccount {
   includeInTotal: boolean;
 }
 
-// Account Card Component - MEMOIZED for performance
+// Account Card Component - OPTIMIZED with memoization and custom comparison
 const AccountCard: React.FC<{
   account: UnifiedAccount;
   onPress: (id: string) => void;
@@ -139,6 +139,17 @@ const AccountCard: React.FC<{
       </View>
     </Pressable>
   );
+}, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo optimization
+  return (
+    prevProps.account.id === nextProps.account.id &&
+    prevProps.account.balance === nextProps.account.balance &&
+    prevProps.account.name === nextProps.account.name &&
+    prevProps.account.color === nextProps.account.color &&
+    prevProps.account.progress === nextProps.account.progress &&
+    prevProps.isLast === nextProps.isLast
+    // Skip comparing functions as they should be stable
+  );
 });
 
 export default function AccountsScreen() {
@@ -151,10 +162,14 @@ export default function AccountsScreen() {
   // Fetch accounts data with controlled refetching - OPTIMIZED
   const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({}, {
     refetchOnWindowFocus: false, // Prevent automatic refetch on focus
-    refetchOnMount: true, // Keep refetch on mount
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    cacheTime: 300000, // Keep in cache for 5 minutes
+    refetchOnMount: false, // Prevent automatic refetch on mount - rely on cache
+    staleTime: 1000 * 60 * 10, // Consider data fresh for 10 minutes
+    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Enable structural sharing for better performance
+    structuralSharing: true,
+    // Use query key for better deduplication
+    enabled: true,
   });
 
   // Process accounts data with integrated goal functionality
@@ -211,8 +226,8 @@ export default function AccountsScreen() {
     };
   }, [accountsData]);
 
-  // Custom formatter for the total balance display
-  const formatDisplayCurrency = (amount: number) => {
+  // Memoized formatter for the total balance display
+  const formatDisplayCurrency = useMemo(() => (amount: number) => {
     const [integer, decimal] = amount.toFixed(2).split('.');
     // Format with dot as thousand separator and comma as decimal separator (Italian format)
     const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -220,33 +235,34 @@ export default function AccountsScreen() {
       integer: formattedInteger,
       decimal: decimal
     };
-  };
+  }, []);
 
-  const { integer, decimal } = formatDisplayCurrency(totalBalance);
-  const currencySymbol = getCurrencySymbol();
+  const { integer, decimal } = useMemo(() => formatDisplayCurrency(totalBalance), [formatDisplayCurrency, totalBalance]);
+  const currencySymbol = useMemo(() => getCurrencySymbol(), [getCurrencySymbol]);
 
-  const handleAccountPress = (id: string) => {
+  // Memoized callback functions to prevent unnecessary re-renders
+  const handleAccountPress = useCallback((id: string) => {
     // Navigate to account details using the id parameter
     router.push({
       pathname: "/(protected)/(accounts)/[id]",
       params: { id }
     });
-  };
+  }, [router]);
 
-  const handleBudgetForecastPress = () => {
+  const handleBudgetForecastPress = useCallback(() => {
     alert(t('accounts.comingSoon'));
-  };
+  }, [t]);
 
-  const rightActions = [
+  const rightActions = useMemo(() => [
     {
       icon: <FontAwesome5 name="plus" size={16} color="black" />,
       onPress: () => router.push("/(protected)/(creation-flow)/name"),
     },
-  ];
+  ], [router]);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     refetchAccounts();
-  };
+  }, [refetchAccounts]);
 
   return (
     <HeaderContainer variant="secondary" rightActions={rightActions} hideBackButton={true}>
@@ -287,37 +303,59 @@ export default function AccountsScreen() {
           </Pressable>
         </View>
 
-        {/* Accounts List */}
-        <ScrollView
-          className="flex-1 px-4"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={handleRefresh}
-            />
-          }
-        >
-          {accounts.length === 0 ? (
+        {/* Accounts List - Optimized with FlatList */}
+        {accounts.length === 0 ? (
+          <ScrollView
+            className="flex-1 px-4"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={handleRefresh}
+              />
+            }
+          >
             <View className="items-center justify-center py-8">
               <Text className="text-gray-500">{t('accounts.noAccountsFound')}</Text>
             </View>
-          ) : (
-            accounts.map((account, index) => (
+          </ScrollView>
+        ) : (
+          <FlatList
+            data={accounts}
+            className="flex-1 px-4"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={handleRefresh}
+              />
+            }
+            keyExtractor={(item) => item.id}
+            getItemLayout={(data, index) => ({
+              length: index === accounts.length - 1 ? 80 : 100, // Adjust based on card height
+              offset: index * 80, // Approximate offset for stacked cards
+              index,
+            })}
+            windowSize={5} // Reduce from default 21 to 5
+            maxToRenderPerBatch={3} // Reduce from default 10 to 3
+            updateCellsBatchingPeriod={100} // Increase from default 50ms
+            removeClippedSubviews={true}
+            initialNumToRender={5} // Reduce from default 10
+            renderItem={({ item, index }) => (
               <AccountCard
-                key={account.id}
-                account={account}
+                account={item}
                 onPress={handleAccountPress}
                 formatCurrency={formatCurrency}
                 getCurrencySymbol={getCurrencySymbol}
                 isLast={index === accounts.length - 1}
                 t={t}
               />
-            ))
-          )}
-          <View className="h-20" />
-        </ScrollView>
+            )}
+            ListFooterComponent={<View className="h-20" />}
+          />
+        )}
       </View>
     </HeaderContainer>
   );

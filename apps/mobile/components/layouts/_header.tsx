@@ -75,7 +75,7 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
   const insets = useSafeAreaInsets();
   const windowHeight = Dimensions.get("window").height;
 
-  const headerHeight = Math.max(insets.top + 44, 0.16 * windowHeight);
+  const headerHeight = Math.max(insets.top + 44, 0.12 * windowHeight);
 
   // Improved back navigation logic - tab bar is now managed automatically via focus
   const handleBackNavigation = () => {
@@ -194,9 +194,10 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
       <View
         style={{
           height: headerHeight,
-          paddingTop: insets.top - 40,
+          paddingTop: insets.top - 20,
           paddingHorizontal: 15,
         }}
+
       >
         <View
           style={{

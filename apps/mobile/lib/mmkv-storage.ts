@@ -34,13 +34,68 @@ export const mmkvPersister: Persister = {
   }
 }
 
-// Utility functions for manual cache management
+// Memory management configuration
+const CACHE_SIZE_LIMITS = {
+  MAX_CACHE_SIZE_MB: 50, // 50MB limit for cache
+  MAX_TRANSACTION_CACHE_MONTHS: 6, // Keep only 6 months of transaction cache
+  MAX_CHARTS_CACHE_MONTHS: 3, // Keep only 3 months of charts cache
+  CLEANUP_THRESHOLD_MB: 40, // Start cleanup when cache exceeds 40MB
+}
+
+// Utility functions for manual cache management with memory optimization
 export const cacheUtils = {
-  // Get cache size
+  // Get cache size in bytes
   getCacheSize: () => mmkvStorage.size,
+  
+  // Get cache size in MB
+  getCacheSizeMB: () => Math.round((mmkvStorage.size / (1024 * 1024)) * 100) / 100,
+  
+  // Check if cache size exceeds limits
+  isCacheOverLimit: () => cacheUtils.getCacheSizeMB() > CACHE_SIZE_LIMITS.CLEANUP_THRESHOLD_MB,
   
   // Clear all cache
   clearCache: () => mmkvStorage.clearAll(),
+  
+  // Smart cleanup to keep cache under limits
+  performSmartCleanup: () => {
+    try {
+      const currentSizeMB = cacheUtils.getCacheSizeMB();
+      console.log(`🧹 [CacheUtils] Starting smart cleanup. Current size: ${currentSizeMB}MB`);
+      
+      if (currentSizeMB <= CACHE_SIZE_LIMITS.CLEANUP_THRESHOLD_MB) {
+        return; // No cleanup needed
+      }
+      
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      
+      // Clean old transaction caches
+      for (let year = currentYear - 1; year <= currentYear; year++) {
+        for (let month = 1; month <= 12; month++) {
+          const monthsAgo = (currentYear - year) * 12 + (currentMonth - month);
+          if (monthsAgo > CACHE_SIZE_LIMITS.MAX_TRANSACTION_CACHE_MONTHS) {
+            transactionUtils.clearTransactionCache(month, year);
+          }
+        }
+      }
+      
+      // Clean old charts caches
+      for (let year = currentYear - 1; year <= currentYear; year++) {
+        for (let month = 1; month <= 12; month++) {
+          const monthsAgo = (currentYear - year) * 12 + (currentMonth - month);
+          if (monthsAgo > CACHE_SIZE_LIMITS.MAX_CHARTS_CACHE_MONTHS) {
+            chartsUtils.clearChartsCache(month, year);
+          }
+        }
+      }
+      
+      const newSizeMB = cacheUtils.getCacheSizeMB();
+      console.log(`✅ [CacheUtils] Cleanup completed. New size: ${newSizeMB}MB`);
+    } catch (error) {
+      console.error('❌ [CacheUtils] Error during smart cleanup:', error);
+    }
+  },
   
   // Get specific cached query
   getCachedQuery: (key: string) => {
@@ -52,9 +107,14 @@ export const cacheUtils = {
     }
   },
   
-  // Set specific cached query
+  // Set specific cached query with size check
   setCachedQuery: (key: string, data: unknown) => {
     try {
+      // Perform cleanup if needed before adding new data
+      if (cacheUtils.isCacheOverLimit()) {
+        cacheUtils.performSmartCleanup();
+      }
+      
       mmkvStorage.set(key, JSON.stringify(data))
     } catch (error) {
       console.error('Failed to cache query:', error)
@@ -67,6 +127,26 @@ export const cacheUtils = {
       mmkvStorage.delete(key)
     } catch (error) {
       console.error('Failed to remove cached query:', error)
+    }
+  },
+  
+  // Get cache statistics
+  getCacheStats: () => {
+    try {
+      const allKeys = mmkvStorage.getAllKeys();
+      const transactionCacheKeys = allKeys.filter(key => key.startsWith('transaction-cache-'));
+      const chartsCacheKeys = allKeys.filter(key => key.startsWith('charts-cache-'));
+      
+      return {
+        totalSizeMB: cacheUtils.getCacheSizeMB(),
+        totalKeys: allKeys.length,
+        transactionCaches: transactionCacheKeys.length,
+        chartsCaches: chartsCacheKeys.length,
+        isOverLimit: cacheUtils.isCacheOverLimit(),
+      };
+    } catch (error) {
+      console.error('Failed to get cache stats:', error);
+      return null;
     }
   }
 }
@@ -417,6 +497,16 @@ export const chartsUtils = {
   getCategoriesCountFromCache: (month: number, year: number): number => {
     const cacheData = chartsUtils.getChartsCacheData(month, year);
     return cacheData ? cacheData.categoriesCount : 0;
+  },
+
+  // Clear charts cache for a specific month/year
+  clearChartsCache: (month: number, year: number): void => {
+    try {
+      const cacheKey = `charts-cache-${month}-${year}`;
+      mmkvStorage.delete(cacheKey);
+    } catch (error) {
+      console.error('Failed to clear charts cache:', error);
+    }
   }
 }
 

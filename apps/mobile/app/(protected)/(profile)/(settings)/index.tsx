@@ -75,10 +75,8 @@ const getFrequencyText = (frequencyType: string, frequencyInterval: number) => {
 
 // Get category display with emoji
 const getCategoryDisplay = (subCategory?: SubCategory | null) => {
-  if (!subCategory?.macroCategory) return '❓ Altro';
-
-  const { macroCategory } = subCategory;
-  return `${macroCategory.icon} ${macroCategory.name}`;
+  if (!subCategory) return '❓ Altro';
+  return `${subCategory.icon} ${subCategory.name}`;
 };
 
 // Recurring Transaction Card Component

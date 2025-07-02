@@ -78,25 +78,32 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 1000 * 60 * 2, // 2 minutes (reduced for more responsive updates)
-        cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+        staleTime: 1000 * 60 * 5, // 5 minutes (increased for better performance)
+        cacheTime: 1000 * 60 * 60 * 2, // 2 hours (reduced from 24h)
         retry: (failureCount, error) => {
           // Don't retry on auth errors
           if (error && typeof error === 'object' && 'message' in error &&
             typeof error.message === 'string' && error.message.includes('UNAUTHORIZED')) {
             return false;
           }
-          return failureCount < 3;
+          return failureCount < 2; // Reduced from 3 to 2
         },
-        // Enable background refetching for better UX
+        // Optimize background refetching
         refetchOnWindowFocus: false,
-        refetchOnMount: true,
-        refetchOnReconnect: true,
-        // Network mode for better offline experience
-        networkMode: 'offlineFirst',
+        refetchOnMount: false, // Reduce automatic refetching
+        refetchOnReconnect: false, // Reduce automatic refetching
+        // Network mode for better performance
+        networkMode: 'online', // Changed from offlineFirst for better performance
+        // Add deduplication
+        structuralSharing: true,
+      },
+      mutations: {
+        // Add mutation defaults for better performance
+        cacheTime: 1000 * 60 * 5, // 5 minutes
+        networkMode: 'online',
       },
     },
-    // Query-specific configurations for better performance
+    // Add query deduplication and performance optimizations
     queryCache: undefined,
     mutationCache: undefined,
   }));
@@ -113,6 +120,21 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         }),
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
+          // Add request timeout support for React Native
+          fetch: (url, options) => {
+            // Create AbortController for timeout functionality
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+              controller.abort();
+            }, 30000); // 30 second timeout
+
+            return fetch(url, {
+              ...options,
+              signal: controller.signal,
+            }).finally(() => {
+              clearTimeout(timeoutId);
+            });
+          },
           async headers() {
             const headers = new Map<string, string>();
 

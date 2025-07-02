@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { View, ScrollView, Pressable, RefreshControl, FlatList } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -202,8 +202,14 @@ export const GoalsSection: React.FC = () => {
   // Animation values
   const contentOpacity = useSharedValue(0);
 
-  // Fetch accounts data
-  const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({});
+  // Fetch accounts data - OPTIMIZED
+  const { data: accountsData, isLoading, refetch: refetchAccounts } = api.account.listWithBalances.useQuery({}, {
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnMount: false, // Use cache first
+    refetchOnWindowFocus: false,
+    structuralSharing: true,
+  });
 
   // Initialize cache data on component mount
   useEffect(() => {
@@ -407,7 +413,8 @@ export const GoalsSection: React.FC = () => {
 
   return (
     <Animated.View style={contentStyle} className="flex-1">
-      <ScrollView
+      <FlatList
+        data={goalAccounts}
         className="flex-1 px-2 pt-2"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -417,18 +424,28 @@ export const GoalsSection: React.FC = () => {
             onRefresh={handleRefresh}
           />
         }
-      >
-        {goalAccounts.map((goal, index) => (
+        keyExtractor={(item) => item.id}
+        getItemLayout={(data, index) => ({
+          length: 140, // Approximate height of goal card
+          offset: 140 * index,
+          index,
+        })}
+        windowSize={3} // Reduce window size for better performance
+        maxToRenderPerBatch={2}
+        updateCellsBatchingPeriod={100}
+        removeClippedSubviews={true}
+        initialNumToRender={3}
+        renderItem={({ item, index }) => (
           <AnimatedGoalCard
-            key={goal.id}
-            goal={goal}
+            key={item.id}
+            goal={item}
             index={index}
             onPress={handleGoalPress}
             formatCurrency={formatCurrency}
             getCurrencySymbol={getCurrencySymbol}
           />
-        ))}
-      </ScrollView>
+        )}
+      />
     </Animated.View>
   );
 }; 

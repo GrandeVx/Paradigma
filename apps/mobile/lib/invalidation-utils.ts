@@ -2,12 +2,12 @@ import { api } from './api';
 import { transactionUtils } from './mmkv-storage';
 
 /**
- * Comprehensive invalidation utility for when transaction data changes.
- * This ensures all related queries are updated across the entire app.
+ * Selective invalidation utility for when transaction data changes.
+ * Optimized to only invalidate what's necessary to reduce performance impact.
  */
 export class InvalidationUtils {
   /**
-   * Invalidates all queries related to transactions.
+   * Invalidates only the essential queries related to transactions.
    * Use this when transactions are created, updated, or deleted.
    */
   static async invalidateTransactionRelatedQueries(
@@ -16,37 +16,50 @@ export class InvalidationUtils {
       currentMonth?: number;
       currentYear?: number;
       clearCache?: boolean;
+      accountId?: string; // Add specific account targeting
     }
   ) {
-    const { currentMonth, currentYear, clearCache = true } = options || {};
+    const { currentMonth, currentYear, clearCache = false, accountId } = options || {};
 
-    console.log('🔄 [InvalidationUtils] Starting comprehensive query invalidation...');
+    console.log('🔄 [InvalidationUtils] Starting selective query invalidation...');
 
     try {
-      // === TRANSACTION QUERIES ===
+      // === TRANSACTION QUERIES - SELECTIVE ===
       if (currentMonth && currentYear) {
-        // Invalidate current month transactions specifically
+        // Only invalidate current month transactions specifically
         await utils.transaction.getMonthlySpending.invalidate({
           month: currentMonth,
           year: currentYear,
         });
+        await utils.transaction.getMonthlySummary.invalidate({
+          month: currentMonth,
+          year: currentYear,
+        });
+      } else {
+        // Fallback: invalidate transaction queries but not all at once
+        await utils.transaction.getMonthlySpending.invalidate();
+        await utils.transaction.getMonthlySummary.invalidate();
       }
       
-      // Invalidate all transaction queries
-      await utils.transaction.invalidate();
-      
-      // === ACCOUNT QUERIES ===
-      // Account balances change when transactions change
-      await utils.account.listWithBalances.invalidate();
-      await utils.account.getById.invalidate();
+      // === ACCOUNT QUERIES - SELECTIVE ===
+      if (accountId) {
+        // Only invalidate specific account
+        await utils.account.getById.invalidate({ accountId });
+      } else {
+        // Account balances change when transactions change
+        await utils.account.listWithBalances.invalidate();
+      }
 
-      // === BUDGET QUERIES ===
-      // Budget spending totals change
-      await utils.budget.getCurrentSettings.invalidate();
-      
-      // === CATEGORY QUERIES ===
-      // Category statistics change
-      await utils.category.list.invalidate();
+      // === BUDGET QUERIES - SELECTIVE ===
+      // Only invalidate budget if we're dealing with current month
+      if (currentMonth && currentYear) {
+        const currentDate = new Date();
+        const isCurrentMonth = currentMonth === (currentDate.getMonth() + 1) && 
+                              currentYear === currentDate.getFullYear();
+        if (isCurrentMonth) {
+          await utils.budget.getCurrentSettings.invalidate();
+        }
+      }
 
       // === CACHE CLEANUP ===
       if (clearCache && currentMonth && currentYear) {
