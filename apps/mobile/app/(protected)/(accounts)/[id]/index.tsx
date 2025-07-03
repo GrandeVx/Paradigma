@@ -1,5 +1,13 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { View, ScrollView, Pressable, Alert, Animated } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, ScrollView, Pressable, Alert } from 'react-native';
+import Animated, {
+    FadeIn,
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    withRepeat,
+    runOnJS
+} from 'react-native-reanimated';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { SvgIcon } from '@/components/ui/svg-icon';
@@ -8,6 +16,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import HeaderContainer from '@/components/layouts/_header';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
+import { InvalidationUtils } from '@/lib/invalidation-utils';
 // Removed cn import as it's no longer used with modular components
 import { AccountColors, AccountIcons } from "@/components/ui/icons";
 import AccountDetailsSkeleton from './skeleton';
@@ -27,25 +36,165 @@ const formatCurrency = (amount: number) => {
     };
 };
 
+// Account Deletion Loading State Component
+const AccountDeletionLoadingState: React.FC = () => {
+    const { t } = useTranslation();
+    const pulseOpacity = useSharedValue(0.3);
+
+    useEffect(() => {
+        const animate = () => {
+            pulseOpacity.value = withRepeat(
+                withTiming(1, { duration: 1500 }, () => {
+                    pulseOpacity.value = withTiming(0.3, { duration: 1500 }, () => {
+                        runOnJS(animate)();
+                    });
+                }),
+                -1,
+                true
+            );
+        };
+        animate();
+    }, [pulseOpacity]);
+
+    const pulseStyle = useAnimatedStyle(() => ({
+        opacity: pulseOpacity.value,
+    }));
+
+    return (
+        <HeaderContainer variant="secondary" customTitle={t("account.details.title", "MODIFICA CONTO")} tabBarHidden={true}>
+            <View className="flex-1 bg-white">
+                <Animated.View
+                    entering={FadeIn.duration(400)}
+                    className="flex-1 items-center justify-center gap-6 px-10"
+                >
+                    {/* Animated Icons */}
+                    <View className="flex-row items-center justify-center mb-4" style={{ height: 100 }}>
+                        <Animated.View
+                            style={[
+                                pulseStyle,
+                                {
+                                    position: 'absolute',
+                                    left: 40,
+                                    backgroundColor: '#FEF2F2',
+                                    transform: [{ rotate: '-12deg' }],
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 6 },
+                                    shadowOpacity: 0.15,
+                                    shadowRadius: 28,
+                                    elevation: 8,
+                                    zIndex: 1
+                                }
+                            ]}
+                            className="rounded-2xl p-5"
+                        >
+                            <Text className="text-4xl">🗑️</Text>
+                        </Animated.View>
+
+                        <Animated.View
+                            style={[
+                                pulseStyle,
+                                {
+                                    backgroundColor: '#FFF7ED',
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 6 },
+                                    shadowOpacity: 0.15,
+                                    shadowRadius: 28,
+                                    elevation: 10,
+                                    zIndex: 3
+                                }
+                            ]}
+                            className="rounded-2xl p-5"
+                        >
+                            <Text className="text-4xl">🏦</Text>
+                        </Animated.View>
+
+                        <Animated.View
+                            style={[
+                                pulseStyle,
+                                {
+                                    position: 'absolute',
+                                    right: 40,
+                                    backgroundColor: '#F0F9FF',
+                                    transform: [{ rotate: '12deg' }],
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 6 },
+                                    shadowOpacity: 0.15,
+                                    shadowRadius: 28,
+                                    elevation: 8,
+                                    zIndex: 2
+                                }
+                            ]}
+                            className="rounded-2xl p-5"
+                        >
+                            <Text className="text-4xl">💸</Text>
+                        </Animated.View>
+                    </View>
+
+                    {/* Main Message */}
+                    <View className="items-center gap-3">
+                        <Text
+                            className="text-black text-center font-medium text-xl"
+                            style={{ fontFamily: 'DM Sans', fontSize: 20, lineHeight: 28 }}
+                        >
+                            Eliminazione in corso...
+                        </Text>
+
+                        <Text
+                            className="text-gray-600 text-center leading-6"
+                            style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 22 }}
+                        >
+                            Stiamo rimuovendo tutte le transazioni e i dati associati al conto.
+                        </Text>
+                    </View>
+
+
+
+                    {/* Progress Indicator */}
+                    <View className="items-center gap-2 mt-4">
+                        <Animated.View
+                            style={[
+                                pulseStyle,
+                                {
+                                    width: 40,
+                                    height: 4,
+                                    backgroundColor: '#3B82F6',
+                                    borderRadius: 2
+                                }
+                            ]}
+                        />
+                        <Text
+                            className="text-gray-500 text-sm"
+                            style={{ fontFamily: 'DM Sans' }}
+                        >
+                            Elaborazione dati...
+                        </Text>
+                    </View>
+                </Animated.View>
+            </View>
+        </HeaderContainer>
+    );
+};
+
 export default function AccountDetailsScreen() {
     const { t } = useTranslation();
     const router = useRouter();
     const { id } = useLocalSearchParams<{ id: string }>();
     const [isSaving, setIsSaving] = useState(false);
     const [isShowingDeleteConfirm, setIsShowingDeleteConfirm] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Overlay states
     const [showIconOverlay, setShowIconOverlay] = useState(false);
     const [showColorOverlay, setShowColorOverlay] = useState(false);
 
-    // Animation values
-    const backdropOpacity = useRef(new Animated.Value(0)).current;
-    const contentOpacity = useRef(new Animated.Value(1)).current;
-    const iconPanelScale = useRef(new Animated.Value(0)).current;
-    const iconPanelTranslateY = useRef(new Animated.Value(-20)).current;
-    const colorPanelScale = useRef(new Animated.Value(0)).current;
-    const colorPanelTranslateY = useRef(new Animated.Value(-20)).current;
+    // Animation values - using Reanimated
+    const backdropOpacity = useSharedValue(0);
+    const contentOpacity = useSharedValue(1);
+    const iconPanelScale = useSharedValue(0);
+    const iconPanelTranslateY = useSharedValue(-20);
+    const colorPanelScale = useSharedValue(0);
+    const colorPanelTranslateY = useSharedValue(-20);
 
     // Form states
     const [accountName, setAccountName] = useState('');
@@ -110,24 +259,29 @@ export default function AccountDetailsScreen() {
             // Only invalidate account list when account is deleted
             await utils.account.listWithBalances.invalidate();
             setIsShowingDeleteConfirm(false);
+            setIsDeletingAccount(false);
             router.back();
         },
         onError: (error) => {
             setError(error.message);
             setIsShowingDeleteConfirm(false);
+            setIsDeletingAccount(false);
         }
     });
 
-    // Animation cleanup effect - MEMORY LEAK PREVENTION
+    // Get all transactions for this account to delete them
+    const { data: accountTransactions } = api.transaction.list.useQuery(
+        { accountId: id },
+        { enabled: !!id }
+    );
+
+    // Delete transaction mutation
+    const { mutate: deleteTransaction } = api.transaction.delete.useMutation();
+
+    // Animation cleanup effect - MEMORY LEAK PREVENTION (not needed for Reanimated shared values)
     useEffect(() => {
         return () => {
-            // Cleanup animations to prevent memory leaks
-            backdropOpacity.removeAllListeners();
-            contentOpacity.removeAllListeners();
-            iconPanelScale.removeAllListeners();
-            iconPanelTranslateY.removeAllListeners();
-            colorPanelScale.removeAllListeners();
-            colorPanelTranslateY.removeAllListeners();
+            // Cleanup for Reanimated is automatic
         };
     }, []);
 
@@ -135,106 +289,34 @@ export default function AccountDetailsScreen() {
     useEffect(() => {
         if (showIconOverlay) {
             // Show icon overlay with animation
-            Animated.parallel([
-                Animated.timing(backdropOpacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(contentOpacity, {
-                    toValue: 0.1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(iconPanelScale, {
-                    toValue: 1,
-                    duration: 250,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(iconPanelTranslateY, {
-                    toValue: 0,
-                    duration: 250,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+            backdropOpacity.value = withTiming(1, { duration: 200 });
+            contentOpacity.value = withTiming(0.1, { duration: 200 });
+            iconPanelScale.value = withTiming(1, { duration: 250 });
+            iconPanelTranslateY.value = withTiming(0, { duration: 250 });
         } else {
             // Hide icon overlay with animation
-            Animated.parallel([
-                Animated.timing(backdropOpacity, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(contentOpacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(iconPanelScale, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(iconPanelTranslateY, {
-                    toValue: -20,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+            backdropOpacity.value = withTiming(0, { duration: 200 });
+            contentOpacity.value = withTiming(1, { duration: 200 });
+            iconPanelScale.value = withTiming(0, { duration: 200 });
+            iconPanelTranslateY.value = withTiming(-20, { duration: 200 });
         }
-    }, [showIconOverlay]);
+    }, [showIconOverlay, backdropOpacity, contentOpacity, iconPanelScale, iconPanelTranslateY]);
 
     useEffect(() => {
         if (showColorOverlay) {
             // Show color overlay with animation
-            Animated.parallel([
-                Animated.timing(backdropOpacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(contentOpacity, {
-                    toValue: 0.1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(colorPanelScale, {
-                    toValue: 1,
-                    duration: 250,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(colorPanelTranslateY, {
-                    toValue: 0,
-                    duration: 250,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+            backdropOpacity.value = withTiming(1, { duration: 200 });
+            contentOpacity.value = withTiming(0.1, { duration: 200 });
+            colorPanelScale.value = withTiming(1, { duration: 250 });
+            colorPanelTranslateY.value = withTiming(0, { duration: 250 });
         } else {
             // Hide color overlay with animation
-            Animated.parallel([
-                Animated.timing(backdropOpacity, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(contentOpacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(colorPanelScale, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(colorPanelTranslateY, {
-                    toValue: -20,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+            backdropOpacity.value = withTiming(0, { duration: 200 });
+            contentOpacity.value = withTiming(1, { duration: 200 });
+            colorPanelScale.value = withTiming(0, { duration: 200 });
+            colorPanelTranslateY.value = withTiming(-20, { duration: 200 });
         }
-    }, [showColorOverlay]);
+    }, [showColorOverlay, backdropOpacity, contentOpacity, colorPanelScale, colorPanelTranslateY]);
 
     // Find account balance from the accounts list
     useEffect(() => {
@@ -279,10 +361,125 @@ export default function AccountDetailsScreen() {
         }
     };
 
+    const handleAccountDeletion = async () => {
+        try {
+            setIsDeletingAccount(true);
+            console.log('🗑️ [AccountDelete] Starting account deletion process...');
+
+            if (accountTransactions && accountTransactions.items && accountTransactions.items.length > 0) {
+                console.log(`🗑️ [AccountDelete] Found ${accountTransactions.items.length} transactions to delete`);
+
+                // Group transactions by month/year for invalidation tracking
+                const affectedMonths = new Set<string>();
+
+                // Group transactions by category for invalidation tracking
+                const affectedCategories = new Set<string>();
+
+                // Delete all transactions first
+                for (const transaction of accountTransactions.items) {
+                    const transactionDate = new Date(transaction.date);
+                    const monthKey = `${transactionDate.getFullYear()}-${transactionDate.getMonth() + 1}`;
+                    affectedMonths.add(monthKey);
+
+                    // Track affected categories for invalidation
+                    if (transaction.subCategoryId) {
+                        affectedCategories.add(transaction.subCategoryId);
+                    }
+
+                    console.log(`🗑️ [AccountDelete] Deleting transaction ${transaction.id} from ${monthKey}`);
+
+                    await new Promise<void>((resolve, reject) => {
+                        deleteTransaction(
+                            { transactionId: transaction.id },
+                            {
+                                onSuccess: () => {
+                                    console.log(`✅ [AccountDelete] Transaction ${transaction.id} deleted`);
+                                    resolve();
+                                },
+                                onError: (error) => {
+                                    console.error(`❌ [AccountDelete] Failed to delete transaction ${transaction.id}:`, error);
+                                    reject(error);
+                                }
+                            }
+                        );
+                    });
+                }
+
+                console.log(`🔄 [AccountDelete] All transactions deleted. Invalidating ${affectedMonths.size} affected months and ${affectedCategories.size} affected categories...`);
+
+                // We need to get category data to map subcategories to macro categories
+                const { data: allCategories } = await utils.category.list.fetch({});
+
+                // Invalidate cache for all affected months
+                for (const monthKey of affectedMonths) {
+                    const [year, month] = monthKey.split('-').map(Number);
+
+                    try {
+                        await InvalidationUtils.invalidateTransactionRelatedQueries(utils, {
+                            currentMonth: month,
+                            currentYear: year,
+                            clearCache: true,
+                        });
+
+                        await InvalidationUtils.invalidateChartsQueries(utils, {
+                            currentMonth: month,
+                            currentYear: year,
+                        });
+
+                        console.log(`✅ [AccountDelete] Invalidated cache for ${monthKey}`);
+                    } catch (invalidationError) {
+                        console.warn(`⚠️ [AccountDelete] Failed to invalidate ${monthKey}:`, invalidationError);
+                    }
+                }
+
+                // Invalidate category-specific queries for all affected categories
+                if (allCategories && affectedCategories.size > 0) {
+                    for (const subCategoryId of affectedCategories) {
+                        // Find the macro category for this subcategory
+                        const macroCategory = allCategories.find(cat => 
+                            cat.subCategories.some(sub => sub.id === subCategoryId)
+                        );
+
+                        if (macroCategory) {
+                            // Invalidate for all affected months
+                            for (const monthKey of affectedMonths) {
+                                const [year, month] = monthKey.split('-').map(Number);
+
+                                try {
+                                    await InvalidationUtils.invalidateCategoryQueries(utils, {
+                                        categoryId: macroCategory.id,
+                                        currentMonth: month,
+                                        currentYear: year,
+                                    });
+
+                                    console.log(`✅ [AccountDelete] Invalidated category ${macroCategory.id} for ${monthKey}`);
+                                } catch (invalidationError) {
+                                    console.warn(`⚠️ [AccountDelete] Failed to invalidate category ${macroCategory.id} for ${monthKey}:`, invalidationError);
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                console.log('ℹ️ [AccountDelete] No transactions found for this account');
+            }
+
+            // Finally, delete the account
+            console.log('🗑️ [AccountDelete] Deleting account...');
+            deleteAccount({ accountId: id });
+
+        } catch (error) {
+            console.error('❌ [AccountDelete] Error during account deletion:', error);
+            setError(error instanceof Error ? error.message : "Errore durante l'eliminazione del conto");
+            setIsShowingDeleteConfirm(false);
+            setIsDeletingAccount(false);
+        }
+    };
+
     const handleDelete = () => {
         Alert.alert(
             t("account.details.delete_confirm_title", "Eliminare questo conto?"),
-            t("account.details.delete_confirm_msg", "Questa azione non può essere annullata. Tutte le transazioni associate a questo conto verranno mantenute."),
+            t("account.details.delete_confirm_msg", "Questa azione non può essere annullata. Tutte le transazioni associate a questo conto verranno eliminate definitivamente."),
             [
                 {
                     text: t("common.actions.cancel", "Annulla"),
@@ -292,7 +489,7 @@ export default function AccountDetailsScreen() {
                     text: t("common.actions.delete", "Elimina"),
                     onPress: () => {
                         setIsShowingDeleteConfirm(true);
-                        deleteAccount({ accountId: id });
+                        handleAccountDeletion();
                     },
                     style: "destructive"
                 }
@@ -341,8 +538,37 @@ export default function AccountDetailsScreen() {
         setShowColorOverlay(false);
     };
 
+    // Animated styles for overlays
+    const backdropStyle = useAnimatedStyle(() => ({
+        opacity: backdropOpacity.value,
+    }));
+
+    const contentStyle = useAnimatedStyle(() => ({
+        opacity: contentOpacity.value,
+    }));
+
+    const iconPanelStyle = useAnimatedStyle(() => ({
+        transform: [
+            { scale: iconPanelScale.value },
+            { translateY: iconPanelTranslateY.value }
+        ],
+        opacity: backdropOpacity.value,
+    }));
+
+    const colorPanelStyle = useAnimatedStyle(() => ({
+        transform: [
+            { scale: colorPanelScale.value },
+            { translateY: colorPanelTranslateY.value }
+        ],
+        opacity: backdropOpacity.value,
+    }));
+
     if (isLoadingAccount || isLoadingBalance) {
         return <AccountDetailsSkeleton />;
+    }
+
+    if (isDeletingAccount) {
+        return <AccountDeletionLoadingState />;
     }
 
     return (
@@ -351,7 +577,7 @@ export default function AccountDetailsScreen() {
                 {/* Main content in ScrollView with animation */}
                 <Animated.View
                     className="flex-1"
-                    style={{ opacity: contentOpacity }}
+                    style={contentStyle}
                     pointerEvents={(showIconOverlay || showColorOverlay) ? 'none' : 'auto'}
                 >
                     <ScrollView
@@ -421,7 +647,7 @@ export default function AccountDetailsScreen() {
                                 rounded="default"
                                 onPress={handleDelete}
                                 className="w-full font-semibold font-sans "
-                                isLoading={isShowingDeleteConfirm || isDeleting}
+                                isLoading={isShowingDeleteConfirm || isDeleting || isDeletingAccount}
                             >
                                 <Text className="text-white font-semibold">
                                     {t("account.details.delete_account", "Elimina questo conto")}
@@ -451,7 +677,7 @@ export default function AccountDetailsScreen() {
                 {(showIconOverlay || showColorOverlay) && (
                     <Animated.View
                         className="absolute inset-0"
-                        style={{ opacity: backdropOpacity }}
+                        style={backdropStyle}
                     >
                         <Pressable
                             className="flex-1"
@@ -465,16 +691,14 @@ export default function AccountDetailsScreen() {
                 {showIconOverlay && (
                     <Animated.View
                         className="absolute bg-gray-50 rounded-xl p-1"
-                        style={{
-                            top: 16,
-                            left: 16,
-                            width: 56,
-                            opacity: backdropOpacity,
-                            transform: [
-                                { scale: iconPanelScale },
-                                { translateY: iconPanelTranslateY }
-                            ]
-                        }}
+                        style={[
+                            iconPanelStyle,
+                            {
+                                top: 16,
+                                left: 16,
+                                width: 56,
+                            }
+                        ]}
                     >
                         {Object.values(AccountIcons).map((icon) => (
                             <Pressable
@@ -492,16 +716,14 @@ export default function AccountDetailsScreen() {
                 {showColorOverlay && (
                     <Animated.View
                         className="absolute bg-gray-50 rounded-xl p-1"
-                        style={{
-                            top: 16,
-                            right: 16,
-                            width: 56,
-                            opacity: backdropOpacity,
-                            transform: [
-                                { scale: colorPanelScale },
-                                { translateY: colorPanelTranslateY }
-                            ]
-                        }}
+                        style={[
+                            colorPanelStyle,
+                            {
+                                top: 16,
+                                right: 16,
+                                width: 56,
+                            }
+                        ]}
                     >
                         {Object.values(AccountColors).map((color) => (
                             <Pressable

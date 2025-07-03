@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 import { useTabBar } from '@/context/TabBarContext';
 import { api } from '@/lib/api';
 import { budgetUtils } from '@/lib/mmkv-storage';
+import { cn } from '@/lib/utils';
 
 
 interface BudgetBottomSheetProps {
@@ -171,17 +172,13 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
     >
       <View className="flex-1">
         {/* Header */}
-        <View className="flex-row justify-between items-center px-4 py-2">
-          <View className="flex-1">
+        <View className="flex-row justify-between items-center px-4 py-2 w-full ">
+          <View className="">
             <Text className="text-black text-center font-medium text-xs uppercase">
               IL TUO PIANO MENSILE
             </Text>
           </View>
-          <Pressable onPress={handleClosePress} className="p-2">
-            <View className="w-6 h-6 items-center justify-center">
-              <Text className="text-black text-xl">×</Text>
-            </View>
-          </Pressable>
+          <Text onPress={handleClosePress} className="text-black text-4xl">×</Text>
         </View>
 
         {isLoadingBudgets || !expenseCategories ? (
@@ -230,45 +227,51 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
               </View>
 
               {/* Expense Categories */}
-              {expenseCategories.map((category) => (
-                <Pressable
-                  key={category.id}
-                  className="flex-row justify-between items-center bg-gray-50 p-4 rounded-xl"
-                  onPress={() => setEditingCategory(category.id)}
-                >
-                  <View className="flex-row items-center gap-x-2">
-                    <Text
-                      className="text-base font-medium"
-                      style={{ color: category.color }}
-                    >
-                      {category.icon || '📊'}
-                    </Text>
-                    <Text
-                      className="text-base font-medium"
-                      style={{ color: category.color }}
-                    >
-                      {category.name}
-                    </Text>
-                  </View>
-                  {editingCategory === category.id ? (
-                    <TextInput
-                      className="text-base font-medium text-black text-right"
-                      keyboardType="numeric"
-                      value={budgetAmounts[category.id]?.toString() || '0'}
-                      onChangeText={(value) => handleAmountChange(category.id, value)}
-                      autoFocus
-                      onBlur={() => setEditingCategory(null)}
-                    />
-                  ) : (
-                    <Text className="text-base font-medium text-black">
-                      {formatCurrency(budgetAmounts[category.id] || 0)}
-                    </Text>
-                  )}
-                </Pressable>
-              ))}
+              <View className={cn("flex-col gap-y-2", {
+                "opacity-50": isLoadingBudgets || monthlyTotalBudget === 0
+              })}>
+                {expenseCategories.map((category) => (
+                  <Pressable
+                    key={category.id}
+                    className="flex-row justify-between items-center bg-gray-50 p-4 rounded-xl"
+                    onPress={() => setEditingCategory(category.id)}
+                    disabled={isLoadingBudgets || monthlyTotalBudget === 0}
+                  >
+                    <View className="flex-row items-center gap-x-2">
+                      <Text
+                        className="text-base font-medium"
+                        style={{ color: category.color }}
+                      >
+                        {category.icon || '📊'}
+                      </Text>
+                      <Text
+                        className="text-base font-medium"
+                        style={{ color: category.color }}
+                      >
+                        {category.name}
+                      </Text>
+                    </View>
+                    {editingCategory === category.id ? (
+                      <TextInput
+                        className="text-base font-medium text-black text-right"
+                        keyboardType="numeric"
+                        value={budgetAmounts[category.id]?.toString() || '0'}
+                        onChangeText={(value) => handleAmountChange(category.id, value)}
+                        autoFocus
+                        onBlur={() => setEditingCategory(null)}
+                      />
+                    ) : (
+                      <Text className="text-base font-medium text-black">
+                        {formatCurrency(budgetAmounts[category.id] || 0)}
+                      </Text>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
             </View>
           </BottomSheetScrollView>
-        )}
+        )
+        }
 
         {/* Save Button */}
         <View className="absolute bottom-0 left-0 right-0 p-4 pb-9 bg-white border-t border-gray-200">
@@ -284,7 +287,7 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
             <Text className="text-white font-semibold">Salva</Text>
           </Button>
         </View>
-      </View>
-    </BottomSheet>
+      </View >
+    </BottomSheet >
   );
 }; 

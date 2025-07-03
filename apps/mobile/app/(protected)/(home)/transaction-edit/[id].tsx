@@ -21,6 +21,7 @@ import { RecurrencePickerBottomSheet, RecurrenceOption } from "@/components/bott
 import { api } from "@/lib/api";
 import { IconName } from "@/components/ui/icons";
 import { useTranslation } from 'react-i18next';
+import { InvalidationUtils } from '@/lib/invalidation-utils';
 
 type TransactionType = 'income' | 'expense' | 'transfer';
 
@@ -73,19 +74,176 @@ export default function TransactionEditScreen() {
     * Mutations
   */
   const updateMutation = api.transaction.update.useMutation({
-    onSuccess: async () => {
-      await queryClient.transaction.list.invalidate();
-      await queryClient.transaction.getMonthlySpending.invalidate();
-      await queryClient.account.listWithBalances.invalidate();
+    onSuccess: async (updatedTransaction) => {
+      console.log('✏️ [UpdateMutation] Transaction updated, invalidating cache...');
+      
+      if (!transaction) {
+        console.warn('⚠️ [UpdateMutation] Original transaction not available, using broad invalidation');
+        await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, { clearCache: true });
+        await InvalidationUtils.invalidateChartsQueries(queryClient);
+        await InvalidationUtils.invalidateBudgetQueries(queryClient);
+        router.back();
+        return;
+      }
+
+      // Get original and new dates
+      const originalDate = new Date(transaction.date);
+      const newDate = new Date(updatedTransaction.date);
+      
+      const originalMonth = originalDate.getMonth() + 1;
+      const originalYear = originalDate.getFullYear();
+      const newMonth = newDate.getMonth() + 1;
+      const newYear = newDate.getFullYear();
+      
+      console.log(`✏️ [UpdateMutation] Original date: ${originalMonth}/${originalYear}, New date: ${newMonth}/${newYear}`);
+
+      // Always invalidate the new transaction's month
+      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+        currentMonth: newMonth,
+        currentYear: newYear,
+        clearCache: true,
+      });
+      
+      await InvalidationUtils.invalidateChartsQueries(queryClient, {
+        currentMonth: newMonth,
+        currentYear: newYear,
+      });
+      
+      // Invalidate budget-related queries for the new month
+      await InvalidationUtils.invalidateBudgetQueries(queryClient, {
+        currentMonth: newMonth,
+        currentYear: newYear,
+      });
+
+      // Invalidate category-specific queries for the new transaction's category
+      if (updatedTransaction.subCategoryId) {
+        // Find the macro category ID from the subcategory
+        const category = categories?.find(cat => 
+          cat.subCategories.some(sub => sub.id === updatedTransaction.subCategoryId)
+        );
+        
+        if (category) {
+          await InvalidationUtils.invalidateCategoryQueries(queryClient, {
+            categoryId: category.id,
+            currentMonth: newMonth,
+            currentYear: newYear,
+          });
+        }
+      }
+
+      // Check if category changed and invalidate original category if different
+      const originalCategoryId = transaction.subCategoryId;
+      const newCategoryId = updatedTransaction.subCategoryId;
+      
+      if (originalCategoryId && originalCategoryId !== newCategoryId) {
+        // Find original category to invalidate
+        const originalCategory = categories?.find(cat => 
+          cat.subCategories.some(sub => sub.id === originalCategoryId)
+        );
+        
+        if (originalCategory) {
+          await InvalidationUtils.invalidateCategoryQueries(queryClient, {
+            categoryId: originalCategory.id,
+            currentMonth: originalMonth,
+            currentYear: originalYear,
+          });
+        }
+      }
+
+      // If the date changed to a different month, also invalidate the original month
+      if (originalMonth !== newMonth || originalYear !== newYear) {
+        console.log(`🔄 [UpdateMutation] Date changed between months, also invalidating original month: ${originalMonth}/${originalYear}`);
+        
+        await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+          currentMonth: originalMonth,
+          currentYear: originalYear,
+          clearCache: true,
+        });
+        
+        await InvalidationUtils.invalidateChartsQueries(queryClient, {
+          currentMonth: originalMonth,
+          currentYear: originalYear,
+        });
+        
+        // Also invalidate budgets for the original month
+        await InvalidationUtils.invalidateBudgetQueries(queryClient, {
+          currentMonth: originalMonth,
+          currentYear: originalYear,
+        });
+
+        // If category didn't change but date did, invalidate same category for original month
+        if (originalCategoryId === newCategoryId && updatedTransaction.subCategoryId) {
+          const category = categories?.find(cat => 
+            cat.subCategories.some(sub => sub.id === updatedTransaction.subCategoryId)
+          );
+          
+          if (category) {
+            await InvalidationUtils.invalidateCategoryQueries(queryClient, {
+              categoryId: category.id,
+              currentMonth: originalMonth,
+              currentYear: originalYear,
+            });
+          }
+        }
+      }
+      
       router.back();
     }
   });
 
   const deleteMutation = api.transaction.delete.useMutation({
     onSuccess: async () => {
-      await queryClient.transaction.list.invalidate();
-      await queryClient.transaction.getMonthlySpending.invalidate();
-      await queryClient.account.listWithBalances.invalidate();
+      console.log('🗑️ [DeleteMutation] Transaction deleted, invalidating cache...');
+      
+      if (!transaction) {
+        console.warn('⚠️ [DeleteMutation] Original transaction not available, using broad invalidation');
+        await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, { clearCache: true });
+        await InvalidationUtils.invalidateChartsQueries(queryClient);
+        await InvalidationUtils.invalidateBudgetQueries(queryClient);
+        router.back();
+        return;
+      }
+
+      // Get the month/year of the deleted transaction for proper cache invalidation
+      const transactionDate = new Date(transaction.date);
+      const transactionMonth = transactionDate.getMonth() + 1;
+      const transactionYear = transactionDate.getFullYear();
+
+      console.log(`🗑️ [DeleteMutation] Invalidating cache for transaction date: ${transactionMonth}/${transactionYear}`);
+
+      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+        clearCache: true,
+      });
+      
+      await InvalidationUtils.invalidateChartsQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+      
+      // Invalidate budget-related queries for real-time budget updates
+      await InvalidationUtils.invalidateBudgetQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+
+      // Invalidate category-specific queries for the deleted transaction's category
+      if (transaction.subCategoryId) {
+        // Find the macro category ID from the subcategory
+        const category = categories?.find(cat => 
+          cat.subCategories.some(sub => sub.id === transaction.subCategoryId)
+        );
+        
+        if (category) {
+          await InvalidationUtils.invalidateCategoryQueries(queryClient, {
+            categoryId: category.id,
+            currentMonth: transactionMonth,
+            currentYear: transactionYear,
+          });
+        }
+      }
+      
       router.back();
     }
   });

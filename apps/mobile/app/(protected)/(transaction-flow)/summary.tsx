@@ -77,43 +77,160 @@ export default function SummaryScreen() {
   */
   const expenseMutation = api.transaction.createExpense.useMutation({
     onSuccess: async (data) => {
+      console.log('💸 [ExpenseMutation] Transaction created, invalidating cache...');
+      const transactionMonth = data.date.getMonth() + 1;
+      const transactionYear = data.date.getFullYear();
+      
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
-        currentMonth: data.date.getMonth() + 1,
-        currentYear: data.date.getFullYear(),
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
         clearCache: true,
       });
+      
+      // Also invalidate charts for the transaction month
+      await InvalidationUtils.invalidateChartsQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+      
+      // Invalidate budget-related queries for real-time budget updates
+      await InvalidationUtils.invalidateBudgetQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+      
+      // Invalidate category-specific queries if we have subCategoryId
+      if (data.subCategoryId) {
+        // Find the macro category ID from the subcategory
+        const category = categories?.find(cat => 
+          cat.subCategories.some(sub => sub.id === data.subCategoryId)
+        );
+        
+        if (category) {
+          await InvalidationUtils.invalidateCategoryQueries(queryClient, {
+            categoryId: category.id,
+            currentMonth: transactionMonth,
+            currentYear: transactionYear,
+          });
+        }
+      }
+      
       router.replace("/(protected)/(home)");
     }
   });
+  
   const incomeMutation = api.transaction.createIncome.useMutation({
     onSuccess: async (data) => {
+      console.log('💰 [IncomeMutation] Transaction created, invalidating cache...');
+      const transactionMonth = data.date.getMonth() + 1;
+      const transactionYear = data.date.getFullYear();
+      
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
-        currentMonth: data.date.getMonth() + 1,
-        currentYear: data.date.getFullYear(),
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
         clearCache: true,
-      }).then(() => {
-        router.replace("/(protected)/(home)");
       });
+      
+      // Also invalidate charts for the transaction month
+      await InvalidationUtils.invalidateChartsQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+      
+      // Invalidate budget-related queries for real-time budget updates
+      await InvalidationUtils.invalidateBudgetQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+      
+      // Invalidate category-specific queries if we have subCategoryId
+      if (data.subCategoryId) {
+        // Find the macro category ID from the subcategory
+        const category = categories?.find(cat => 
+          cat.subCategories.some(sub => sub.id === data.subCategoryId)
+        );
+        
+        if (category) {
+          await InvalidationUtils.invalidateCategoryQueries(queryClient, {
+            categoryId: category.id,
+            currentMonth: transactionMonth,
+            currentYear: transactionYear,
+          });
+        }
+      }
+      
+      router.replace("/(protected)/(home)");
     }
   });
+  
   const transferMutation = api.transaction.createTransfer.useMutation({
     onSuccess: async (data) => {
+      console.log('🔄 [TransferMutation] Transfer created, invalidating cache...');
+      const transactionMonth = data.outflowTransaction.date.getMonth() + 1;
+      const transactionYear = data.outflowTransaction.date.getFullYear();
+      
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
-        currentMonth: data.outflowTransaction.date.getMonth() + 1,
-        currentYear: data.outflowTransaction.date.getFullYear(),
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
         clearCache: true,
-      }).then(() => {
-        router.replace("/(protected)/(home)");
       });
+      
+      // Also invalidate charts for the transaction month
+      await InvalidationUtils.invalidateChartsQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+      
+      // Invalidate budget-related queries for real-time budget updates
+      await InvalidationUtils.invalidateBudgetQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+      
+      router.replace("/(protected)/(home)");
     }
   });
+  
+  // Store the transaction date for recurring rule invalidation
+  const [lastTransactionDate, setLastTransactionDate] = useState<Date | null>(null);
+  
   const recurringRuleMutation = api.recurringRule.create.useMutation({
     onSuccess: async () => {
-      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
-        clearCache: true,
-      }).then(() => {
-        router.replace("/(protected)/(home)");
-      });
+      console.log('🔁 [RecurringRuleMutation] Recurring rule created, invalidating cache...');
+      
+      // If we have the last transaction date, use it for targeted invalidation
+      if (lastTransactionDate) {
+        const transactionMonth = lastTransactionDate.getMonth() + 1;
+        const transactionYear = lastTransactionDate.getFullYear();
+        
+        await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+          currentMonth: transactionMonth,
+          currentYear: transactionYear,
+          clearCache: true,
+        });
+        
+        // Also invalidate charts for the transaction month
+        await InvalidationUtils.invalidateChartsQueries(queryClient, {
+          currentMonth: transactionMonth,
+          currentYear: transactionYear,
+        });
+        
+        // Invalidate budget-related queries for real-time budget updates
+        await InvalidationUtils.invalidateBudgetQueries(queryClient, {
+          currentMonth: transactionMonth,
+          currentYear: transactionYear,
+        });
+      } else {
+        // Fallback: broad invalidation
+        await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+          clearCache: true,
+        });
+        
+        // Also invalidate budgets broadly
+        await InvalidationUtils.invalidateBudgetQueries(queryClient);
+      }
+      
+      router.replace("/(protected)/(home)");
     }
   });
   const convertFrequencyMutation = api.recurringRule.convertFrequency.useMutation();
@@ -249,6 +366,9 @@ export default function SummaryScreen() {
 
           // First, create the immediate transaction for the first installment
           const singleInstallmentAmount = parseFloat(amount) / numInstallments;
+
+          // Store the transaction date for recurring rule invalidation
+          setLastTransactionDate(selectedDate);
 
           switch (transactionType) {
             case 'expense':
@@ -410,6 +530,9 @@ export default function SummaryScreen() {
       // Add recurring rule if recurrence is selected
       if (recurrenceOption.id !== 'none' && !isRecurring) {
         try {
+          // Store the transaction date for recurring rule invalidation
+          setLastTransactionDate(selectedDate);
+          
           // Use the recurrence option to determine frequency type and interval
           const { frequencyType, frequencyInterval } = await convertFrequencyMutation.mutateAsync({
             frequencyDays: recurrenceOption.days

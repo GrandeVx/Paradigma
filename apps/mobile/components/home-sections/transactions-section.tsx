@@ -411,54 +411,16 @@ export const TransactionsSection: React.FC = () => {
   // Use appropriate data source
   const transactions = isFutureMonth ? futureTransactions : realTransactions;
 
+  // Query for categories to map subcategories to macro categories for invalidation
+  const { data: categories } = api.category.list.useQuery({}, {
+    staleTime: 1000 * 60 * 30, // 30 minutes - categories change very rarely
+    cacheTime: 1000 * 60 * 60 * 24 * 7, // 1 week
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
   // Delete mutation with comprehensive invalidations
   const deleteMutation = api.transaction.delete.useMutation({
-    onSuccess: async () => {
-      console.log('🗑️ [TransactionsSection] Transaction deleted, starting comprehensive refresh...');
-
-      // Haptic feedback for successful delete
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-      // Small delay to ensure server has processed the deletion
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Use comprehensive invalidation utility with forced refetch
-      try {
-        await InvalidationUtils.invalidateTransactionRelatedQueries(utils, {
-          currentMonth,
-          currentYear,
-          clearCache: true,
-        });
-
-        // Additional aggressive invalidation for charts (invalidates specific month)
-        console.log('📊 [TransactionsSection] Aggressively invalidating chart queries...');
-        await InvalidationUtils.invalidateChartsQueries(utils, {
-          currentMonth,
-          currentYear,
-        });
-
-        // Additional explicit refetch of current component's query
-        console.log('🔄 [TransactionsSection] Explicitly refetching component query...');
-        await refetch();
-
-        console.log('✅ [TransactionsSection] All refresh operations completed');
-
-        // Fire global event to notify other components (like ChartsSection)
-        const transactionDeletedEvent = new CustomEvent('transactionDeleted');
-        window.dispatchEvent(transactionDeletedEvent);
-        console.log('📡 [TransactionsSection] Fired transactionDeleted event');
-
-      } catch (error) {
-        console.warn('❌ [TransactionsSection] Some queries failed to invalidate:', error);
-        // Fallback: force refetch our local query even if others fail
-        try {
-          console.log('🔄 [TransactionsSection] Attempting fallback refetch...');
-          await refetch();
-        } catch (refetchError) {
-          console.error('❌ [TransactionsSection] Even local refetch failed:', refetchError);
-        }
-      }
-    },
     onError: (error) => {
       console.error('❌ Failed to delete transaction:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -497,11 +459,121 @@ export const TransactionsSection: React.FC = () => {
   // Memoized delete handler
   const handleDeleteTransaction = useCallback(async (transactionId: string) => {
     try {
-      await deleteMutation.mutateAsync({ transactionId });
+      // Find the transaction in our current data to get its date before deletion
+      const transactionToDelete = transactions?.find(t => t.id === transactionId);
+      if (transactionToDelete) {
+        // Store transaction data for use in onSuccess
+        deleteMutation.mutate({ 
+          transactionId,
+          // Pass transaction data through context (we'll modify mutation to handle this)
+        }, {
+          onSuccess: async () => {
+            console.log('🗑️ [TransactionsSection] Transaction deleted, starting comprehensive refresh...');
+
+            // Haptic feedback for successful delete
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+            // Small delay to ensure server has processed the deletion
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Get the month/year of the deleted transaction for proper cache invalidation
+            const transactionDate = new Date(transactionToDelete.date);
+            const transactionMonth = transactionDate.getMonth() + 1;
+            const transactionYear = transactionDate.getFullYear();
+
+            console.log(`🗑️ [TransactionsSection] Invalidating cache for transaction date: ${transactionMonth}/${transactionYear}`);
+
+            // Use comprehensive invalidation utility with forced refetch
+            try {
+              // Invalidate the month where the transaction was deleted
+              await InvalidationUtils.invalidateTransactionRelatedQueries(utils, {
+                currentMonth: transactionMonth,
+                currentYear: transactionYear,
+                clearCache: true,
+              });
+
+              // If the deleted transaction is from a different month than currently viewed,
+              // also invalidate the current month to ensure consistency
+              if (transactionMonth !== currentMonth || transactionYear !== currentYear) {
+                console.log(`🔄 [TransactionsSection] Also invalidating current view month: ${currentMonth}/${currentYear}`);
+                await InvalidationUtils.invalidateTransactionRelatedQueries(utils, {
+                  currentMonth,
+                  currentYear,
+                  clearCache: true,
+                });
+              }
+
+              // Additional aggressive invalidation for charts (invalidates both months)
+              console.log('📊 [TransactionsSection] Aggressively invalidating chart queries...');
+              await InvalidationUtils.invalidateChartsQueries(utils, {
+                currentMonth: transactionMonth,
+                currentYear: transactionYear,
+              });
+
+              // If different month, also invalidate charts for current month
+              if (transactionMonth !== currentMonth || transactionYear !== currentYear) {
+                await InvalidationUtils.invalidateChartsQueries(utils, {
+                  currentMonth,
+                  currentYear,
+                });
+              }
+
+              // Invalidate category-specific queries for the deleted transaction's category
+              if (transactionToDelete.subCategoryId && categories) {
+                // Find the macro category ID from the subcategory
+                const category = categories.find(cat => 
+                  cat.subCategories.some(sub => sub.id === transactionToDelete.subCategoryId)
+                );
+                
+                if (category) {
+                  console.log(`🏷️ [TransactionsSection] Invalidating category queries for category: ${category.id}`);
+                  await InvalidationUtils.invalidateCategoryQueries(utils, {
+                    categoryId: category.id,
+                    currentMonth: transactionMonth,
+                    currentYear: transactionYear,
+                  });
+
+                  // If different month, also invalidate for current month
+                  if (transactionMonth !== currentMonth || transactionYear !== currentYear) {
+                    await InvalidationUtils.invalidateCategoryQueries(utils, {
+                      categoryId: category.id,
+                      currentMonth,
+                      currentYear,
+                    });
+                  }
+                }
+              }
+
+              // Additional explicit refetch of current component's query
+              console.log('🔄 [TransactionsSection] Explicitly refetching component query...');
+              await refetch();
+
+              console.log('✅ [TransactionsSection] All refresh operations completed');
+
+              // Fire global event to notify other components (like ChartsSection)
+              const transactionDeletedEvent = new CustomEvent('transactionDeleted');
+              window.dispatchEvent(transactionDeletedEvent);
+              console.log('📡 [TransactionsSection] Fired transactionDeleted event');
+
+            } catch (error) {
+              console.warn('❌ [TransactionsSection] Some queries failed to invalidate:', error);
+              // Fallback: force refetch our local query even if others fail
+              try {
+                console.log('🔄 [TransactionsSection] Attempting fallback refetch...');
+                await refetch();
+              } catch (refetchError) {
+                console.error('❌ [TransactionsSection] Even local refetch failed:', refetchError);
+              }
+            }
+          }
+        });
+      } else {
+        await deleteMutation.mutateAsync({ transactionId });
+      }
     } catch (error) {
       console.error('Failed to delete transaction:', error);
     }
-  }, [deleteMutation]);
+  }, [deleteMutation, transactions, utils, currentMonth, currentYear, refetch]);
 
   // Memoized refresh handler
   const handleRefresh = useCallback(async () => {
@@ -812,7 +884,7 @@ export const TransactionsSection: React.FC = () => {
           windowSize={10}
           initialNumToRender={10}
           updateCellsBatchingPeriod={50}
-          getItemLayout={(data, index) => ({
+          getItemLayout={(_, index) => ({
             length: 60, // Approximate item height
             offset: 60 * index,
             index,

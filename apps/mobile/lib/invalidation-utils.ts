@@ -104,8 +104,93 @@ export class InvalidationUtils {
    * Invalidates only budget-related queries.
    * Use this for budget-specific operations.
    */
-  static async invalidateBudgetQueries(utils: ReturnType<typeof api.useContext>) {
-    await utils.budget.getCurrentSettings.invalidate();
+  static async invalidateBudgetQueries(
+    utils: ReturnType<typeof api.useContext>,
+    options?: {
+      currentMonth?: number;
+      currentYear?: number;
+      budgetSettings?: any[];
+    }
+  ) {
+    console.log('💰 [InvalidationUtils] Invalidating budget-related queries...');
+    
+    try {
+      // Always invalidate budget settings
+      await utils.budget.getCurrentSettings.invalidate();
+      
+      // Invalidate transaction spending data that budgets depend on
+      if (options?.currentMonth && options?.currentYear) {
+        const { currentMonth, currentYear, budgetSettings } = options;
+        
+        // Invalidate monthly spending with category filtering if budget settings available
+        if (budgetSettings && budgetSettings.length > 0) {
+          await utils.transaction.getMonthlySpending.invalidate({
+            month: currentMonth,
+            year: currentYear,
+            macroCategoryIds: budgetSettings.map(budget => budget.macroCategoryId),
+          });
+        } else {
+          // Fallback: invalidate without category filtering
+          await utils.transaction.getMonthlySpending.invalidate({
+            month: currentMonth,
+            year: currentYear,
+          });
+        }
+      } else {
+        // Fallback: broad invalidation
+        await utils.transaction.getMonthlySpending.invalidate();
+      }
+      
+      console.log('✅ [InvalidationUtils] Budget queries invalidated successfully');
+    } catch (error) {
+      console.error('❌ [InvalidationUtils] Error invalidating budget queries:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Invalidates category-specific transaction queries.
+   * Use this when transactions are modified to update category transaction views.
+   */
+  static async invalidateCategoryQueries(
+    utils: ReturnType<typeof api.useContext>,
+    options: {
+      categoryId: string;
+      currentMonth?: number;
+      currentYear?: number;
+    }
+  ) {
+    const { categoryId, currentMonth, currentYear } = options;
+    
+    console.log(`🏷️ [InvalidationUtils] Invalidating category queries for categoryId: ${categoryId}...`);
+    
+    try {
+      if (currentMonth && currentYear) {
+        // Invalidate specific month/year for the category
+        await utils.transaction.getCategoryTransactions.invalidate({
+          categoryId,
+          month: currentMonth,
+          year: currentYear,
+        });
+        
+        await utils.transaction.getBudgetInfo.invalidate({
+          categoryId,
+          month: currentMonth,
+          year: currentYear,
+        });
+        
+        console.log(`✅ [InvalidationUtils] Category queries invalidated for ${categoryId} - ${currentMonth}/${currentYear}`);
+      } else {
+        // Fallback: broad invalidation for all months
+        await utils.transaction.getCategoryTransactions.invalidate();
+        await utils.transaction.getBudgetInfo.invalidate();
+        
+        console.log(`✅ [InvalidationUtils] Category queries invalidated broadly for ${categoryId}`);
+      }
+    } catch (error) {
+      console.error(`❌ [InvalidationUtils] Error invalidating category queries for ${categoryId}:`, error);
+      throw error;
+    }
   }
 
   /**
