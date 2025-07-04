@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, FlatList, RefreshControl, Pressable } from 'react-native';
+import { View, TouchableOpacity, RefreshControl, Pressable } from 'react-native';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Animated, {
   FadeIn,
@@ -21,6 +21,7 @@ import * as Haptics from 'expo-haptics';
 import { useCurrency } from '@/hooks/use-currency';
 import { useMonth } from '@/context/month-context';
 import { useTranslation } from 'react-i18next';
+import { FlashList } from '@shopify/flash-list';
 
 interface TransactionGroup {
   date: string;
@@ -860,7 +861,7 @@ export const TransactionsSection: React.FC = () => {
           </Text>
         </Animated.View>
       ) : (
-        <FlatList
+        <FlashList
           data={flatListData}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
@@ -874,15 +875,7 @@ export const TransactionsSection: React.FC = () => {
             />
           }
           removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          windowSize={10}
-          initialNumToRender={10}
-          updateCellsBatchingPeriod={50}
-          getItemLayout={(_, index) => ({
-            length: 60, // Approximate item height
-            offset: 60 * index,
-            index,
-          })}
+          estimatedItemSize={60}
         />
       )}
     </Animated.View>

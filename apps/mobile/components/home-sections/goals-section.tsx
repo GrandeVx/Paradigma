@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { View, ScrollView, Pressable, RefreshControl, FlatList } from 'react-native';
+import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -19,6 +19,7 @@ import { Decimal } from 'decimal.js';
 import { useTabBar } from '@/context/TabBarContext';
 import { goalsUtils } from '@/lib/mmkv-storage';
 import { useCurrency } from '@/hooks/use-currency';
+import { FlashList } from '@shopify/flash-list';
 
 // Loading skeleton for goals section
 const GoalsLoadingSkeleton = ({ goalsCount = 3 }: { goalsCount?: number }) => {
@@ -317,9 +318,9 @@ export const GoalsSection: React.FC = () => {
           <View className="items-center justify-center py-8 gap-4">
             {/* Emoji Cards */}
             <View className="flex-row items-center justify-center mb-2" style={{ height: 84 }}>
-              <View 
-                className="absolute rounded-xl p-4" 
-                style={{ 
+              <View
+                className="absolute rounded-xl p-4"
+                style={{
                   backgroundColor: '#FEF6F5',
                   transform: [{ rotate: '-8deg' }],
                   shadowColor: '#000',
@@ -332,9 +333,9 @@ export const GoalsSection: React.FC = () => {
               >
                 <Text className="text-3xl">🎯</Text>
               </View>
-              <View 
-                className="rounded-xl p-4" 
-                style={{ 
+              <View
+                className="rounded-xl p-4"
+                style={{
                   backgroundColor: '#FFFCF5',
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 4 },
@@ -346,9 +347,9 @@ export const GoalsSection: React.FC = () => {
               >
                 <Text className="text-3xl">💰</Text>
               </View>
-              <View 
-                className="absolute rounded-xl p-4" 
-                style={{ 
+              <View
+                className="absolute rounded-xl p-4"
+                style={{
                   backgroundColor: '#F5FAFF',
                   transform: [{ rotate: '8deg' }],
                   shadowColor: '#000',
@@ -362,23 +363,23 @@ export const GoalsSection: React.FC = () => {
                 <Text className="text-3xl">🏆</Text>
               </View>
             </View>
-            
+
             {/* Main Title */}
-            <Text 
-              className="text-black text-center font-medium text-lg" 
+            <Text
+              className="text-black text-center font-medium text-lg"
               style={{ fontFamily: 'DM Sans', fontSize: 18, lineHeight: 24 }}
             >
               Nessun obiettivo impostato
             </Text>
-            
+
             {/* Subtitle */}
-            <Text 
-              className="text-gray-500 text-center mb-4" 
+            <Text
+              className="text-gray-500 text-center mb-4"
               style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 20 }}
             >
               Crea il tuo primo obiettivo di risparmio
             </Text>
-            
+
             <Pressable
               className="bg-blue-500 px-6 py-3 rounded-full"
               onPress={() => router.push('/(protected)/(creation-flow)/name')}
@@ -413,7 +414,7 @@ export const GoalsSection: React.FC = () => {
 
   return (
     <Animated.View style={contentStyle} className="flex-1">
-      <FlatList
+      <FlashList
         data={goalAccounts}
         className="flex-1 px-2 pt-2"
         showsVerticalScrollIndicator={false}
@@ -425,16 +426,8 @@ export const GoalsSection: React.FC = () => {
           />
         }
         keyExtractor={(item) => item.id}
-        getItemLayout={(data, index) => ({
-          length: 140, // Approximate height of goal card
-          offset: 140 * index,
-          index,
-        })}
-        windowSize={3} // Reduce window size for better performance
-        maxToRenderPerBatch={2}
-        updateCellsBatchingPeriod={100}
+        estimatedItemSize={140}
         removeClippedSubviews={true}
-        initialNumToRender={3}
         renderItem={({ item, index }) => (
           <AnimatedGoalCard
             key={item.id}

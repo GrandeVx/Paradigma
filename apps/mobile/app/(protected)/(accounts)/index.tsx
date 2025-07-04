@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { View, ScrollView, Pressable, RefreshControl, FlatList } from 'react-native';
+import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { IconName } from '@/components/ui/icons';
@@ -11,6 +11,7 @@ import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
 import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
+import { FlashList } from '@shopify/flash-list';
 
 // Extended interface for MoneyAccount with goal fields
 interface MoneyAccountWithGoal {
@@ -321,11 +322,11 @@ export default function AccountsScreen() {
             </View>
           </ScrollView>
         ) : (
-          <FlatList
+          <FlashList
             data={accounts}
-            className="flex-1 px-4"
+            className="flex-1"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 12 }}
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}
@@ -333,16 +334,8 @@ export default function AccountsScreen() {
               />
             }
             keyExtractor={(item) => item.id}
-            getItemLayout={(data, index) => ({
-              length: index === accounts.length - 1 ? 80 : 100, // Adjust based on card height
-              offset: index * 80, // Approximate offset for stacked cards
-              index,
-            })}
-            windowSize={5} // Reduce from default 21 to 5
-            maxToRenderPerBatch={3} // Reduce from default 10 to 3
-            updateCellsBatchingPeriod={100} // Increase from default 50ms
+            estimatedItemSize={80}
             removeClippedSubviews={true}
-            initialNumToRender={5} // Reduce from default 10
             renderItem={({ item, index }) => (
               <AccountCard
                 account={item}

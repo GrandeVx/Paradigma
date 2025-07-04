@@ -25,6 +25,7 @@
     "@paradigma/styles": "workspace:*",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-navigation/native": "^7.0.14",
+    "@shopify/flash-list": "1.7.6",
     "@superwall/react-native-superwall": "^2.1.7",
     "@tanstack/query-sync-storage-persister": "^5.81.2",
     "@tanstack/react-query": "^4.32.6",
@@ -104,7 +105,7 @@
         "exclude": [
           "@backpackapp-io/react-native-toast",
           "@paradigma/api",
-          "@paradigma/auth", 
+          "@paradigma/auth",
           "@paradigma/db",
           "@paradigma/styles",
           "@superwall/react-native-superwall",

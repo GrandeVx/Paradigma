@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, SafeAreaView, Pressable, FlatList } from 'react-native';
+import { View, SafeAreaView, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import HeaderContainer from '@/components/layouts/_header';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
+import { FlashList } from '@shopify/flash-list';
 
 interface TransactionItemProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -149,7 +150,7 @@ export default function DailyTransactionsScreen() {
                 </Text>
               </View>
             ) : (
-              <FlatList
+              <FlashList
                 data={dailyData.transactions}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (

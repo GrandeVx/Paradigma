@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
-import { FlatList } from 'react-native';
 
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Decimal } from '@paradigma/db';
+import { FlashList } from '@shopify/flash-list';
 
 // Types
 type Transaction = {
@@ -335,7 +335,7 @@ export default function AccountTransactionsScreen() {
 
         {/* Transaction List - VIRTUALIZED for performance */}
         {groupedTransactions.length > 0 ? (
-          <FlatList
+          <FlashList
             data={groupedTransactions}
             renderItem={renderGroupedSection}
             keyExtractor={(item) => item.date}
@@ -351,14 +351,7 @@ export default function AccountTransactionsScreen() {
             showsVerticalScrollIndicator={false}
             // PERFORMANCE OPTIMIZATIONS
             removeClippedSubviews={true}
-            maxToRenderPerBatch={5}
-            windowSize={10}
-            initialNumToRender={3}
-            getItemLayout={(data, index) => ({
-              length: 120, // Estimated height per group
-              offset: 120 * index,
-              index,
-            })}
+            estimatedItemSize={120}
             keyboardShouldPersistTaps="handled"
           />
         ) : (
