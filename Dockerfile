@@ -81,6 +81,7 @@ RUN npm install -g pnpm
 
 # Install OpenSSL for Prisma compatibility in production
 RUN apk add --no-cache openssl libc6-compat
+RUN apk add --no-cache curl
 
 # Define build arguments for environment variables needed at runtime
 ARG DATABASE_URL
