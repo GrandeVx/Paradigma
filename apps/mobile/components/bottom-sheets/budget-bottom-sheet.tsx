@@ -174,7 +174,7 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
         {/* Header */}
         <View className="flex-row justify-between items-center px-4 py-2 w-full ">
           <View className="">
-            <Text className="text-black text-center font-medium text-xs uppercase">
+            <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
               IL TUO PIANO MENSILE
             </Text>
           </View>
@@ -183,7 +183,7 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
 
         {isLoadingBudgets || !expenseCategories ? (
           <View className="flex-1 justify-center items-center">
-            <Text className="text-gray-500">Caricamento...</Text>
+            <Text className="text-gray-500" style={{ fontSize: 16 }}>Caricamento...</Text>
           </View>
         ) : (
           <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 120 }}>
@@ -194,12 +194,13 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
                 onPress={() => setEditingTotalBudget(true)}
               >
                 <View className="flex-row items-center gap-x-2">
-                  <Text className="text-base font-medium text-green-600">💰</Text>
-                  <Text className="text-base font-medium text-green-600">Budget Mensile</Text>
+                  <Text className="font-medium text-green-600" style={{ fontSize: 16 }}>💰</Text>
+                  <Text className="font-medium text-green-600" style={{ fontSize: 16 }}>Budget Mensile</Text>
                 </View>
                 {editingTotalBudget ? (
                   <TextInput
-                    className="text-base font-medium text-black text-right"
+                    className="font-medium text-black text-right"
+                    style={{ fontSize: 16 }}
                     keyboardType="numeric"
                     value={monthlyTotalBudget.toString()}
                     onChangeText={handleTotalBudgetChange}
@@ -207,7 +208,7 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
                     onBlur={() => setEditingTotalBudget(false)}
                   />
                 ) : (
-                  <Text className="text-base font-medium text-black">
+                  <Text className="font-medium text-black" style={{ fontSize: 16 }}>
                     {formatCurrency(monthlyTotalBudget)}
                   </Text>
                 )}
@@ -218,10 +219,10 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
 
               {/* Remaining Amount */}
               <View className="flex-row justify-between items-center px-4">
-                <Text className="text-sm font-medium text-gray-500">
+                <Text className="font-medium text-gray-500" style={{ fontSize: 14 }}>
                   Hai ancora a disposizione
                 </Text>
-                <Text className={`text-sm font-medium ${remainingAmount < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                <Text className={`font-medium ${remainingAmount < 0 ? 'text-red-500' : 'text-gray-500'}`} style={{ fontSize: 16 }}>
                   {formatCurrency(remainingAmount)}
                 </Text>
               </View>
@@ -239,21 +240,22 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
                   >
                     <View className="flex-row items-center gap-x-2">
                       <Text
-                        className="text-base font-medium"
-                        style={{ color: category.color }}
+                        className="font-medium"
+                        style={{ color: category.color, fontSize: 16 }}
                       >
                         {category.icon || '📊'}
                       </Text>
                       <Text
-                        className="text-base font-medium"
-                        style={{ color: category.color }}
+                        className="font-medium"
+                        style={{ color: category.color, fontSize: 16 }}
                       >
                         {category.name}
                       </Text>
                     </View>
                     {editingCategory === category.id ? (
                       <TextInput
-                        className="text-base font-medium text-black text-right"
+                        className="font-medium text-black text-right"
+                        style={{ fontSize: 16 }}
                         keyboardType="numeric"
                         value={budgetAmounts[category.id]?.toString() || '0'}
                         onChangeText={(value) => handleAmountChange(category.id, value)}
@@ -284,7 +286,7 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
             isLoading={isLoading}
             disabled={isLoadingBudgets || !expenseCategories}
           >
-            <Text className="text-white font-semibold">Salva</Text>
+            <Text className="text-white font-semibold" style={{ fontSize: 16 }}>Salva</Text>
           </Button>
         </View>
       </View >

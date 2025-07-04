@@ -251,28 +251,28 @@ const SummaryContainer: React.FC<{
 
       <View className="flex-row justify-between mt-2">
         <View className="flex-1 items-center">
-          <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+          <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.income')}
           </Text>
-          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
+          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
             {formatCurrency(income)}
           </Text>
         </View>
 
         <View className="flex-1 items-center">
-          <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+          <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.expenses')}
           </Text>
-          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
+          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
             {formatCurrency(expenses)}
           </Text>
         </View>
 
         <View className="flex-1 items-center">
-          <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+          <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.remaining')}
           </Text>
-          <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk' }}>
+          <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
             {formatCurrency(remaining)}
           </Text>
         </View>
@@ -327,12 +327,12 @@ const FlatListHeaderComponent: React.FC<{
       className="mb-1"
     >
       <View className="flex-row justify-between items-center py-1">
-        <Text className="text-sm font-normal text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+        <Text className=" font-normal text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
           {item.dayName}
         </Text>
         <Text
-          className={`text-base font-medium ${isPositive ? 'text-gray-500' : 'text-gray-500'}`}
-          style={{ fontFamily: 'Apfel Grotezk' }}
+          className={`font-medium ${isPositive ? 'text-gray-400' : 'text-gray-400'}`}
+          style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
         >
           {formatCurrency(item.dailyTotal, { showSign: true })}
         </Text>
@@ -463,7 +463,7 @@ export const TransactionsSection: React.FC = () => {
       const transactionToDelete = transactions?.find(t => t.id === transactionId);
       if (transactionToDelete) {
         // Store transaction data for use in onSuccess
-        deleteMutation.mutate({ 
+        deleteMutation.mutate({
           transactionId,
           // Pass transaction data through context (we'll modify mutation to handle this)
         }, {
@@ -521,10 +521,10 @@ export const TransactionsSection: React.FC = () => {
               // Invalidate category-specific queries for the deleted transaction's category
               if (transactionToDelete.subCategoryId && categories) {
                 // Find the macro category ID from the subcategory
-                const category = categories.find(cat => 
+                const category = categories.find(cat =>
                   cat.subCategories.some(sub => sub.id === transactionToDelete.subCategoryId)
                 );
-                
+
                 if (category) {
                   console.log(`🏷️ [TransactionsSection] Invalidating category queries for category: ${category.id}`);
                   await InvalidationUtils.invalidateCategoryQueries(utils, {
@@ -544,25 +544,18 @@ export const TransactionsSection: React.FC = () => {
                 }
               }
 
-              // Additional explicit refetch of current component's query
-              console.log('🔄 [TransactionsSection] Explicitly refetching component query...');
               await refetch();
 
-              console.log('✅ [TransactionsSection] All refresh operations completed');
 
               // Fire global event to notify other components (like ChartsSection)
               const transactionDeletedEvent = new CustomEvent('transactionDeleted');
               window.dispatchEvent(transactionDeletedEvent);
-              console.log('📡 [TransactionsSection] Fired transactionDeleted event');
 
             } catch (error) {
-              console.warn('❌ [TransactionsSection] Some queries failed to invalidate:', error);
               // Fallback: force refetch our local query even if others fail
               try {
-                console.log('🔄 [TransactionsSection] Attempting fallback refetch...');
                 await refetch();
               } catch (refetchError) {
-                console.error('❌ [TransactionsSection] Even local refetch failed:', refetchError);
               }
             }
           }
@@ -758,24 +751,25 @@ export const TransactionsSection: React.FC = () => {
         className="flex-1 p-4"
       >
         <View className="flex-1 justify-center items-center">
-          <Text className="text-center text-red-500">Errore nel caricamento delle transazioni</Text>
+          <Text className="text-center text-red-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>Errore nel caricamento delle transazioni</Text>
           <Pressable onPress={() => {
             refetch();
           }}>
-            <Text className="text-center text-primary-500">Riprova</Text>
+            <Text className="text-center text-primary-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>Riprova</Text>
           </Pressable>
         </View>
       </Animated.View>
     );
   }
 
+  // Empty state - show loading state
   if (!shouldShowContent && !shouldShowEmptyState) {
     return (
       <Animated.View
         entering={FadeIn.duration(400)}
         className="flex-1 p-4 justify-center items-center"
       >
-        <Text className="text-center text-gray-500">Caricamento...</Text>
+        <Text className="text-center text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>Caricamento...</Text>
       </Animated.View>
     );
   }
@@ -816,7 +810,7 @@ export const TransactionsSection: React.FC = () => {
                 zIndex: 1
               }}
             >
-              <Text className="text-3xl">🏠</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>🏠</Text>
             </View>
             <View
               className="rounded-xl p-4"
@@ -830,7 +824,7 @@ export const TransactionsSection: React.FC = () => {
                 zIndex: 3
               }}
             >
-              <Text className="text-3xl">☕</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>☕</Text>
             </View>
             <View
               className="absolute right-12 rounded-xl p-4"
@@ -845,14 +839,14 @@ export const TransactionsSection: React.FC = () => {
                 zIndex: 2
               }}
             >
-              <Text className="text-3xl">👕</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>👕</Text>
             </View>
           </View>
 
           {/* Main Title */}
           <Text
-            className="text-black text-center font-medium text-lg"
-            style={{ fontFamily: 'DM Sans', fontSize: 18, lineHeight: 24 }}
+            className="text-black text-center font-medium"
+            style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 24 }}
           >
             Tutto tace... per ora
           </Text>
@@ -860,7 +854,7 @@ export const TransactionsSection: React.FC = () => {
           {/* Subtitle */}
           <Text
             className="text-gray-500 text-center"
-            style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 20 }}
+            style={{ fontFamily: 'DM Sans', fontSize: 14, lineHeight: 20 }}
           >
             Aggiungi una transazione per visualizzare il tuo andamento
           </Text>

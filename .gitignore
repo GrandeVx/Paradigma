@@ -205,3 +205,6 @@ tasks/
 docs/*
 
 .mcp.json
+apps/mobile/ios/*
+apps/mobile/.expo/*
+apps/mobile/android/*

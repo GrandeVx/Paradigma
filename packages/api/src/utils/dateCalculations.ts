@@ -133,4 +133,9 @@ export function convertDaysToFrequency(frequencyDays: number): {
  */
 export function generateTransactionGroupId(): string {
   return `tgroup-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-} 
+}
+
+/**
+ * Alias for calculateNextOccurrenceDate for backward compatibility
+ */
+export const calculateNextDueDate = calculateNextOccurrenceDate; 

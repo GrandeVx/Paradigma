@@ -256,17 +256,17 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
                 className="w-8 h-8 rounded-lg items-center justify-center mr-3"
                 style={{ backgroundColor: categoryColor }}
               >
-                <Text className="text-base" style={{ fontFamily: 'DM Sans' }}>
+                <Text className="text-base" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>
                   {categoryEmoji}
                 </Text>
               </View>
 
               <View className="flex-1">
-                <Text className="text-sm text-gray-900 font-medium" style={{ fontFamily: 'DM Sans' }}>
+                <Text className="text-sm text-gray-900 font-medium" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
                   {transaction.description}
                 </Text>
                 {transaction.subCategory && (
-                  <Text className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: 'DM Sans' }}>
+                  <Text className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: 'DM Sans', fontSize: 12 }}>
                     {transaction.subCategory.name}
                   </Text>
                 )}
@@ -274,9 +274,9 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
             </View>
 
             <Text
-              className={`text-base text-right font-medium ${isIncome ? 'text-green-600' : 'text-gray-700'
+              className={`text-right font-medium ${isIncome ? 'text-green-600' : 'text-gray-500'
                 }`}
-              style={{ fontFamily: 'Apfel Grotezk' }}
+              style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
             >
               {formatCurrency(transaction.amount, { showSign: isIncome })}
             </Text>

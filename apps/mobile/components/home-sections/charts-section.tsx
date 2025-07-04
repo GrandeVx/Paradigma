@@ -140,7 +140,7 @@ const MonthSelector: React.FC<{
         <LeftIcon size={14} className="text-black" />
       </View>
 
-      <Text className="text-sm font-normal text-center" style={{ fontFamily: 'DM Sans' }}>
+      <Text className="font-normal text-center" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
         {monthNames[currentMonth - 1]} {currentYear}
       </Text>
 
@@ -175,28 +175,28 @@ const SummaryContainer: React.FC<{
 
       <View className="flex-row justify-between mt-2">
         <View className="flex-1 items-center">
-          <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+          <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.income')}
           </Text>
-          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
+          <Text className="font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
             {formatCurrency(income)}
           </Text>
         </View>
 
         <View className="flex-1 items-center">
-          <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+          <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.expenses')}
           </Text>
-          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk' }}>
+          <Text className="font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
             {formatCurrency(expenses)}
           </Text>
         </View>
 
         <View className="flex-1 items-center">
-          <Text className="text-sm font-medium text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+          <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.remaining')}
           </Text>
-          <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk' }}>
+          <Text className="font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
             {formatCurrency(remaining)}
           </Text>
         </View>
@@ -214,8 +214,8 @@ const SubCategoryItem: React.FC<{
       {/* Sub-category info */}
       <View className="flex-row items-center flex-1 gap-3">
         <Text
-          className="text-sm font-normal text-gray-600"
-          style={{ fontFamily: 'DM Sans' }}
+          className="font-normal text-gray-600"
+          style={{ fontFamily: 'DM Sans', fontSize: 14 }}
         >
           {subCategory.icon} {subCategory.name}
         </Text>
@@ -224,15 +224,15 @@ const SubCategoryItem: React.FC<{
       {/* Amount and percentage */}
       <View className="flex-row items-center gap-4">
         <Text
-          className="text-gray-500 text-sm"
-          style={{ fontFamily: 'Apfel Grotezk' }}
+          className="text-gray-500"
+          style={{ fontFamily: 'Apfel Grotezk', fontSize: 14 }}
         >
           {subCategory.percentage}%
         </Text>
 
         <Text
-          className="text-gray-600 text-sm"
-          style={{ fontFamily: 'Apfel Grotezk' }}
+          className="text-gray-600"
+          style={{ fontFamily: 'Apfel Grotezk', fontSize: 14 }}
         >
           {formatCurrency(subCategory.amount)}
         </Text>
@@ -297,7 +297,7 @@ const AnimatedCategoryLegendItem: React.FC<{
             style={{ backgroundColor: 'transparent' }}
           >
             <Text
-              className="text-sm font-semibold"
+              className="font-semibold"
               style={{
                 fontFamily: 'DM Sans',
                 color: category.color
@@ -311,15 +311,15 @@ const AnimatedCategoryLegendItem: React.FC<{
         {/* Amount, percentage and arrow */}
         <View className="flex-row items-center gap-4">
           <Text
-            className="text-gray-500 text-base"
-            style={{ fontFamily: 'Apfel Grotezk' }}
+            className="text-gray-500"
+            style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
           >
             {category.percentage}%
           </Text>
 
           <Text
-            className="text-black text-base font-medium"
-            style={{ fontFamily: 'Apfel Grotezk' }}
+            className="text-black font-medium"
+            style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
           >
             {formatCurrency(category.amount)}
           </Text>
@@ -365,7 +365,7 @@ const AnimatedCategoryLegendItem: React.FC<{
             </>
           ) : (
             <View className="py-4 pl-6">
-              <Text className="text-gray-400 text-sm" style={{ fontFamily: 'DM Sans' }}>
+              <Text className="text-gray-400" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
                 {t('home.charts.noSubcategoriesFound')}
               </Text>
             </View>
@@ -565,7 +565,7 @@ export const ChartsSection: React.FC = () => {
                 zIndex: 1
               }}
             >
-              <Text className="text-3xl">📊</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>📊</Text>
             </View>
             <View
               className="rounded-xl p-4"
@@ -579,7 +579,7 @@ export const ChartsSection: React.FC = () => {
                 zIndex: 3
               }}
             >
-              <Text className="text-3xl">📈</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>📈</Text>
             </View>
             <View
               className="absolute left-12 rounded-xl p-4"
@@ -594,14 +594,14 @@ export const ChartsSection: React.FC = () => {
                 zIndex: 2
               }}
             >
-              <Text className="text-3xl">💹</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>💹</Text>
             </View>
           </View>
 
           {/* Main Title */}
           <Text
-            className="text-black text-center font-medium text-lg"
-            style={{ fontFamily: 'DM Sans', fontSize: 18, lineHeight: 24 }}
+            className="text-black text-center font-medium"
+            style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 24 }}
           >
             Nessun grafico da mostrare
           </Text>
@@ -609,7 +609,7 @@ export const ChartsSection: React.FC = () => {
           {/* Subtitle */}
           <Text
             className="text-gray-500 text-center"
-            style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 20 }}
+            style={{ fontFamily: 'DM Sans', fontSize: 14, lineHeight: 20 }}
           >
             Inizia ad aggiungere spese per vedere i tuoi grafici
           </Text>
@@ -626,7 +626,7 @@ export const ChartsSection: React.FC = () => {
         className="flex-1 items-center justify-center"
       >
         <ActivityIndicator size="large" color="#000" />
-        <Text className="mt-2 text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+        <Text className="mt-2 text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>
           Caricamento dati...
         </Text>
       </Animated.View>
@@ -703,7 +703,7 @@ export const ChartsSection: React.FC = () => {
                         zIndex: 1
                       }}
                     >
-                      <Text className="text-2xl">📊</Text>
+                      <Text className="text-2xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>📊</Text>
                     </View>
                     <View
                       className="rounded-xl p-3"
@@ -717,7 +717,7 @@ export const ChartsSection: React.FC = () => {
                         zIndex: 3
                       }}
                     >
-                      <Text className="text-2xl">📈</Text>
+                      <Text className="text-2xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>📈</Text>
                     </View>
                     <View
                       className="absolute rounded-xl p-3"
@@ -732,7 +732,7 @@ export const ChartsSection: React.FC = () => {
                         zIndex: 2
                       }}
                     >
-                      <Text className="text-2xl">💹</Text>
+                      <Text className="text-2xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>💹</Text>
                     </View>
                   </View>
 
@@ -755,7 +755,7 @@ export const ChartsSection: React.FC = () => {
             {isDailySpendingLoading ? (
               <View className="h-40 items-center justify-center">
                 <ActivityIndicator size="small" color="#6B7280" />
-                <Text className="mt-2 text-gray-500" style={{ fontFamily: 'DM Sans' }}>
+                <Text className="mt-2 text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>
                   Caricamento calendario...
                 </Text>
               </View>

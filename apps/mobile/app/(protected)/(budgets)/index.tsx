@@ -197,14 +197,14 @@ const BudgetItem = React.memo<{
             className="flex-row items-center py-1.5 px-3 rounded-xl"
           >
             <Text
-              className="text-base font-medium mr-2"
-              style={{ color: category.color }}
+              className="font-medium mr-2"
+              style={{ color: category.color, fontSize: 14 }}
             >
               {category.icon || '📊'}
             </Text>
             <Text
-              className="text-sm font-semibold uppercase"
-              style={{ color: category.color }}
+              className="font-semibold uppercase"
+              style={{ color: category.color, fontSize: 14 }}
             >
               {category.name}
             </Text>
@@ -227,22 +227,22 @@ const BudgetItem = React.memo<{
         {/* Details */}
         <View className="flex-row justify-between px-6">
           <View className="items-center">
-            <Text className="text-gray-400 text-sm">{t('budgets.budget')}</Text>
-            <Text className="text-gray-700 text-base font-medium">
+            <Text className="text-gray-400" style={{ fontSize: 14 }}>{t('budgets.budget')}</Text>
+            <Text className="text-gray-700 font-medium" style={{ fontSize: 16 }}>
               {formatCurrency(calculations.budgetAmount)}
             </Text>
           </View>
           <View className="items-center">
-            <Text className="text-gray-400 text-sm">{t('budgets.alreadySpent')}</Text>
-            <Text className="text-gray-700 text-base font-medium">
+            <Text className="text-gray-400" style={{ fontSize: 14 }}>{t('budgets.alreadySpent')}</Text>
+            <Text className="text-gray-700 font-medium" style={{ fontSize: 16 }}>
               {formatCurrency(calculations.spent)}
             </Text>
           </View>
           <View className="items-center">
-            <Text className="text-gray-400 text-sm">{t('budgets.remaining')}</Text>
+            <Text className="text-gray-400" style={{ fontSize: 14 }}>{t('budgets.remaining')}</Text>
             <Text
-              className="text-base font-medium"
-              style={{ color: remainingAmountColor }}
+              className="font-medium"
+              style={{ color: remainingAmountColor, fontSize: 16 }}
             >
               {calculations.remaining < 0 ? '-' : ''}{formatCurrency(Math.abs(calculations.remaining))}
             </Text>
@@ -626,7 +626,7 @@ export default function BudgetScreen() {
                     <Pressable onPress={goToPreviousMonth} className="w-10 h-10 items-center justify-center">
                       <Text className="text-black">←</Text>
                     </Pressable>
-                    <Text className="text-base font-normal text-black capitalize">
+                    <Text className="font-normal text-black capitalize" style={{ fontSize: 16 }}>
                       {formattedMonthYear}
                     </Text>
                     <Pressable onPress={goToNextMonth} disabled={
@@ -648,17 +648,17 @@ export default function BudgetScreen() {
                       className="mb-4"
                     >
                       <View className="flex-row items-baseline justify-center">
-                        <Text className="text-gray-500 text-2xl">{getCurrencySymbol()}</Text>
-                        <Text className="text-black text-5xl font-medium">
+                        <Text className="text-gray-500" style={{ fontSize: 16 }}>{getCurrencySymbol()}</Text>
+                        <Text className="text-black font-medium" style={{ fontSize: 45 }}>
                           {Math.floor(
                             budgetSummary.totalBudget - budgetSummary.totalSpent > 0 ? budgetSummary.totalBudget - budgetSummary.totalSpent : 0
                           )}
                         </Text>
-                        <Text className="text-black text-2xl font-normal">
+                        <Text className="text-black font-normal" style={{ fontSize: 32 }}>
                           ,{(budgetSummary.totalBudget - budgetSummary.totalSpent > 0 ? budgetSummary.totalBudget - budgetSummary.totalSpent : 0 % 1).toFixed(2).substring(2)}
                         </Text>
                       </View>
-                      <Text className="text-gray-500 text-sm text-center">
+                      <Text className="text-gray-500 text-center" style={{ fontSize: 14 }}>
                         {t('budgets.availableThisMonth')}
                       </Text>
                     </Animated.View>
@@ -706,7 +706,7 @@ export default function BudgetScreen() {
                               );
                             })}
                       </View>
-                      <Text className="text-gray-500 text-xs mt-2">
+                      <Text className="text-gray-500 mt-2" style={{ fontSize: 12 }}>
                         {t('budgets.spentOnTotal', {
                           spent: formatCurrency(budgetSummary.totalSpent),
                           total: formatCurrency(budgetSummary.totalBudget)

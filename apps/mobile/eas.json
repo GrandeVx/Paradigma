@@ -28,7 +28,10 @@
         "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS": "pk_86b4721ca862863fe7a594d6627c8b7993fe60aeab9c2854",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_ANDROID": "pk_86b4721ca862863fe7a594d6627c8b7993fe60aeab9c2854"
       },
-      "channel": "preview"
+      "channel": "preview",
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "autoIncrement": true,
