@@ -94,7 +94,7 @@ const RecurringCard: React.FC<{
     <View style={styles.card}>
       {/* Header with title and edit button */}
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{recurring.description}</Text>
+        <Text style={styles.cardTitle}>{recurring.description.length > 15 ? recurring.description.slice(0, 12) + '...' : recurring.description}</Text>
         <Pressable
           style={styles.editButton}
           onPress={() => onEdit(recurring.id)}

@@ -29,6 +29,7 @@ import { TabBarProvider } from "@/context/TabBarContext";
 // Import per Expo Updates
 import { useExpoUpdates } from "@/hooks/use-expo-updates";
 import { UpdateModal } from "@/components/ui/update-modal";
+import { useNotificationBadgeSimple } from "@/hooks/use-notification-badge-simple";
 
 import * as Notifications from 'expo-notifications';
 
@@ -100,6 +101,9 @@ function RootLayoutNav() {
 
   // Integrazione Expo Updates
   const { updateInfo, downloadAndRestart, dismissUpdate } = useExpoUpdates();
+  
+  // Clear notification badge when app becomes active
+  useNotificationBadgeSimple();
 
   return (
     <SupabaseProvider>

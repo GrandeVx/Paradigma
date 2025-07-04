@@ -87,7 +87,7 @@ export const useCurrency = () => {
   }) => {
     const {
       showSymbol = true,
-      showSign = false,
+      showSign = true,
       decimals = 2
     } = options || {};
 
@@ -113,8 +113,6 @@ export const useCurrency = () => {
     // Add sign if requested
     if (showSign) {
       result += isNegative ? '- ' : '+ ';
-    } else if (isNegative) {
-      result += '- ';
     }
 
     // Add symbol if requested

@@ -81,7 +81,7 @@ const getDaysUntilNext = (nextDate?: Date | string) => {
 
   if (diffDays === 0) return 'oggi';
   if (diffDays === 1) return 'in 1 giorno';
-  if (diffDays > 1) return `in ${diffDays} giorni`;
+  if (diffDays > 1 && diffDays < 4) return `in ${diffDays} giorni`;
   return null;
 };
 
@@ -331,7 +331,7 @@ export default function InstallmentsScreen() {
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.titleContainer}>
-            <Text style={styles.installmentTitle}>{installment.description}</Text>
+            <Text style={styles.installmentTitle}>{installment.description.length > 15 ? installment.description.slice(0, 12) + '...' : installment.description}</Text>
             {isUpcoming && (
               <Text style={styles.upcomingText}>{isUpcoming}</Text>
             )}
@@ -349,8 +349,8 @@ export default function InstallmentsScreen() {
         {/* Amount and frequency */}
         <View style={styles.amountRow}>
           <View style={styles.amountCard}>
-            <Text style={styles.totalAmount}>{formatCurrency(totalAmount)}</Text>
-            <Text style={styles.installmentAmount}>{formatCurrency(installmentAmountNum)}</Text>
+            <Text style={styles.totalAmount}>{formatCurrency(totalAmount, { showSign: false })}</Text>
+            <Text style={styles.installmentAmount}>{formatCurrency(installmentAmountNum, { showSign: false })}</Text>
           </View>
           <View style={styles.frequencyCard}>
             <Text style={styles.frequencyText}>{getFrequencyText(installment.frequencyType, installment.frequencyInterval)}</Text>
