@@ -6,6 +6,7 @@ import HeaderContainer from '@/components/layouts/_header';
 import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 
 
 // Types based on API response
@@ -137,6 +138,7 @@ const RecurringCard: React.FC<{
 
 export default function RecurringTransactionsScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
 
   // Fetch recurring transactions (only non-installment ones = classic recurring)
   const { data: recurringData, isLoading, refetch } = api.recurringRule.list.useQuery({
@@ -144,8 +146,7 @@ export default function RecurringTransactionsScreen() {
   });
 
   const handleEdit = (id: string) => {
-    // Navigate to edit page (to be implemented)
-    console.log('Edit recurring transaction:', id);
+    router.push(`/(protected)/(profile)/(settings)/recurring-edit/${id}`);
   };
 
   const handleRefresh = () => {

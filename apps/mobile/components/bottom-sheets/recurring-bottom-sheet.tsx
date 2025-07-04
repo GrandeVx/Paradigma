@@ -217,7 +217,7 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
             size="lg"
             rounded="default"
             onPress={handleClosePress}
-            className="w-full mb-4"
+            className="w-full mb-10"
           >
             <Text className="text-white font-semibold text-lg">Salva</Text>
           </Button>

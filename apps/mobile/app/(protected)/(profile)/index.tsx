@@ -407,9 +407,7 @@ export default function ProfileScreen() {
             <View style={styles.updateSection}>
               <ManualUpdateChecker />
             </View>
-            <View style={[styles.updateSection, { marginTop: 8 }]}>
 
-            </View>
           </Section>
 
 
@@ -420,7 +418,6 @@ export default function ProfileScreen() {
               textColor="#DE4841"
               onPress={handleSignOut}
             />
-
             <CategoryItem
               label={isDeletingAccount ? t('profile.deletingAccount') : t('profile.deleteAccount')}
               textColor={isDeletingAccount ? "#9CA3AF" : "#DE4841"}

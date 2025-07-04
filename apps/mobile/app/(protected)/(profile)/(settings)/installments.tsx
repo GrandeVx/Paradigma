@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
 import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 
 
 // Types based on actual API response
@@ -277,10 +278,9 @@ const ProgressBar = ({ current, total, nextDueDate }: { current: number; total: 
 
 // Main component
 export default function InstallmentsScreen() {
-  // Translation hook
+  // Hooks
   const { t } = useTranslation();
-
-  // Currency hook
+  const router = useRouter();
   const { formatCurrency } = useCurrency();
 
   // Fetch installment transactions
@@ -289,8 +289,7 @@ export default function InstallmentsScreen() {
   });
 
   const handleEdit = (id: string) => {
-    // Navigate to edit page (to be implemented)
-    console.log('Edit installment:', id);
+    router.push(`/(protected)/(profile)/(settings)/installment-edit/${id}`);
   };
 
   const handleRefresh = () => {
