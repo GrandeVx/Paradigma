@@ -256,7 +256,7 @@ const SummaryContainer: React.FC<{
             {t('home.transactions.income')}
           </Text>
           <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
-            {formatCurrency(income)}
+            {formatCurrency(income, { showSign: false })}
           </Text>
         </View>
 
@@ -265,7 +265,7 @@ const SummaryContainer: React.FC<{
             {t('home.transactions.expenses')}
           </Text>
           <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
-            {formatCurrency(expenses)}
+            {formatCurrency(expenses, { showSign: false })}
           </Text>
         </View>
 
@@ -274,7 +274,7 @@ const SummaryContainer: React.FC<{
             {t('home.transactions.remaining')}
           </Text>
           <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
-            {formatCurrency(remaining)}
+            {formatCurrency(remaining, { showSign: false })}
           </Text>
         </View>
       </View>
@@ -335,7 +335,7 @@ const FlatListHeaderComponent: React.FC<{
           className={`font-medium ${isPositive ? 'text-gray-400' : 'text-gray-400'}`}
           style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
         >
-          {formatCurrency(item.dailyTotal, { showSign: true })}
+          {formatCurrency(item.dailyTotal, { showSign: false })}
         </Text>
       </View>
     </Animated.View>

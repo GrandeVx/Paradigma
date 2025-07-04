@@ -229,13 +229,13 @@ const BudgetItem = React.memo<{
           <View className="items-center">
             <Text className="text-gray-400" style={{ fontSize: 14 }}>{t('budgets.budget')}</Text>
             <Text className="text-gray-700 font-medium" style={{ fontSize: 16 }}>
-              {formatCurrency(calculations.budgetAmount)}
+              {formatCurrency(calculations.budgetAmount, { showSign: false })}
             </Text>
           </View>
           <View className="items-center">
             <Text className="text-gray-400" style={{ fontSize: 14 }}>{t('budgets.alreadySpent')}</Text>
             <Text className="text-gray-700 font-medium" style={{ fontSize: 16 }}>
-              {formatCurrency(calculations.spent)}
+              {formatCurrency(calculations.spent, { showSign: false })}
             </Text>
           </View>
           <View className="items-center">
@@ -244,7 +244,7 @@ const BudgetItem = React.memo<{
               className="font-medium"
               style={{ color: remainingAmountColor, fontSize: 16 }}
             >
-              {calculations.remaining < 0 ? '-' : ''}{formatCurrency(Math.abs(calculations.remaining))}
+              {calculations.remaining < 0 ? '-' : ''}{formatCurrency(Math.abs(calculations.remaining), { showSign: false })}
             </Text>
           </View>
         </View>
@@ -708,8 +708,8 @@ export default function BudgetScreen() {
                       </View>
                       <Text className="text-gray-500 mt-2" style={{ fontSize: 12 }}>
                         {t('budgets.spentOnTotal', {
-                          spent: formatCurrency(budgetSummary.totalSpent),
-                          total: formatCurrency(budgetSummary.totalBudget)
+                          spent: formatCurrency(budgetSummary.totalSpent, { showSign: false }),
+                          total: formatCurrency(budgetSummary.totalBudget, { showSign: false })
                         })}
                       </Text>
                     </Animated.View>

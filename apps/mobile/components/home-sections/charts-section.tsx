@@ -179,7 +179,7 @@ const SummaryContainer: React.FC<{
             {t('home.transactions.income')}
           </Text>
           <Text className="font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
-            {formatCurrency(income)}
+            {formatCurrency(income, { showSign: false })}
           </Text>
         </View>
 
@@ -188,7 +188,7 @@ const SummaryContainer: React.FC<{
             {t('home.transactions.expenses')}
           </Text>
           <Text className="font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
-            {formatCurrency(expenses)}
+            {formatCurrency(expenses, { showSign: false })}
           </Text>
         </View>
 
@@ -197,7 +197,7 @@ const SummaryContainer: React.FC<{
             {t('home.transactions.remaining')}
           </Text>
           <Text className="font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
-            {formatCurrency(remaining)}
+            {formatCurrency(remaining, { showSign: false })}
           </Text>
         </View>
       </View>
@@ -234,7 +234,7 @@ const SubCategoryItem: React.FC<{
           className="text-gray-600"
           style={{ fontFamily: 'Apfel Grotezk', fontSize: 14 }}
         >
-          {formatCurrency(subCategory.amount)}
+          {formatCurrency(subCategory.amount, { showSign: false })}
         </Text>
       </View>
     </View>
@@ -321,7 +321,7 @@ const AnimatedCategoryLegendItem: React.FC<{
             className="text-black font-medium"
             style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
           >
-            {formatCurrency(category.amount)}
+            {formatCurrency(category.amount, { showSign: false })}
           </Text>
 
           {/* Expand/Collapse arrow - separate touchable area */}

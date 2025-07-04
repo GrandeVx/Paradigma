@@ -1,48 +1,154 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOutUp,
+  Layout,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
-import { SvgIcon } from '@/components/ui/svg-icon';
 import { useLocalSearchParams } from 'expo-router';
 import HeaderContainer from '@/components/layouts/_header';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { Decimal } from '@paradigma/db';
 import { FlashList } from '@shopify/flash-list';
+import { SwipeableTransactionItem } from '@/components/ui/swipeable-transaction-item';
+import { InvalidationUtils } from '@/lib/invalidation-utils';
+import * as Haptics from 'expo-haptics';
+import { useCurrency } from '@/hooks/use-currency';
 
 // Types
-type Transaction = {
+interface TransactionItem {
   id: string;
-  amount: Decimal;
-  date: Date;
+  amount: number;
   description: string;
+  date: Date;
   notes?: string | null;
   transferId?: string | null;
+  category?: {
+    name: string;
+    icon: string;
+    color: string;
+  };
   subCategory?: {
     name: string;
-    icon?: string;
-    macroCategory?: {
-      name: string;
-      icon: string;
-    };
-  } | null;
-};
-
-type GroupedTransaction = {
-  date: string;
-  transactions: Transaction[];
-};
-
-// Format currency helper
-const formatCurrency = (amount: number) => {
-  const [integer, decimal] = Math.abs(amount).toFixed(2).split('.');
-  const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return {
-    integer: formattedInteger,
-    decimal: decimal
+    icon: string;
   };
+  type: 'income' | 'expense';
+}
+
+interface TransactionGroup {
+  date: string;
+  dayName: string;
+  transactions: TransactionItem[];
+  dailyTotal: number;
+}
+
+// FlatList item types
+interface FlatListHeader {
+  type: 'header';
+  id: string;
+  date: string;
+  dayName: string;
+  dailyTotal: number;
+  groupIndex: number;
+}
+
+interface FlatListTransaction {
+  type: 'transaction';
+  id: string;
+  data: TransactionItem;
+  groupIndex: number;
+  transactionIndex: number;
+  isLast: boolean;
+}
+
+type FlatListItem = FlatListHeader | FlatListTransaction;
+
+// Convert grouped transactions to flat list format
+const convertToFlatListData = (groupedTransactions: TransactionGroup[]): FlatListItem[] => {
+  const flatData: FlatListItem[] = [];
+
+  groupedTransactions.forEach((group, groupIndex) => {
+    // Add group header
+    flatData.push({
+      type: 'header',
+      id: `header-${group.date}`,
+      date: group.date,
+      dayName: group.dayName,
+      dailyTotal: group.dailyTotal,
+      groupIndex,
+    });
+
+    // Add transactions
+    group.transactions.forEach((transaction, transactionIndex) => {
+      flatData.push({
+        type: 'transaction',
+        id: `transaction-${transaction.id}`,
+        data: transaction,
+        groupIndex,
+        transactionIndex,
+        isLast: transactionIndex === group.transactions.length - 1,
+      });
+    });
+  });
+
+  return flatData;
+};
+
+// Header component for FlatList
+const FlatListHeaderComponent: React.FC<{
+  item: FlatListHeader;
+  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
+}> = ({ item, formatCurrency }) => {
+  const isPositive = item.dailyTotal > 0;
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(item.groupIndex * 100).duration(500).springify()}
+      exiting={FadeOutUp.duration(300)}
+      layout={Layout.springify().damping(15).stiffness(100)}
+      className="mb-1"
+    >
+      <View className="flex-row justify-between items-center py-1">
+        <Text className="font-normal text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
+          {item.dayName}
+        </Text>
+        <Text
+          className={`font-medium ${isPositive ? 'text-gray-400' : 'text-gray-400'}`}
+          style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
+        >
+          {formatCurrency(item.dailyTotal, { showSign: true })}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+};
+
+// Transaction component for FlatList
+const FlatListTransactionComponent: React.FC<{
+  item: FlatListTransaction;
+  onDelete: (transactionId: string) => void;
+}> = ({ item, onDelete }) => {
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(item.groupIndex * 100 + item.transactionIndex * 50).duration(400).springify()}
+      exiting={FadeOutUp.duration(300)}
+      layout={Layout.springify().damping(15).stiffness(100)}
+      className={item.isLast ? "border-b border-gray-200 pb-1" : ""}
+    >
+      <SwipeableTransactionItem
+        transaction={item.data}
+        onDelete={onDelete}
+      />
+    </Animated.View>
+  );
 };
 
 // Filter tabs
@@ -58,9 +164,16 @@ type FilterType = typeof FILTER_TYPES[number]['key'];
 export default function AccountTransactionsScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { formatCurrency } = useCurrency();
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Animation values
+  const contentOpacity = useSharedValue(0);
+
+  // API utils for invalidation
+  const utils = api.useContext();
 
   // Get account details for the header
   const { data: accountData } = api.account.getById.useQuery(
@@ -98,37 +211,215 @@ export default function AccountTransactionsScreen() {
     return flattened.slice(0, 100);
   }, [data]);
 
-  // Group transactions by date
-  const groupedTransactions = useMemo(() => {
-    const groups: { [key: string]: Transaction[] } = {};
+  // Memoized format day name function
+  const formatDayName = useCallback((date: Date): string => {
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
 
-    allTransactions.forEach(transaction => {
-      const date = new Date(transaction.date);
-      const dateKey = date.toLocaleDateString('it-IT', {
-        weekday: 'long',
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      });
+    if (isToday) {
+      return t('home.transactions.today');
+    }
 
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(transaction);
+    const dayNames = [
+      t('home.transactions.days.sun'), t('home.transactions.days.mon'),
+      t('home.transactions.days.tue'), t('home.transactions.days.wed'),
+      t('home.transactions.days.thu'), t('home.transactions.days.fri'),
+      t('home.transactions.days.sat')
+    ];
+    const monthNames = [
+      t('home.transactions.monthsAbbr.jan'), t('home.transactions.monthsAbbr.feb'),
+      t('home.transactions.monthsAbbr.mar'), t('home.transactions.monthsAbbr.apr'),
+      t('home.transactions.monthsAbbr.may'), t('home.transactions.monthsAbbr.jun'),
+      t('home.transactions.monthsAbbr.jul'), t('home.transactions.monthsAbbr.aug'),
+      t('home.transactions.monthsAbbr.sep'), t('home.transactions.monthsAbbr.oct'),
+      t('home.transactions.monthsAbbr.nov'), t('home.transactions.monthsAbbr.dec')
+    ];
+
+    return `${dayNames[date.getDay()]}, ${date.getDate()} ${monthNames[date.getMonth()]}`;
+  }, [t]);
+
+  // Process and group transactions by day, then convert to FlatList format
+  const { summary, flatListData } = useMemo(() => {
+    if (!allTransactions || allTransactions.length === 0) {
+      return {
+        summary: { income: 0, expenses: 0, remaining: 0 },
+        flatListData: []
+      };
+    }
+
+    // Filter out transactions with invalid dates
+    const validTransactions = allTransactions.filter(transaction => {
+      const isValid = transaction.date &&
+        typeof transaction.date !== 'undefined' &&
+        (transaction.date instanceof Date || typeof transaction.date === 'string' || typeof transaction.date === 'object');
+      return isValid;
     });
 
-    return Object.entries(groups).map(([date, transactions]) => ({
-      date,
-      transactions
-    }));
-  }, [allTransactions]);
+    // Calculate summary
+    const income = validTransactions
+      .filter(t => Number(t.amount) > 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const expenses = Math.abs(validTransactions
+      .filter(t => Number(t.amount) < 0)
+      .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0));
+
+    const remaining = income - expenses;
+
+    // Group by date
+    const grouped = validTransactions.reduce((acc: Record<string, TransactionGroup>, transaction) => {
+      let dateObj: Date;
+      try {
+        dateObj = new Date(transaction.date as string | number | Date);
+        if (isNaN(dateObj.getTime())) {
+          dateObj = new Date();
+        }
+      } catch {
+        dateObj = new Date();
+      }
+
+      const date = dateObj.toISOString().split('T')[0];
+
+      if (!acc[date]) {
+        acc[date] = {
+          date,
+          dayName: formatDayName(dateObj),
+          transactions: [],
+          dailyTotal: 0,
+        };
+      }
+
+      const amount = Number(transaction.amount);
+      const transformedTransaction: TransactionItem = {
+        id: transaction.id,
+        amount: amount,
+        description: transaction.description,
+        date: dateObj,
+        notes: transaction.notes,
+        transferId: transaction.transferId,
+        type: amount > 0 ? 'income' : 'expense',
+        category: transaction.subCategory?.macroCategory ? {
+          name: transaction.subCategory.macroCategory.name,
+          icon: transaction.subCategory.macroCategory.icon,
+          color: transaction.subCategory.macroCategory.color,
+        } : undefined,
+        subCategory: transaction.subCategory ? {
+          name: transaction.subCategory.name,
+          icon: transaction.subCategory.icon,
+        } : undefined,
+      };
+
+      acc[date].transactions.push(transformedTransaction);
+      acc[date].dailyTotal += amount;
+
+      return acc;
+    }, {} as Record<string, TransactionGroup>);
+
+    // Convert to array and sort by date (newest first)
+    const groupedArray = Object.values(grouped).sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const flatListData = convertToFlatListData(groupedArray);
+
+    return {
+      summary: { income, expenses, remaining },
+      flatListData
+    };
+  }, [allTransactions, formatDayName]);
+
+  // Query for categories to map subcategories to macro categories for invalidation
+  const { data: categories } = api.category.list.useQuery({}, {
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    cacheTime: 1000 * 60 * 60 * 24 * 7, // 1 week
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  // Delete mutation with comprehensive invalidations
+  const deleteMutation = api.transaction.delete.useMutation({
+    onError: (error) => {
+      console.error('❌ Failed to delete transaction:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    },
+  });
+
+  // Memoized delete handler
+  const handleDeleteTransaction = useCallback(async (transactionId: string) => {
+    try {
+      // Find the transaction in our current data to get its date before deletion
+      const transactionToDelete = allTransactions?.find(t => t.id === transactionId);
+      if (transactionToDelete) {
+        deleteMutation.mutate({
+          transactionId,
+        }, {
+          onSuccess: async () => {
+            console.log('🗑️ [AccountTransactions] Transaction deleted, starting comprehensive refresh...');
+
+            // Haptic feedback for successful delete
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+            // Small delay to ensure server has processed the deletion
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Get the month/year of the deleted transaction for proper cache invalidation
+            const transactionDate = new Date(transactionToDelete.date);
+            const transactionMonth = transactionDate.getMonth() + 1;
+            const transactionYear = transactionDate.getFullYear();
+
+            console.log(`🗑️ [AccountTransactions] Invalidating cache for transaction date: ${transactionMonth}/${transactionYear}`);
+
+            // Use comprehensive invalidation utility with forced refetch
+            try {
+              await InvalidationUtils.invalidateTransactionRelatedQueries(utils, {
+                currentMonth: transactionMonth,
+                currentYear: transactionYear,
+                clearCache: true,
+              });
+
+              // Invalidate category-specific queries for the deleted transaction's category
+              if (transactionToDelete.subCategoryId && categories) {
+                const category = categories.find(cat =>
+                  cat.subCategories.some(sub => sub.id === transactionToDelete.subCategoryId)
+                );
+
+                if (category) {
+                  console.log(`🏷️ [AccountTransactions] Invalidating category queries for category: ${category.id}`);
+                  await InvalidationUtils.invalidateCategoryQueries(utils, {
+                    categoryId: category.id,
+                    currentMonth: transactionMonth,
+                    currentYear: transactionYear,
+                  });
+                }
+              }
+
+              await refetch();
+
+            } catch (error) {
+              // Fallback: force refetch our local query even if others fail
+              try {
+                await refetch();
+              } catch (refetchError) {
+                console.error('Fallback refetch failed:', refetchError);
+              }
+            }
+          }
+        });
+      } else {
+        await deleteMutation.mutateAsync({ transactionId });
+      }
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+    }
+  }, [deleteMutation, allTransactions, utils, refetch, categories]);
 
   // Handle refresh
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await refetch();
     setRefreshing(false);
-  };
+  }, [refetch]);
 
   // Load more transactions
   const handleLoadMore = () => {
@@ -137,96 +428,69 @@ export default function AccountTransactionsScreen() {
     }
   };
 
-  // Memoized Transaction Item Component - PERFORMANCE OPTIMIZED
-  const TransactionItem = React.memo(({ transaction }: { transaction: Transaction }) => {
-    const amount = parseFloat(transaction.amount.toString());
-    const isNegative = amount < 0;
-    const { integer, decimal } = formatCurrency(amount);
-    const transactionDate = new Date(transaction.date);
+  // Memoized FlatList render item function
+  const renderItem = useCallback(({ item }: { item: FlatListItem }) => {
+    if (item.type === 'header') {
+      return <FlatListHeaderComponent item={item} formatCurrency={formatCurrency} />;
+    } else {
+      return <FlatListTransactionComponent item={item} onDelete={handleDeleteTransaction} />;
+    }
+  }, [formatCurrency, handleDeleteTransaction]);
 
+  // Memoized FlatList key extractor
+  const keyExtractor = useCallback((item: FlatListItem) => item.id, []);
+
+  // Memoized animated styles
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+  }));
+
+  // Animate content when data loads
+  React.useEffect(() => {
+    if (!isLoading) {
+      contentOpacity.value = withTiming(1, { duration: 600 });
+    }
+  }, [isLoading, contentOpacity]);
+
+  // Summary Container Component
+  const SummaryContainer: React.FC<{
+    income: number;
+    expenses: number;
+    remaining: number;
+  }> = ({ income, expenses, remaining }) => {
     return (
-      <Pressable
-        className="bg-white mx-4 mb-3 p-4 rounded-xl"
-        onPress={() => {
-          // Navigate to transaction details if needed
-          console.log('Navigate to transaction:', transaction.id);
-        }}
-      >
-        <View className="flex-row items-center">
-          {/* Transaction Icon */}
-          <View className="w-12 h-12 rounded-lg bg-gray-100 items-center justify-center mr-4">
-            {transaction.subCategory?.icon ? (
-              <Text className="text-lg">{transaction.subCategory.icon}</Text>
-            ) : (
-              <SvgIcon name="box" width={24} height={24} color="#6B7280" />
-            )}
+      <View className="bg-gray-50 rounded-3xl p-4 mb-4">
+        <View className="flex-row justify-between">
+          <View className="flex-1 items-center">
+            <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
+              {t('home.transactions.income')}
+            </Text>
+            <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+              {formatCurrency(income)}
+            </Text>
           </View>
 
-          {/* Transaction Details */}
-          <View className="flex-1 mr-4">
-            <Text className="text-base font-semibold text-black mb-1">
-              {transaction.description}
+          <View className="flex-1 items-center">
+            <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
+              {t('home.transactions.expenses')}
             </Text>
-            <Text className="text-sm text-gray-500 mb-1">
-              {transactionDate.toLocaleDateString('it-IT', {
-                day: '2-digit',
-                month: 'short'
-              })}
+            <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+              {formatCurrency(expenses)}
             </Text>
-            {transaction.subCategory && (
-              <Text className="text-xs text-gray-400">
-                {transaction.subCategory.macroCategory?.name} • {transaction.subCategory.name}
-              </Text>
-            )}
-            {transaction.notes && (
-              <Text className="text-xs text-gray-400 mt-1">
-                {transaction.notes}
-              </Text>
-            )}
           </View>
 
-          {/* Transaction Amount */}
-          <View className="items-end">
-            <View className="flex-row items-baseline">
-              <Text className={`text-sm font-normal ${isNegative ? 'text-red-500' : 'text-green-500'}`}>
-                {isNegative ? '-' : '+'}€
-              </Text>
-              <Text className={`text-xl font-semibold ${isNegative ? 'text-red-500' : 'text-green-500'}`}>
-                {integer}
-              </Text>
-              <Text className={`text-lg font-normal ${isNegative ? 'text-red-500' : 'text-green-500'}`}>
-                ,{decimal}
-              </Text>
-            </View>
-            {transaction.transferId && (
-              <Text className="text-xs text-gray-400 mt-1">
-                {t("transaction.transfer", "Trasferimento")}
-              </Text>
-            )}
+          <View className="flex-1 items-center">
+            <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
+              {t('home.transactions.remaining')}
+            </Text>
+            <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+              {formatCurrency(remaining)}
+            </Text>
           </View>
         </View>
-      </Pressable>
+      </View>
     );
-  });
-
-  // Render grouped section - OPTIMIZED with memoized TransactionItem
-  const renderGroupedSection = ({ item }: { item: GroupedTransaction }) => (
-    <View className="mb-6">
-      {/* Date Header */}
-      <View className="px-4 py-2">
-        <Text className="text-lg font-semibold text-black capitalize">
-          {item.date}
-        </Text>
-      </View>
-
-      {/* Transactions for this date */}
-      <View>
-        {item.transactions.map(transaction => (
-          <TransactionItem key={transaction.id} transaction={transaction} />
-        ))}
-      </View>
-    </View>
-  );
+  };
 
   // Render load more button
   const renderFooter = () => {
@@ -263,18 +527,76 @@ export default function AccountTransactionsScreen() {
 
   // Render empty state
   const renderEmptyState = () => (
-    <View className="flex-1 items-center justify-center py-16">
-      <SvgIcon name="box" width={64} height={64} color="#D1D5DB" />
-      <Text className="text-lg font-medium text-gray-400 mt-4 mb-2">
-        {t("transaction.list.empty_title", "Nessuna transazione")}
-      </Text>
-      <Text className="text-sm text-gray-400 text-center px-8">
+    <Animated.View
+      entering={FadeIn.delay(300).duration(600)}
+      className="items-center justify-center flex-1 gap-4 pb-24 px-10"
+    >
+      {/* Emoji Cards */}
+      <View className="flex-row items-center justify-center mb-2" style={{ height: 84 }}>
+        <View
+          className="absolute left-12 rounded-xl p-4"
+          style={{
+            backgroundColor: '#FEF6F5',
+            transform: [{ rotate: '-8deg' }],
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 24,
+            elevation: 6,
+            zIndex: 1
+          }}
+        >
+          <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>🏠</Text>
+        </View>
+        <View
+          className="rounded-xl p-4"
+          style={{
+            backgroundColor: '#FFFCF5',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 24,
+            elevation: 6,
+            zIndex: 3
+          }}
+        >
+          <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>💳</Text>
+        </View>
+        <View
+          className="absolute right-12 rounded-xl p-4"
+          style={{
+            backgroundColor: '#F5FAFF',
+            transform: [{ rotate: '8deg' }],
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 24,
+            elevation: 6,
+            zIndex: 2
+          }}
+        >
+          <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>📊</Text>
+        </View>
+      </View>
+
+      {/* Main Title */}
+      <Text
+        className="text-black text-center font-medium"
+        style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 24 }}
+      >
         {activeFilter === 'all'
-          ? t("transaction.list.empty_desc", "Non ci sono ancora transazioni per questo conto")
-          : t("transaction.list.empty_filtered", "Nessuna transazione trovata per il filtro selezionato")
-        }
+          ? "Nessuna transazione per questo conto"
+          : "Nessuna transazione per il filtro selezionato"}
       </Text>
-    </View>
+
+      {/* Subtitle */}
+      <Text
+        className="text-gray-500 text-center"
+        style={{ fontFamily: 'DM Sans', fontSize: 14, lineHeight: 20 }}
+      >
+        Le transazioni aggiunte a questo conto appariranno qui
+      </Text>
+    </Animated.View>
   );
 
   if (isLoading && allTransactions.length === 0) {
@@ -299,15 +621,25 @@ export default function AccountTransactionsScreen() {
       customTitle={accountData?.name || t("transaction.list.title", "Transazioni")}
       tabBarHidden={true}
     >
-      <View className="flex-1 bg-gray-100">
+      <Animated.View style={contentStyle} className="flex-1 bg-white">
+        {/* Summary Container */}
+        <View className="px-4 pt-4">
+          <SummaryContainer
+            income={summary.income}
+            expenses={summary.expenses}
+            remaining={summary.remaining}
+          />
+        </View>
+
         {/* Filter Tabs */}
         <View className="bg-white px-4 py-3 border-b border-gray-200">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 0 }}
+
+            contentContainerStyle={{ paddingHorizontal: 0, marginHorizontal: "auto" }}
           >
-            <View className="flex-row space-x-2">
+            <View className="flex-row w-full gap-1 justify-between">
               {FILTER_TYPES.map((filter) => (
                 <Pressable
                   key={filter.key}
@@ -334,26 +666,28 @@ export default function AccountTransactionsScreen() {
         </View>
 
         {/* Transaction List - VIRTUALIZED for performance */}
-        {groupedTransactions.length > 0 ? (
-          <FlashList
-            data={groupedTransactions}
-            renderItem={renderGroupedSection}
-            keyExtractor={(item) => item.date}
-            contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}
-            ListFooterComponent={renderFooter}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                tintColor="#6B7280"
-              />
-            }
-            showsVerticalScrollIndicator={false}
-            // PERFORMANCE OPTIMIZATIONS
-            removeClippedSubviews={true}
-            estimatedItemSize={120}
-            keyboardShouldPersistTaps="handled"
-          />
+        {flatListData.length > 0 ? (
+          <View className="flex-1 px-4">
+            <FlashList
+              data={flatListData}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}
+              ListFooterComponent={renderFooter}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  tintColor="#007AFF"
+                />
+              }
+              showsVerticalScrollIndicator={false}
+              // PERFORMANCE OPTIMIZATIONS
+              removeClippedSubviews={true}
+              estimatedItemSize={60}
+              keyboardShouldPersistTaps="handled"
+            />
+          </View>
         ) : (
           <ScrollView
             contentContainerStyle={{ flexGrow: 1 }}
@@ -368,7 +702,7 @@ export default function AccountTransactionsScreen() {
             {renderEmptyState()}
           </ScrollView>
         )}
-      </View>
+      </Animated.View>
     </HeaderContainer>
   );
 } 
