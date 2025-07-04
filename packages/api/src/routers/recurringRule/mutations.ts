@@ -203,6 +203,7 @@ export const mutations = {
       if (input.dayOfWeek !== undefined) updateData.dayOfWeek = input.dayOfWeek;
       if (input.dayOfMonth !== undefined) updateData.dayOfMonth = input.dayOfMonth;
       if (input.endDate !== undefined) updateData.endDate = input.endDate;
+      if (input.totalOccurrences !== undefined) updateData.totalOccurrences = input.totalOccurrences;
       if (input.notes !== undefined) updateData.notes = input.notes;
       
       // If frequency settings changed, recalculate next due date
