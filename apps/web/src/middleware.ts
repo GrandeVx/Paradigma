@@ -1,7 +1,6 @@
 import { betterFetch } from "@better-fetch/fetch";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { initializeApp } from "./lib/startup";
 
 // Define Session type locally since we don't have access to the auth lib here
 type Session = {
@@ -43,9 +42,6 @@ function getLocale(request: NextRequest) {
 }
 
 export async function middleware(req: NextRequest) {
-  // Initialize application on first request
-  initializeApp();
-  
   const pathname = req.nextUrl.pathname;
 
   // Skip ALL API routes from locale and auth handling
