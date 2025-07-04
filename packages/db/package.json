@@ -18,7 +18,8 @@
     "db-push": "dotenv -e ../../apps/web/.env -- prisma db push",
     "studio": "dotenv -e ../../apps/web/.env -- prisma studio",
     "db-generate": "dotenv -e ../../apps/web/.env -- prisma generate",
-    "seed": "dotenv -e ../../apps/web/.env -- tsx prisma/seed.ts"
+    "seed": "dotenv -e ../../apps/web/.env -- tsx prisma/seed.ts",
+    "seed-recurring-test": "dotenv -e ../../apps/web/.env -- tsx prisma/seed-recurring-test.ts"
   },
   "prisma": {
     "seed": "dotenv -e ../../apps/web/.env -- tsx prisma/seed.ts"

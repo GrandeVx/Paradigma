@@ -18,3 +18,7 @@ export const addUserSchema = z.object({
   email: z.string(),
   id: z.string(),
 });
+
+export const clearNotificationBadgeSchema = z.object({
+  // No input needed - will use the current user from context
+});

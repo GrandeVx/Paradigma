@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../../trpc";
-import { addUserSchema, updateProfileSchema } from "../../schemas/user";
+import { addUserSchema, updateProfileSchema, clearNotificationBadgeSchema } from "../../schemas/user";
 export const mutations = {
   // Update user profile
   updateProfile: protectedProcedure
@@ -164,5 +164,44 @@ export const mutations = {
       });
 
       return newUser;
+    }),
+
+  // Clear notification badge
+  clearNotificationBadge: protectedProcedure
+    .input(clearNotificationBadgeSchema)
+    .mutation(async ({ ctx }) => {
+      const currentUserId = ctx.session?.user?.id;
+      if (!currentUserId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You must be logged in to clear badge",
+        });
+      }
+
+      // Get user's notification token
+      const user = await ctx.db.user.findUnique({
+        where: { id: currentUserId },
+        select: { notificationToken: true },
+      });
+
+      if (!user?.notificationToken) {
+        // No notification token, nothing to clear
+        return { success: true, message: "No notification token found" };
+      }
+
+      // Import the notification service
+      const { clearNotificationBadge } = await import("../../utils/notificationService");
+      
+      // Clear the badge
+      const success = await clearNotificationBadge(user.notificationToken);
+
+      if (!success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to clear notification badge",
+        });
+      }
+
+      return { success: true, message: "Badge cleared successfully" };
     }),
 };

@@ -485,6 +485,9 @@ importers:
       '@types/react':
         specifier: 19.0.10
         version: 19.0.10
+      expo-server-sdk:
+        specifier: ^3.15.0
+        version: 3.15.0
       next:
         specifier: 15.1.7
         version: 15.1.7(@babel/core@7.26.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -17593,7 +17596,7 @@ snapshots:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
       '@types/node': 18.19.76
-      acorn: 8.15.0
+      acorn: 8.14.0
       acorn-walk: 8.3.4
       arg: 4.1.0
       create-require: 1.1.1
