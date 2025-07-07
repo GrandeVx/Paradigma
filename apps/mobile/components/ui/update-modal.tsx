@@ -181,7 +181,7 @@ export function UpdateModal({
                 </Button>
               ) : (
                 // Normal state - pulsanti aggiorna e annulla
-                <>
+                <View className="flex-row gap-2">
                   <Button
                     variant="primary"
                     onPress={onUpdatePress}
@@ -201,7 +201,7 @@ export function UpdateModal({
                       {t('update.later', 'Più tardi')}
                     </Text>
                   </Button>
-                </>
+                </View>
               )}
             </View>
           )}
