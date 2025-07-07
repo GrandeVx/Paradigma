@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import CategoryTransactionsView from '@/components/category-transactions/CategoryTransactionsView';
 
-export default function CategoryTransactionsScreen() {
+export default function BudgetCategoryTransactionsScreen() {
   const params = useLocalSearchParams<{ categoryId: string }>();
   const categoryId = params.categoryId;
 
@@ -10,5 +10,5 @@ export default function CategoryTransactionsScreen() {
     return null;
   }
 
-  return <CategoryTransactionsView categoryId={categoryId} />;
-} 
+  return <CategoryTransactionsView categoryId={categoryId} context="budgets" />;
+}

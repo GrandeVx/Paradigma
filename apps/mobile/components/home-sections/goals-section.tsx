@@ -306,8 +306,9 @@ export const GoalsSection: React.FC = () => {
         className="flex-1"
       >
         <ScrollView
-          className="flex-1 p-4"
+          className="flex-1 p-4 h-full"
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ height: '100%' }}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
@@ -315,11 +316,11 @@ export const GoalsSection: React.FC = () => {
             />
           }
         >
-          <View className="items-center justify-center py-8 gap-4">
+          <View className="items-center justify-center py-8 gap-4 " style={{ height: '80%' }}>
             {/* Emoji Cards */}
             <View className="flex-row items-center justify-center mb-2" style={{ height: 84 }}>
               <View
-                className="absolute rounded-xl p-4"
+                className="absolute rounded-xl p-4 left-12"
                 style={{
                   backgroundColor: '#FEF6F5',
                   transform: [{ rotate: '-8deg' }],
@@ -348,7 +349,7 @@ export const GoalsSection: React.FC = () => {
                 <Text className="text-3xl">💰</Text>
               </View>
               <View
-                className="absolute rounded-xl p-4"
+                className="absolute rounded-xl p-4 right-12"
                 style={{
                   backgroundColor: '#F5FAFF',
                   transform: [{ rotate: '8deg' }],

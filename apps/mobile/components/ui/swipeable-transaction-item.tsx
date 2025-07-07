@@ -42,11 +42,13 @@ interface SwipeableTransactionItemProps {
     };
   };
   onDelete?: (id: string) => void;
+  context?: 'home' | 'accounts' | 'budgets';
 }
 
 export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> = React.memo(({
   transaction,
   onDelete,
+  context = 'home',
 }) => {
   const router = useRouter();
   const { hideTabBar } = useTabBar();
@@ -77,9 +79,12 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
     translateX.value = withSpring(0);
     actionsOpacity.value = withTiming(0);
 
-    // Navigate to edit
+    // Navigate to edit based on context
     hideTabBar();
-    router.push(`/(protected)/(home)/transaction-edit/${transaction.id}`);
+    const basePath = context === 'accounts' ? '/(protected)/(accounts)' : 
+                     context === 'budgets' ? '/(protected)/(budgets)' : 
+                     '/(protected)/(home)';
+    router.push(`${basePath}/transaction-edit/${transaction.id}`);
   };
 
   const handleDelete = () => {

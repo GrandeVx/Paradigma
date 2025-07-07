@@ -411,7 +411,7 @@ export default function BudgetScreen() {
   }, [showTabBar, utils, queryParams, budgetSettings]);
 
   const handleBudgetClick = useCallback((budgetId: string) => {
-    router.push(`/(protected)/(home)/(category-transactions)/${budgetId}?referrer=budgets`);
+    router.push(`/(protected)/(budgets)/(category-transactions)/${budgetId}`);
   }, []);
 
   const renderBackdrop = useCallback(

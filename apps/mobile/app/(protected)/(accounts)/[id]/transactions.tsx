@@ -146,6 +146,7 @@ const FlatListTransactionComponent: React.FC<{
       <SwipeableTransactionItem
         transaction={item.data}
         onDelete={onDelete}
+        context="accounts"
       />
     </Animated.View>
   );
