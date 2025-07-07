@@ -7,7 +7,9 @@ import { getSpendingIntensity, getFallbackCategoryColor } from './chartColors';
 export const calculateDonutSegments = (
   data: CategoryData[],
   size: number = 200,
-  strokeWidth: number = 40
+  strokeWidth: number = 40,
+  gapAngle: number = 2,
+  irregular: boolean = false
 ): DonutSegment[] => {
   const total = data.reduce((sum, item) => sum + item.amount, 0);
   
@@ -16,16 +18,44 @@ export const calculateDonutSegments = (
   let currentAngle = 0;
   const centerX = size / 2;
   const centerY = size / 2;
-  const outerRadius = (size / 2) - (strokeWidth / 2);
-  const innerRadius = outerRadius - strokeWidth;
+  const baseOuterRadius = (size / 2) - (strokeWidth / 2);
+  const baseInnerRadius = baseOuterRadius - strokeWidth;
+  
+  // Calculate total gap angle to subtract from segments
+  const totalGapAngle = data.length * gapAngle;
+  const availableAngle = 360 - totalGapAngle;
   
   return data.map((item) => {
     const percentage = (item.amount / total) * 100;
-    let angleSize = (percentage / 100) * 360;
+    let angleSize = (percentage / 100) * availableAngle;
     
     // Fix for 100% single category: reduce angle slightly to avoid SVG rendering issues
-    if (angleSize >= 360) {
+    if (data.length === 1 && angleSize >= 360) {
       angleSize = 359.99; // Slightly less than 360 to ensure proper SVG rendering
+    }
+    
+    // Calculate variable thickness for irregular effect
+    let outerRadius = baseOuterRadius;
+    let innerRadius = baseInnerRadius;
+    
+    if (irregular) {
+      // All segments start from the same inner radius and grow outward
+      innerRadius = baseInnerRadius; // Same starting line for all segments
+      
+      // Create exponential thickness based on percentage coverage
+      const normalizedPercentage = percentage / 100;
+      const exponentialMultiplier = Math.pow(normalizedPercentage, 0.7);
+      
+      // Base thickness variation: from 0.8x to 1.6x of original stroke
+      const minMultiplier = 0.8;
+      const maxMultiplier = 1.6;
+      const thicknessRange = maxMultiplier - minMultiplier;
+      
+      const thicknessMultiplier = minMultiplier + (exponentialMultiplier * thicknessRange);
+      const newStrokeWidth = strokeWidth * thicknessMultiplier;
+      
+      // Only the outer radius varies - all segments aligned at inner edge
+      outerRadius = innerRadius + newStrokeWidth;
     }
     
     // Convert to radians for calculations
@@ -66,7 +96,7 @@ export const calculateDonutSegments = (
       path
     };
     
-    currentAngle += angleSize;
+    currentAngle += angleSize + gapAngle; // Add gap after each segment
     return segment;
   });
 };

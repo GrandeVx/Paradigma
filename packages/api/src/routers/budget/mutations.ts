@@ -31,6 +31,25 @@ export const mutations = {
         });
       }
       
+      // If amount is 0, delete the budget
+      if (input.allocatedAmount === 0) {
+        await ctx.db.budget.deleteMany({
+          where: {
+            userId,
+            macroCategoryId: input.macroCategoryId,
+          },
+        });
+        
+        return {
+          userId,
+          macroCategoryId: input.macroCategoryId,
+          allocatedAmount: 0,
+          id: "", // Return a dummy budget object
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+      }
+      
       // Use upsert to create or update the budget
       const budget = await ctx.db.budget.upsert({
         where: {

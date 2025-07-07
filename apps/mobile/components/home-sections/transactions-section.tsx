@@ -217,7 +217,7 @@ const MonthSelector: React.FC<{
         <LeftIcon size={14} className="text-black" />
       </TouchableOpacity>
 
-      <Text className="text-sm font-normal text-center" style={{ fontFamily: 'DM Sans' }}>
+      <Text className="text-sm font-normal text-center" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
         {monthNames[currentMonth - 1]} {currentYear}
       </Text>
 

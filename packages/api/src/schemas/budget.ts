@@ -6,5 +6,5 @@ export const getCurrentBudgetSettingsSchema = z.object({});
 // Schema for setting a budget amount for a category
 export const setBudgetAmountSchema = z.object({
   macroCategoryId: z.string(),
-  allocatedAmount: z.number().positive(),
+  allocatedAmount: z.number().min(0), // Allow 0 to remove budget
 }); 

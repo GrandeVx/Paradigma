@@ -316,9 +316,9 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
       }}
       onChange={(index) => {
         if (index === -1) {
-          showTabBar();
+          showTabBar('notifications-bottom-sheet');
         } else {
-          hideTabBar();
+          hideTabBar('notifications-bottom-sheet');
         }
       }}
     >

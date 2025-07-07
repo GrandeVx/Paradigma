@@ -97,7 +97,7 @@ export default function ValueScreen() {
       router.back();
     } else {
       // Flow aperto direttamente dalla tab bar - vai alla home
-      router.replace("/(protected)/(home)");
+      router.replace("/(protected)/(home)/");
     }
   };
 

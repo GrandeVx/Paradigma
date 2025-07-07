@@ -64,7 +64,7 @@ const DayCell: React.FC<{
                 lineHeight: 16,
               }}
             >
-              {formatCurrency(day.amount > 0 ? Math.round(day.amount) : 0, { decimals: 0 })}
+              {formatCurrency(day.amount > 0 ? Math.round(day.amount) : 0, { decimals: 0, showSign: false })}
             </Text>
           </>
         )}

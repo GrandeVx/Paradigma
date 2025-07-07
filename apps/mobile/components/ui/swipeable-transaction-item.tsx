@@ -14,7 +14,6 @@ import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-g
 import { Text } from '@/components/ui/text';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { useRouter } from 'expo-router';
-import { useTabBar } from '@/context/TabBarContext';
 import * as Haptics from 'expo-haptics';
 import { useCurrency } from '@/hooks/use-currency';
 
@@ -51,7 +50,6 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
   context = 'home',
 }) => {
   const router = useRouter();
-  const { hideTabBar } = useTabBar();
   const { formatCurrency } = useCurrency();
   const panRef = useRef<PanGestureHandler>(null);
 
@@ -80,7 +78,6 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
     actionsOpacity.value = withTiming(0);
 
     // Navigate to edit based on context
-    hideTabBar();
     const basePath = context === 'accounts' ? '/(protected)/(accounts)' : 
                      context === 'budgets' ? '/(protected)/(budgets)' : 
                      '/(protected)/(home)';

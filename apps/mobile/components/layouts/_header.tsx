@@ -1,13 +1,13 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useSegments, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useSegments, useLocalSearchParams } from "expo-router";
 import { getTitle } from "@/lib/utils";
-import React, { ReactNode, useCallback } from "react";
+import React, { ReactNode } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { Href, Router, useRouter } from "expo-router";
 import { Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useTabBar } from "@/context/TabBarContext";
+import { useTabBar, useHideTabBar } from "@/context/TabBarContext";
 
 interface HeaderAction {
   icon: ReactNode;
@@ -45,29 +45,9 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
     referrer?: string;
   }>();
 
-  const { hideTabBar, showTabBar } = useTabBar();
-
-  // Use useFocusEffect to manage tab bar visibility only when screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      // When screen comes into focus, apply tab bar visibility
-      if (tabBarHidden) {
-        hideTabBar();
-      } else {
-        showTabBar();
-      }
-
-      // Cleanup: only show tab bar when leaving this screen if it was hidden
-      return () => {
-        if (tabBarHidden) {
-          // Shorter delay to reduce flash during navigation
-          setTimeout(() => {
-            showTabBar();
-          }, 50); // 50ms delay to allow next screen to take control
-        }
-      };
-    }, [tabBarHidden]) // Remove hideTabBar and showTabBar from dependencies to prevent infinite loop
-  );
+  // Use the new hook to automatically manage tab bar visibility based on component lifecycle
+  const currentRoute = segments.join('/');
+  useHideTabBar(`header-${currentRoute}`, tabBarHidden);
 
   // Derive route name from the last segment of the path
   const currentRouteName = segments[segments.length - 1] ?? "";

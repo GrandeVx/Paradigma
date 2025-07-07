@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useCallback, RefObject } from "react";
-import { View, TextInput, Pressable, Switch, SafeAreaView } from "react-native";
+import { View, TextInput, Pressable, Switch, SafeAreaView, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import HeaderContainer from "@/components/layouts/_header";
@@ -80,32 +80,32 @@ export default function SummaryScreen() {
       console.log('💸 [ExpenseMutation] Transaction created, invalidating cache...');
       const transactionMonth = data.date.getMonth() + 1;
       const transactionYear = data.date.getFullYear();
-      
+
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
         clearCache: true,
       });
-      
+
       // Also invalidate charts for the transaction month
       await InvalidationUtils.invalidateChartsQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
       });
-      
+
       // Invalidate budget-related queries for real-time budget updates
       await InvalidationUtils.invalidateBudgetQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
       });
-      
+
       // Invalidate category-specific queries if we have subCategoryId
       if (data.subCategoryId) {
         // Find the macro category ID from the subcategory
-        const category = categories?.find(cat => 
+        const category = categories?.find(cat =>
           cat.subCategories.some(sub => sub.id === data.subCategoryId)
         );
-        
+
         if (category) {
           await InvalidationUtils.invalidateCategoryQueries(queryClient, {
             categoryId: category.id,
@@ -114,42 +114,42 @@ export default function SummaryScreen() {
           });
         }
       }
-      
+
       router.replace("/(protected)/(home)");
     }
   });
-  
+
   const incomeMutation = api.transaction.createIncome.useMutation({
     onSuccess: async (data) => {
       console.log('💰 [IncomeMutation] Transaction created, invalidating cache...');
       const transactionMonth = data.date.getMonth() + 1;
       const transactionYear = data.date.getFullYear();
-      
+
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
         clearCache: true,
       });
-      
+
       // Also invalidate charts for the transaction month
       await InvalidationUtils.invalidateChartsQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
       });
-      
+
       // Invalidate budget-related queries for real-time budget updates
       await InvalidationUtils.invalidateBudgetQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
       });
-      
+
       // Invalidate category-specific queries if we have subCategoryId
       if (data.subCategoryId) {
         // Find the macro category ID from the subcategory
-        const category = categories?.find(cat => 
+        const category = categories?.find(cat =>
           cat.subCategories.some(sub => sub.id === data.subCategoryId)
         );
-        
+
         if (category) {
           await InvalidationUtils.invalidateCategoryQueries(queryClient, {
             categoryId: category.id,
@@ -158,66 +158,66 @@ export default function SummaryScreen() {
           });
         }
       }
-      
+
       router.replace("/(protected)/(home)");
     }
   });
-  
+
   const transferMutation = api.transaction.createTransfer.useMutation({
     onSuccess: async (data) => {
       console.log('🔄 [TransferMutation] Transfer created, invalidating cache...');
       const transactionMonth = data.outflowTransaction.date.getMonth() + 1;
       const transactionYear = data.outflowTransaction.date.getFullYear();
-      
+
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
         clearCache: true,
       });
-      
+
       // Also invalidate charts for the transaction month
       await InvalidationUtils.invalidateChartsQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
       });
-      
+
       // Invalidate budget-related queries for real-time budget updates
       await InvalidationUtils.invalidateBudgetQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
       });
-      
+
       router.replace("/(protected)/(home)");
     }
   });
-  
+
   // Store the transaction date for recurring rule invalidation
   const [lastTransactionDate, setLastTransactionDate] = useState<Date | null>(null);
-  
+
   const recurringRuleMutation = api.recurringRule.create.useMutation({
     onSuccess: async () => {
       console.log('🔁 [RecurringRuleMutation] Recurring rule created, invalidating cache...');
-      
+
       // Invalidate recurring rule queries first
       await InvalidationUtils.invalidateRecurringRuleQueries(queryClient);
-      
+
       // If we have the last transaction date, use it for targeted invalidation
       if (lastTransactionDate) {
         const transactionMonth = lastTransactionDate.getMonth() + 1;
         const transactionYear = lastTransactionDate.getFullYear();
-        
+
         await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
           currentMonth: transactionMonth,
           currentYear: transactionYear,
           clearCache: true,
         });
-        
+
         // Also invalidate charts for the transaction month
         await InvalidationUtils.invalidateChartsQueries(queryClient, {
           currentMonth: transactionMonth,
           currentYear: transactionYear,
         });
-        
+
         // Invalidate budget-related queries for real-time budget updates
         await InvalidationUtils.invalidateBudgetQueries(queryClient, {
           currentMonth: transactionMonth,
@@ -228,11 +228,11 @@ export default function SummaryScreen() {
         await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
           clearCache: true,
         });
-        
+
         // Also invalidate budgets broadly
         await InvalidationUtils.invalidateBudgetQueries(queryClient);
       }
-      
+
       router.replace("/(protected)/(home)");
     }
   });
@@ -535,7 +535,7 @@ export default function SummaryScreen() {
         try {
           // Store the transaction date for recurring rule invalidation
           setLastTransactionDate(selectedDate);
-          
+
           // Use the recurrence option to determine frequency type and interval
           const { frequencyType, frequencyInterval } = await convertFrequencyMutation.mutateAsync({
             frequencyDays: recurrenceOption.days
@@ -644,6 +644,14 @@ export default function SummaryScreen() {
     return 'pig-money' as IconName;
   };
 
+  const getAccountColor = () => {
+    if (selectedAccountId) {
+      const accountData = moneyAccounts?.find(item => item.account.id === selectedAccountId);
+      return accountData ? accountData.account.color : '#000000';
+    }
+    return '#000000';
+  };
+
   const getTransferAccountName = () => {
     if (selectedTransferAccountId) {
       const accountData = moneyAccounts?.find(item => item.account.id === selectedTransferAccountId);
@@ -683,196 +691,208 @@ export default function SummaryScreen() {
   return (
     <>
       <HeaderContainer variant="secondary" customTitle={t('transaction.new.title')}>
-        <SafeAreaView className="flex-1 bg-white w-screen">
-          <View className="flex-row justify-between items-center px-4 py-2">
-            <View className="flex-col">
-              <View className="flex-row items-baseline gap-1">
-                <Text className="text-gray-400 text-2xl font-bold">{getCurrencySymbol()}</Text>
-                <View className="flex-row items-baseline">
-                  <Text className="text-primary-700 text-5xl font-bold">{integerPart}</Text>
-                  <Text className="text-primary-700 text-2xl font-bold">{decimalPart}</Text>
+        <SafeAreaView className="flex-1 bg-white">
+          <KeyboardAvoidingView
+            className="flex-1"
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+          >
+            <ScrollView
+              className="flex-1"
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View className="flex-row justify-between items-center px-4 py-2">
+                <View className="flex-col">
+                  <View className="flex-row items-baseline gap-1">
+                    <Text className="text-gray-400 text-2xl font-bold">{getCurrencySymbol()}</Text>
+                    <View className="flex-row items-baseline">
+                      <Text className="text-primary-700 text-5xl font-bold">{integerPart}</Text>
+                      <Text className="text-primary-700 text-2xl font-bold">{decimalPart}</Text>
+                    </View>
+                  </View>
+
+                  {isRecurring && (
+                    <View className="flex-row items-baseline gap-1 ">
+                      <Text className="text-gray-400 text-sm font-normal">{getCurrencySymbol()}</Text>
+                      <View className="flex-row items-baseline">
+                        <Text className="text-gray-500 text-xl font-medium">{monthlyIntegerPart}</Text>
+                        <Text className="text-gray-500 text-sm font-normal">{monthlyDecimalPart}</Text>
+                      </View>
+                      <Text className="text-gray-400 text-sm font-normal">x{numInstallments}</Text>
+                    </View>
+                  )}
+                </View>
+                <View className={`rounded-full px-3 py-2 ${getTransactionTypeColor()}`}>
+                  <Text className="text-white text-sm font-sans font-medium">{getTransactionTypeText().toUpperCase()}</Text>
                 </View>
               </View>
 
-              {isRecurring && (
-                <View className="flex-row items-baseline gap-1 ">
-                  <Text className="text-gray-400 text-sm font-normal">{getCurrencySymbol()}</Text>
-                  <View className="flex-row items-baseline">
-                    <Text className="text-gray-500 text-xl font-medium">{monthlyIntegerPart}</Text>
-                    <Text className="text-gray-500 text-sm font-normal">{monthlyDecimalPart}</Text>
-                  </View>
-                  <Text className="text-gray-400 text-sm font-normal">x{numInstallments}</Text>
-                </View>
-              )}
-            </View>
-            <View className={`rounded-full px-3 py-2 ${getTransactionTypeColor()}`}>
-              <Text className="text-white text-sm font-sans font-medium">{getTransactionTypeText().toUpperCase()}</Text>
-            </View>
-          </View>
-
-          <View className="flex-1 px-4">
-            <View className="flex-col">
-              <Pressable disabled={transactionType === 'transfer'} onPress={handleOpenCategoryBottomSheet} className="border-b border-t border-gray-200 py-4">
-                <View className="flex-row gap-8 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.category')}</Text>
-                  <View className="flex-row items-center">
-                    {transactionType === 'transfer' ? (
-                      <View className="flex-row items-center gap-3">
-                        <SvgIcon name="target" size={16} color="gray" />
-                        <Text className="text-gray-400" style={{ fontSize: 16, fontWeight: 'regular' }}>{t('transaction.types.transfer')}</Text>
+              <View className="px-4">
+                <View className="flex-col">
+                  <Pressable disabled={transactionType === 'transfer'} onPress={handleOpenCategoryBottomSheet} className="border-b border-t border-gray-200 py-4">
+                    <View className="flex-row gap-8 items-center py-2">
+                      <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.category')}</Text>
+                      <View className="flex-row items-center">
+                        {transactionType === 'transfer' ? (
+                          <View className="flex-row items-center gap-3">
+                            <SvgIcon name="target" size={16} color="gray" />
+                            <Text className="text-gray-400" style={{ fontSize: 16, fontWeight: 'regular' }}>{t('transaction.types.transfer')}</Text>
+                          </View>
+                        ) : (
+                          <Text className="text-black text-base">{getCategoryName()}</Text>
+                        )}
                       </View>
-                    ) : (
-                      <Text className="text-black text-base">{getCategoryName()}</Text>
-                    )}
-                  </View>
-                </View>
-              </Pressable>
-
-              <Pressable onPress={handleOpenMoneyAccountBottomSheet} className="border-b border-gray-200 py-4">
-                <View className="flex-row gap-8 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{transactionType === 'transfer' ? t('transaction.fields.fromAccount') : t('transaction.fields.account')}</Text>
-                  <View className="flex-row items-center gap-3">
-                    <SvgIcon name={getAccountIcon()} size={16} color="gray" />
-                    <Text className="text-black text-base">{getAccountName()}</Text>
-                  </View>
-                </View>
-              </Pressable>
-
-              {transactionType === 'transfer' && (
-                <Pressable onPress={handleOpenTransferAccountBottomSheet} className="border-b border-gray-200 py-4">
-                  <View className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.toAccount')}</Text>
-                    <View className="flex-row items-center">
-                      <Text className="text-black text-base">{getTransferAccountName()}</Text>
-                    </View>
-                  </View>
-                </Pressable>
-              )}
-
-              <View className="border-b border-gray-200 py-4">
-                <View className="flex-row justify-between pr-2 items-center">
-                  <Pressable onPress={handleOpenDateBottomSheet} className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.date')}</Text>
-                    <View className="flex-row items-center gap-4">
-                      <SvgIcon name="calendar" size={16} color="black" />
-                      <Text className="text-black text-base">{getDateText(selectedDate)}</Text>
                     </View>
                   </Pressable>
-                  <View className="flex-row gap-12">
-                    <Pressable onPress={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}>
-                      <SvgIcon name="left" size={14} color="black" />
-                    </Pressable>
-                    <Pressable disabled={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date()} onPress={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}>
-                      <SvgIcon name="right" size={14} color={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date() ? 'gray' : 'black'} />
-                    </Pressable>
-                  </View>
-                </View>
-              </View>
 
-              {
-                (transactionType === 'expense' || transactionType === 'income') && (
-                  <View className="border-b border-gray-200 py-4">
+                  <Pressable onPress={handleOpenMoneyAccountBottomSheet} className="border-b border-gray-200 py-4">
                     <View className="flex-row gap-8 items-center py-2">
-                      <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.installments')}</Text>
-                      <Pressable
-                        onPress={() => {
-                          if (isRecurring) {
-                            handleOpenRecurringBottomSheet();
-                          }
-                        }}
-                        className="flex flex-row justify-between items-center"
-                        style={{ flex: 1 }}
-                      >
-                        <View className="flex-row items-center gap-4">
-                          <SvgIcon name="link" size={16} color="black" />
-                          {isRecurring ? (
-                            <View className="flex-col">
-                              <Text className="text-black text-base font-normal">{t('transaction.installments.multiple', { count: numInstallments })}</Text>
-                              <Text className="text-gray-600 text-xs font-normal">
-                                {frequency === 'daily' && frequencyDays === 14 && t('transaction.installments.every14Days')}
-                                {frequency === 'monthly' && frequencyDays === 30 && t('transaction.installments.every30Days')}
-                                {frequency === 'monthly' && frequencyDays === 60 && t('transaction.installments.every60Days')}
-                                {frequency === 'monthly' && frequencyDays === 90 && t('transaction.installments.every90Days')}
-                                {frequency === 'monthly' && frequencyDays === 180 && t('transaction.installments.every180Days')}
-                                {!(['daily', 'monthly'].includes(frequency) && [14, 30, 60, 90, 180].includes(frequencyDays)) && frequency}
-                              </Text>
-                            </View>
-                          ) : (
-                            <Text className="text-black text-base">{t('transaction.installments.single')}</Text>
-                          )}
-                        </View>
-                        <Switch
-                          value={isRecurring}
-                          onValueChange={(value) => {
-                            setIsRecurring(value);
-                            if (value) {
-                              handleOpenRecurringBottomSheet();
-                            }
-                          }}
-                          trackColor={{ false: "#F3F4F6", true: "#005EFD" }}
-                          thumbColor="#FFFFFF"
-                          style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
-                        />
-                      </Pressable>
+                      <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{transactionType === 'transfer' ? t('transaction.fields.fromAccount') : t('transaction.fields.account')}</Text>
+                      <View className="flex-row items-center gap-3">
+                        <SvgIcon name={getAccountIcon()} size={16} color={getAccountColor() || 'gray'} />
+                        <Text className="text-black text-base">{getAccountName()}</Text>
+                      </View>
                     </View>
-                  </View>
-                )
-              }
+                  </Pressable>
 
-              {!isRecurring && (
-                <View className="border-b border-gray-200 py-4">
-                  <View className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.repeat')}</Text>
-                    <Pressable onPress={handleOpenRecurrenceBottomSheet} style={{ flex: 1 }}>
-                      <View className="flex-row items-center gap-4 w-full">
-                        <SvgIcon name="schedule" size={16} color="black" />
-                        <View className="flex-row justify-between items-center pr-4" style={{ flex: 1 }}>
-                          <Text className="text-black text-base">
-                            {recurrenceOption.id !== 'none' ? recurrenceOption.label : t('transaction.recurrence.never')}
-                          </Text>
-                          <SvgIcon name="refresh" size={16} color="black" />
+                  {transactionType === 'transfer' && (
+                    <Pressable onPress={handleOpenTransferAccountBottomSheet} className="border-b border-gray-200 py-4">
+                      <View className="flex-row gap-8 items-center py-2">
+                        <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.toAccount')}</Text>
+                        <View className="flex-row items-center">
+                          <Text className="text-black text-base">{getTransferAccountName()}</Text>
                         </View>
                       </View>
                     </Pressable>
+                  )}
+
+                  <View className="border-b border-gray-200 py-4">
+                    <View className="flex-row justify-between pr-2 items-center">
+                      <Pressable onPress={handleOpenDateBottomSheet} className="flex-row gap-8 items-center py-2">
+                        <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.date')}</Text>
+                        <View className="flex-row items-center gap-4">
+                          <SvgIcon name="calendar" size={16} color="black" />
+                          <Text className="text-black text-base">{getDateText(selectedDate)}</Text>
+                        </View>
+                      </Pressable>
+                      <View className="flex-row gap-12">
+                        <Pressable onPress={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}>
+                          <SvgIcon name="left" size={14} color="black" />
+                        </Pressable>
+                        <Pressable disabled={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date()} onPress={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}>
+                          <SvgIcon name="right" size={14} color={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date() ? 'gray' : 'black'} />
+                        </Pressable>
+                      </View>
+                    </View>
+                  </View>
+
+                  {
+                    (transactionType === 'expense' || transactionType === 'income') && (
+                      <View className="border-b border-gray-200 py-4">
+                        <View className="flex-row gap-8 items-center py-2">
+                          <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.installments')}</Text>
+                          <Pressable
+                            onPress={() => {
+                              if (isRecurring) {
+                                handleOpenRecurringBottomSheet();
+                              }
+                            }}
+                            className="flex flex-row justify-between items-center"
+                            style={{ flex: 1 }}
+                          >
+                            <View className="flex-row items-center gap-4">
+                              <SvgIcon name="link" size={16} color="black" />
+                              {isRecurring ? (
+                                <View className="flex-col">
+                                  <Text className="text-black text-base font-normal">{t('transaction.installments.multiple', { count: numInstallments })}</Text>
+                                  <Text className="text-gray-600 text-xs font-normal">
+                                    {frequency === 'daily' && frequencyDays === 14 && t('transaction.installments.every14Days')}
+                                    {frequency === 'monthly' && frequencyDays === 30 && t('transaction.installments.every30Days')}
+                                    {frequency === 'monthly' && frequencyDays === 60 && t('transaction.installments.every60Days')}
+                                    {frequency === 'monthly' && frequencyDays === 90 && t('transaction.installments.every90Days')}
+                                    {frequency === 'monthly' && frequencyDays === 180 && t('transaction.installments.every180Days')}
+                                    {!(['daily', 'monthly'].includes(frequency) && [14, 30, 60, 90, 180].includes(frequencyDays)) && frequency}
+                                  </Text>
+                                </View>
+                              ) : (
+                                <Text className="text-black text-base">{t('transaction.installments.single')}</Text>
+                              )}
+                            </View>
+                            <Switch
+                              value={isRecurring}
+                              onValueChange={(value) => {
+                                setIsRecurring(value);
+                                if (value) {
+                                  handleOpenRecurringBottomSheet();
+                                }
+                              }}
+                              trackColor={{ false: "#F3F4F6", true: "#005EFD" }}
+                              thumbColor="#FFFFFF"
+                              style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                            />
+                          </Pressable>
+                        </View>
+                      </View>
+                    )
+                  }
+
+                  {!isRecurring && (
+                    <View className="border-b border-gray-200 py-4">
+                      <View className="flex-row gap-8 items-center py-2">
+                        <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.repeat')}</Text>
+                        <Pressable onPress={handleOpenRecurrenceBottomSheet} style={{ flex: 1 }}>
+                          <View className="flex-row items-center gap-4 w-full">
+                            <SvgIcon name="schedule" size={16} color="black" />
+                            <View className="flex-row justify-between items-center pr-4" style={{ flex: 1 }}>
+                              <Text className="text-black text-base">
+                                {recurrenceOption.id !== 'none' ? recurrenceOption.label : t('transaction.recurrence.never')}
+                              </Text>
+                              <SvgIcon name="refresh" size={16} color="black" />
+                            </View>
+                          </View>
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+
+                  <View className="border-b border-gray-200 py-4">
+                    <View className="flex-row gap-x-4 items-center py-2">
+                      <Text className="text-gray-400 font-medium" style={{ fontSize: 16, marginRight: 18 }}>{t('transaction.fields.notes')}</Text>
+                      <SvgIcon name="schedule" size={16} color="black" />
+                      <TextInput
+                        value={note}
+                        onChangeText={setNote}
+                        placeholder={t('transaction.placeholders.addNote')}
+                        className="text-black text-base flex-1 text-left"
+                        placeholderTextColor="#9CA3AF"
+                      />
+                    </View>
                   </View>
                 </View>
-              )}
-
-              <View className="border-b border-gray-200 py-4">
-                <View className="flex-row gap-x-4 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16, marginRight: 18 }}>{t('transaction.fields.notes')}</Text>
-                  <SvgIcon name="schedule" size={16} color="black" />
-                  <TextInput
-                    value={note}
-                    onChangeText={setNote}
-                    placeholder={t('transaction.placeholders.addNote')}
-                    className="text-black text-base flex-1 text-left"
-                    placeholderTextColor="#9CA3AF"
-                  />
-                </View>
               </View>
-            </View>
-          </View>
 
-          {error && (
-            <View className="px-4 py-2 mb-4">
-              <Text className="text-error-500">{error}</Text>
-            </View>
-          )}
+              {error && (
+                <View className="px-4 py-2 mb-4">
+                  <Text className="text-error-500">{error}</Text>
+                </View>
+              )}
+            </ScrollView>
 
-          <View className="px-4 pb-8 pt-2">
-            <Button
-              variant="primary"
-              size="lg"
-              rounded="default"
-              onPress={handleSave}
-              className="w-full"
-              isLoading={isLoading}
-              disabled={!canSaveTransaction()}
-            >
-              <Text className="text-white font-semibold text-lg">{t('auth.actions.continue')}</Text>
-            </Button>
-          </View>
+            <View className="px-4 pb-8 pt-2">
+              <Button
+                variant="primary"
+                size="lg"
+                rounded="default"
+                onPress={handleSave}
+                className="w-full"
+                isLoading={isLoading}
+                disabled={!canSaveTransaction()}
+              >
+                <Text className="text-white font-semibold text-lg">{t('auth.actions.continue')}</Text>
+              </Button>
+            </View>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </HeaderContainer>
 

@@ -164,9 +164,9 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
       }}
       onChange={(index) => {
         if (index === -1) {
-          showTabBar();
+          showTabBar('budget-bottom-sheet');
         } else {
-          hideTabBar();
+          hideTabBar('budget-bottom-sheet');
         }
       }}
     >

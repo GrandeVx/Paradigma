@@ -62,7 +62,7 @@ export interface DonutChartProps {
   size?: number;
   strokeWidth?: number;
   showLabels?: boolean;
-  animate?: boolean;
+  irregular?: boolean;
 }
 
 export interface HeatmapProps {

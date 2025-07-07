@@ -664,6 +664,7 @@ export const ChartsSection: React.FC = () => {
                 size={350}
                 strokeWidth={50}
                 showLabels={false}
+                irregular={true}
               />
             </Animated.View>
 

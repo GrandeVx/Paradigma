@@ -15,7 +15,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   size,
   strokeWidth = 40,
   showLabels = true,
-  animate = false,
+  irregular = false,
 }) => {
   const router = useRouter();
   const { getCurrencySymbol } = useCurrency();
@@ -29,10 +29,11 @@ export const DonutChart: React.FC<DonutChartProps> = ({
     return size || calculateOptimalChartSize(screenWidth - 32, 800);
   }, [size, screenWidth]);
 
-  // Calculate donut segments
+  // Calculate donut segments with gaps and variable thickness
   const segments = useMemo(() => {
-    return calculateDonutSegments(data, chartSize, strokeWidth);
-  }, [data, chartSize, strokeWidth]);
+    const gapAngle = irregular ? 3 : 0; // 3 degree gap between segments when irregular
+    return calculateDonutSegments(data, chartSize, strokeWidth, gapAngle, irregular);
+  }, [data, chartSize, strokeWidth, irregular]);
 
   // Format total amount for display
   const formattedAmount = useMemo(() => {
@@ -94,24 +95,25 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   return (
     <View
       style={{
-        width: chartSize,
-        height: chartSize,
+        width: chartSize + 20,
+        height: chartSize + 20,
         alignItems: 'center',
         justifyContent: 'center'
       }}
     >
       {/* SVG Donut Chart */}
       <Svg width={chartSize} height={chartSize}>
-        {/* Background circle */}
-        {/* <Circle
-          cx={centerX}
-          cy={centerY}
-          r={backgroundRadius}
-          fill="none"
-          stroke="#F3F4F6"
-
-          strokeWidth={strokeWidth}
-        /> */}
+        {/* Background circle - only show when not irregular */}
+        {!irregular && (
+          <Circle
+            cx={centerX}
+            cy={centerY}
+            r={backgroundRadius}
+            fill="none"
+            stroke="#F3F4F6"
+            strokeWidth={strokeWidth}
+          />
+        )}
 
         {/* Category segments */}
         {segments.map((segment, index) => (
@@ -121,7 +123,6 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             fill={segment.color}
             stroke={segment.color}
             strokeWidth={1}
-            opacity={animate ? 0.9 : 1}
             onPress={() => handleCategoryPress(segment.id)}
           />
         ))}
