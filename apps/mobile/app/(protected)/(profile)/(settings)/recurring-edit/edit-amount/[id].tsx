@@ -38,16 +38,10 @@ export default function EditRecurringAmount() {
     onSuccess: async () => {
       console.log('✏️ [UpdateAmountMutation] Recurring amount updated, invalidating cache...');
       
-      // Invalidate the specific recurring rule query so the edit page reflects the new amount
-      await queryClient.recurringRule.getById.invalidate({ ruleId: id! });
-      
-      // Invalidate the list of recurring rules
-      await queryClient.recurringRule.list.invalidate();
-      
-      // Invalidate other related queries
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, { clearCache: true });
       await InvalidationUtils.invalidateChartsQueries(queryClient);
       await InvalidationUtils.invalidateBudgetQueries(queryClient);
+      await InvalidationUtils.invalidateRecurringRuleQueries(queryClient);
       
       setIsLoading(false);
       router.back();

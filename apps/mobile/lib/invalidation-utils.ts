@@ -241,6 +241,30 @@ export class InvalidationUtils {
   }
 
   /**
+   * Invalidates recurring rule queries (both recurring and installment lists).
+   * Use this when recurring rules are created, updated, or deleted.
+   */
+  static async invalidateRecurringRuleQueries(
+    utils: ReturnType<typeof api.useContext>
+  ) {
+    console.log('🔄 [InvalidationUtils] Invalidating recurring rule queries...');
+    
+    try {
+      // Invalidate both recurring and installment lists
+      await utils.recurringRule.list.invalidate({ isInstallment: false });
+      await utils.recurringRule.list.invalidate({ isInstallment: true });
+      
+      // Also invalidate the getById queries (broad invalidation)
+      await utils.recurringRule.getById.invalidate();
+      
+      console.log('✅ [InvalidationUtils] Recurring rule queries invalidated successfully');
+    } catch (error) {
+      console.error('❌ [InvalidationUtils] Error invalidating recurring rule queries:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Aggressively invalidates all chart-related queries with specific parameters.
    * Use this when transactions are deleted to ensure charts update correctly.
    */

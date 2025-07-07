@@ -198,6 +198,9 @@ export default function SummaryScreen() {
     onSuccess: async () => {
       console.log('🔁 [RecurringRuleMutation] Recurring rule created, invalidating cache...');
       
+      // Invalidate recurring rule queries first
+      await InvalidationUtils.invalidateRecurringRuleQueries(queryClient);
+      
       // If we have the last transaction date, use it for targeted invalidation
       if (lastTransactionDate) {
         const transactionMonth = lastTransactionDate.getMonth() + 1;

@@ -126,6 +126,7 @@ export default function RecurringEditScreen() {
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, { clearCache: true });
       await InvalidationUtils.invalidateChartsQueries(queryClient);
       await InvalidationUtils.invalidateBudgetQueries(queryClient);
+      await InvalidationUtils.invalidateRecurringRuleQueries(queryClient);
       
       router.back();
     }
@@ -138,6 +139,7 @@ export default function RecurringEditScreen() {
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, { clearCache: true });
       await InvalidationUtils.invalidateChartsQueries(queryClient);
       await InvalidationUtils.invalidateBudgetQueries(queryClient);
+      await InvalidationUtils.invalidateRecurringRuleQueries(queryClient);
       
       router.back();
     }
