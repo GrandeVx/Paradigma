@@ -366,7 +366,6 @@ export default function ProfileScreen() {
               label={t('profile.recurring')}
               hasArrow={true}
               onPress={() => {
-                hideTabBar();
                 router.push("/(protected)/(profile)/(settings)")
               }}
             />
@@ -375,7 +374,6 @@ export default function ProfileScreen() {
               label={t('profile.installments')}
               hasArrow={true}
               onPress={() => {
-                hideTabBar();
                 router.push("/(protected)/(profile)/(settings)/installments")
               }}
             />

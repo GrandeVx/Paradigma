@@ -277,7 +277,7 @@ export const GoalsSection: React.FC = () => {
   }, [isLoading, contentOpacity]);
 
   const handleGoalPress = (id: string) => {
-    hideTabBar();
+    hideTabBar('goals-navigation');
     // Navigate to goal account details
     router.push({
       pathname: "/(protected)/(accounts)/[id]",
