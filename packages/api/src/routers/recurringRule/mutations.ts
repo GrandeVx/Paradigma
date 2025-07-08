@@ -51,26 +51,14 @@ export const mutations = {
         dayOfMonth = input.startDate.getDate();
       }
       
-      // Check if the first occurrence starts today or in the past
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startDateNormalized = new Date(input.startDate);
-      startDateNormalized.setHours(0, 0, 0, 0);
-      
-      // If the rule starts today or in the past, set nextDueDate to startDate
-      // Otherwise, calculate the next occurrence from startDate
-      let nextDueDate: Date;
-      if (startDateNormalized <= today) {
-        nextDueDate = input.startDate;
-      } else {
-        nextDueDate = calculateNextOccurrenceDate(
-          input.startDate,
-          input.frequencyType,
-          input.frequencyInterval,
-          dayOfMonth || null,
-          input.dayOfWeek || null
-        );
-      }
+      // Calculate next due date based on start date and frequency
+      const nextDueDate = calculateNextOccurrenceDate(
+        input.startDate,
+        input.frequencyType,
+        input.frequencyInterval,
+        dayOfMonth || null,
+        input.dayOfWeek || null
+      );
       
       // Create the recurring rule
       const recurringRule = await ctx.db.recurringTransactionRule.create({
@@ -103,7 +91,12 @@ export const mutations = {
         }
       });
       
-      // If the rule starts today or in the past, create the first transaction immediately
+      // Check if the first occurrence starts today or in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startDateNormalized = new Date(input.startDate);
+      startDateNormalized.setHours(0, 0, 0, 0);
+      
       if (startDateNormalized <= today) {
         // Calculate the signed amount based on type
         const signedAmount = input.type === "EXPENSE" 
@@ -128,23 +121,12 @@ export const mutations = {
           // Transaction creation has its own cache invalidation
         });
         
-        // Calculate the actual next due date after creating the first transaction
-        const actualNextDueDate = calculateNextOccurrenceDate(
-          input.startDate,
-          input.frequencyType,
-          input.frequencyInterval,
-          dayOfMonth || null,
-          input.dayOfWeek || null
-        );
-        
         // Update the recurring rule to track that first occurrence was generated
-        // and set the correct next due date
         await ctx.db.recurringTransactionRule.update({
           where: { id: recurringRule.id },
           data: {
             occurrencesGenerated: 1,
             isFirstOccurrenceGenerated: true,
-            nextDueDate: actualNextDueDate,
           },
           uncache: {
             uncacheKeys: getRecurringRuleInvalidationKeys(ctx.db, userId, recurringRule.id, input.isInstallment)

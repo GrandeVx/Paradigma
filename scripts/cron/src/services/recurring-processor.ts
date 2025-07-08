@@ -121,6 +121,29 @@ async function processRule(
     nextDueDate: rule.nextDueDate
   });
 
+  // Skip if this is the first occurrence and it was already generated at creation time
+  if (rule.occurrencesGenerated === 1 && rule.isFirstOccurrenceGenerated) {
+    // Check if the nextDueDate is still the same as startDate (meaning this is the first run)
+    const startDateNormalized = new Date(rule.startDate);
+    startDateNormalized.setHours(0, 0, 0, 0);
+    const nextDueDateNormalized = new Date(rule.nextDueDate);
+    nextDueDateNormalized.setHours(0, 0, 0, 0);
+    
+    if (startDateNormalized.getTime() === nextDueDateNormalized.getTime()) {
+      // This is the first run after creation, skip creating duplicate transaction
+      // Just update the nextDueDate to the actual next occurrence
+      const nextDueDate = calculateNextDueDate(rule);
+      
+      await db.recurringTransactionRule.update({
+        where: { id: rule.id },
+        data: { nextDueDate },
+      });
+      
+      logger.info(`Skipped first occurrence for rule ${rule.id} (already generated at creation)`);
+      return;
+    }
+  }
+
   await db.$transaction(async (tx) => {
     // Create the transaction
     const transaction = await tx.transaction.create({

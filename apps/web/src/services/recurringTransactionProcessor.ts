@@ -58,6 +58,43 @@ export async function processRecurringTransactions(): Promise<ProcessingResult> 
           continue;
         }
 
+        // Skip if this is the first occurrence and it was already generated at creation time
+        if (rule.occurrencesGenerated === 1 && rule.isFirstOccurrenceGenerated) {
+          // Check if the nextDueDate is still the same as startDate (meaning this is the first run)
+          const startDateNormalized = new Date(rule.startDate);
+          startDateNormalized.setHours(0, 0, 0, 0);
+          const nextDueDateNormalized = new Date(rule.nextDueDate);
+          nextDueDateNormalized.setHours(0, 0, 0, 0);
+          
+          if (startDateNormalized.getTime() === nextDueDateNormalized.getTime()) {
+            // This is the first run after creation, skip creating duplicate transaction
+            // Just update the nextDueDate to the actual next occurrence
+            const nextDueDate = calculateNextDueDate(
+              rule.nextDueDate,
+              rule.frequencyType,
+              rule.frequencyInterval,
+              rule.dayOfWeek ?? undefined,
+              rule.dayOfMonth ?? undefined
+            );
+            
+            await db.recurringTransactionRule.update({
+              where: { id: rule.id },
+              data: { nextDueDate },
+              uncache: {
+                uncacheKeys: getRecurringRuleInvalidationKeys(
+                  db,
+                  rule.userId,
+                  rule.id,
+                  rule.isInstallment
+                ),
+              },
+            });
+            
+            processedRules++;
+            continue;
+          }
+        }
+
         // Get macro category for cache invalidation
         const macroCategoryId = rule.subCategory?.macroCategoryId;
 
