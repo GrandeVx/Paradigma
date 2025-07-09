@@ -44,6 +44,9 @@ export const mutations = {
         
         console.log(`✅ [Transaction] Account verified:`, account);
         
+        // Convert date to UTC to ensure consistency
+        const dateUTC = new Date(input.date.toISOString());
+        
         // Store amount as negative for expenses
         const negativeAmount = -Math.abs(input.amount);
         console.log(`💱 [Transaction] Amount converted to negative: ${negativeAmount}`);
@@ -59,7 +62,7 @@ export const mutations = {
           console.log(`🏷️ [Transaction] Macro category ID: ${macroCategoryId}`);
         }
         
-        console.log(`🔥 [Transaction] Creating expense with invalidations for date: ${input.date.toISOString()}`);
+        console.log(`🔥 [Transaction] Creating expense with invalidations for date: ${dateUTC.toISOString()}`);
         console.log(`🔥 [Transaction] User ID: ${userId}, SubCategory: ${input.subCategoryId}`);
         
         console.log(`💾 [Transaction] Creating expense transaction`);
@@ -70,7 +73,7 @@ export const mutations = {
             userId: userId,
             moneyAccountId: input.accountId,
             amount: negativeAmount,
-            date: input.date,
+            date: dateUTC,
             description: input.description,
             subCategoryId: input.subCategoryId || null,
             notes: input.notes || null,  
@@ -78,7 +81,7 @@ export const mutations = {
           // Invalidate relevant caches after creating a transaction
           uncache: {
             uncacheKeys: getTransactionInvalidationKeys(ctx.db, userId, {
-              date: input.date,
+              date: dateUTC,
               moneyAccountId: input.accountId,
               subCategoryId: input.subCategoryId || null,
               macroCategoryId: macroCategoryId,
@@ -126,6 +129,9 @@ export const mutations = {
         
         console.log(`✅ [Transaction] Account verified:`, account);
         
+        // Convert date to UTC to ensure consistency
+        const dateUTC = new Date(input.date.toISOString());
+        
         // Store amount as positive for income
         const positiveAmount = Math.abs(input.amount);
         console.log(`💱 [Transaction] Amount converted to positive: ${positiveAmount}`);
@@ -141,7 +147,7 @@ export const mutations = {
           console.log(`🏷️ [Transaction] Macro category ID: ${macroCategoryId}`);
         }
         
-        console.log(`🔥 [Transaction] Creating income with invalidations for date: ${input.date.toISOString()}`);
+        console.log(`🔥 [Transaction] Creating income with invalidations for date: ${dateUTC.toISOString()}`);
         console.log(`💾 [Transaction] Creating income transaction`);
         const startTime = Date.now();
         
@@ -150,7 +156,7 @@ export const mutations = {
             userId: userId,
             moneyAccountId: input.accountId,
             amount: positiveAmount,
-            date: input.date,
+            date: dateUTC,
             description: input.description,
             subCategoryId: input.subCategoryId || null,
             notes: input.notes || null,
@@ -158,7 +164,7 @@ export const mutations = {
           // Invalidate relevant caches after creating a transaction
           uncache: {
             uncacheKeys: getTransactionInvalidationKeys(ctx.db, userId, {
-              date: input.date,
+              date: dateUTC,
               moneyAccountId: input.accountId,
               subCategoryId: input.subCategoryId || null,
               macroCategoryId: macroCategoryId,
@@ -225,6 +231,9 @@ export const mutations = {
         console.log(`✅ [Transaction] Both accounts verified`);
         console.log(`💸 [Transaction] Creating transfer: ${fromAccount.name} -> ${toAccount.name}`);
         
+        // Convert date to UTC to ensure consistency
+        const dateUTC = new Date(input.date.toISOString());
+        
         // Generate a unique transfer ID to link both transactions
         const transferId = `transfer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         console.log(`🔗 [Transaction] Transfer ID: ${transferId}`);
@@ -240,7 +249,7 @@ export const mutations = {
               userId: userId,
               moneyAccountId: input.fromAccountId,
               amount: -Math.abs(input.amount),
-              date: input.date,
+              date: dateUTC,
               description: input.description || `Transfer to ${toAccount.name}`,
               transferId: transferId,
               notes: input.notes || null,
@@ -252,7 +261,7 @@ export const mutations = {
               userId: userId,
               moneyAccountId: input.toAccountId,
               amount: Math.abs(input.amount),
-              date: input.date,
+              date: dateUTC,
               description: input.description || `Transfer from ${fromAccount.name}`,
               transferId: transferId,
               notes: input.notes || null,

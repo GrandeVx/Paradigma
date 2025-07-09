@@ -47,16 +47,28 @@ export async function processRecurringTransactions(): Promise<ProcessingResult> 
       NODE_ENV: process.env.NODE_ENV
     });
 
-    // Get all active recurring rules that are due
+    // Get all active recurring rules that are due today
     const now = new Date();
-    logger.debug('Executing recurring transaction rules query', { currentTime: now });
+    
+    // Calculate start and end of current day in UTC
+    const startOfDay = new Date(now);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(now);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+    
+    logger.debug('Executing recurring transaction rules query', { 
+      currentTime: now,
+      startOfDay: startOfDay,
+      endOfDay: endOfDay
+    });
     
     const dueRules = await db.recurringTransactionRule.findMany({
       where: {
         isActive: true,
         nextDueDate: {
-          // TODO: Troppo specifico... dovremmo lavorare sulla data di oggi, non sulle 00:00:00
-          lte: now
+          gte: startOfDay,
+          lt: endOfDay,
         }
       },
       include: {
@@ -84,7 +96,7 @@ export async function processRecurringTransactions(): Promise<ProcessingResult> 
       throw new Error(`Expected array, got ${typeof dueRules}`);
     }
 
-    logger.info(`Found ${dueRules.length} due recurring transaction rules`);
+    logger.info(`Found ${dueRules.length} due recurring transaction rules for today (${startOfDay.toISOString()} to ${endOfDay.toISOString()})`);
 
     for (const rule of dueRules) {
       try {

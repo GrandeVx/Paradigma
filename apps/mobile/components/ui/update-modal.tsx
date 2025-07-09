@@ -181,7 +181,7 @@ export function UpdateModal({
                 </Button>
               ) : (
                 // Normal state - pulsanti aggiorna e annulla
-                <View className="flex-row gap-2">
+                <View className="flex-col gap-2">
                   <Button
                     variant="primary"
                     onPress={onUpdatePress}

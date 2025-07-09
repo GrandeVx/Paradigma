@@ -45,15 +45,19 @@ export const mutations = {
         }
       }
       
+      // Convert input dates to UTC to ensure consistency
+      const startDateUTC = new Date(input.startDate.toISOString());
+      const endDateUTC = input.endDate ? new Date(input.endDate.toISOString()) : null;
+      
       // For MONTHLY frequency, extract day of month from startDate if not provided
       let dayOfMonth = input.dayOfMonth;
       if (input.frequencyType === "MONTHLY" && !dayOfMonth) {
-        dayOfMonth = input.startDate.getDate();
+        dayOfMonth = startDateUTC.getUTCDate();
       }
       
       // Calculate next due date based on start date and frequency
       const nextDueDate = calculateNextOccurrenceDate(
-        input.startDate,
+        startDateUTC,
         input.frequencyType,
         input.frequencyInterval,
         dayOfMonth || null,
@@ -71,7 +75,7 @@ export const mutations = {
           subCategoryId: input.subCategoryId || null,
           
           // Recurrence logic
-          startDate: input.startDate,
+          startDate: startDateUTC,
           frequencyType: input.frequencyType,
           frequencyInterval: input.frequencyInterval,
           dayOfWeek: input.dayOfWeek || null,
@@ -79,7 +83,7 @@ export const mutations = {
           nextDueDate,
           
           // End conditions
-          endDate: input.endDate || null,
+          endDate: endDateUTC,
           totalOccurrences: input.totalOccurrences || null,
           isInstallment: input.isInstallment || false,
           
@@ -91,13 +95,13 @@ export const mutations = {
         }
       });
       
-      // Check if the first occurrence starts today or in the past
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startDateNormalized = new Date(input.startDate);
-      startDateNormalized.setHours(0, 0, 0, 0);
+      // Check if the first occurrence starts today or in the past (in UTC)
+      const todayUTC = new Date();
+      todayUTC.setUTCHours(0, 0, 0, 0);
+      const startDateNormalizedUTC = new Date(startDateUTC);
+      startDateNormalizedUTC.setUTCHours(0, 0, 0, 0);
       
-      if (startDateNormalized <= today) {
+      if (startDateNormalizedUTC <= todayUTC) {
         // Calculate the signed amount based on type
         const signedAmount = input.type === "EXPENSE" 
           ? -Math.abs(input.amount) 
@@ -112,7 +116,7 @@ export const mutations = {
               ? `${input.description} (1/${input.totalOccurrences})` 
               : input.description,
             amount: signedAmount,
-            date: input.startDate,
+            date: startDateUTC,
             subCategoryId: input.subCategoryId || null,
             notes: input.notes || null,
             isRecurringInstance: true,

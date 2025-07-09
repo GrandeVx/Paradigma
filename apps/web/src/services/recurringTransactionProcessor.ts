@@ -22,13 +22,21 @@ export async function processRecurringTransactions(): Promise<ProcessingResult> 
   let createdTransactions = 0;
   const userNotifications = new Map<string, number>();
 
+  // Calculate start and end of current day in UTC
+  const startOfDay = new Date(now);
+  startOfDay.setUTCHours(0, 0, 0, 0);
+  
+  const endOfDay = new Date(now);
+  endOfDay.setUTCHours(23, 59, 59, 999);
+
   try {
-    // Find all active rules that are due
+    // Find all active rules that are due today
     const dueRules = await db.recurringTransactionRule.findMany({
       where: {
         isActive: true,
         nextDueDate: {
-          lte: now,
+          gte: startOfDay,
+          lt: endOfDay,
         },
       },
       include: {
@@ -38,7 +46,7 @@ export async function processRecurringTransactions(): Promise<ProcessingResult> 
       },
     });
 
-    console.log(`Found ${dueRules.length} rules to process`);
+    console.log(`Found ${dueRules.length} rules to process for today (${startOfDay.toISOString()} to ${endOfDay.toISOString()})`);
 
     // Process each rule
     for (const rule of dueRules) {
@@ -62,9 +70,9 @@ export async function processRecurringTransactions(): Promise<ProcessingResult> 
         if (rule.occurrencesGenerated === 1 && rule.isFirstOccurrenceGenerated) {
           // Check if the nextDueDate is still the same as startDate (meaning this is the first run)
           const startDateNormalized = new Date(rule.startDate);
-          startDateNormalized.setHours(0, 0, 0, 0);
+          startDateNormalized.setUTCHours(0, 0, 0, 0);
           const nextDueDateNormalized = new Date(rule.nextDueDate);
-          nextDueDateNormalized.setHours(0, 0, 0, 0);
+          nextDueDateNormalized.setUTCHours(0, 0, 0, 0);
           
           if (startDateNormalized.getTime() === nextDueDateNormalized.getTime()) {
             // This is the first run after creation, skip creating duplicate transaction
