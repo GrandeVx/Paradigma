@@ -2,6 +2,7 @@ import React from "react";
 import { View, ImageBackground, Image } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Link, useRouter } from "expo-router";
+import { Video, ResizeMode } from 'expo-av';
 
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -14,12 +15,32 @@ export default function AuthIndex() {
   const router = useRouter();
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/background.png")}
-      className="flex-1"
-      imageClassName="transform"
-      resizeMode="cover"
-    >
+    <View className="flex-1">
+      {/* Background Video */}
+      <Video
+        source={require("@/assets/videos/background.mp4")}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+        }}
+        shouldPlay
+        isLooping
+        isMuted
+        resizeMode={ResizeMode.COVER}
+      />
+      
+      {/* Fallback Background Image */}
+      <ImageBackground
+        source={require("@/assets/images/background.png")}
+        className="absolute inset-0"
+        imageClassName="transform"
+        resizeMode="cover"
+        style={{ zIndex: -1 }}
+      />
+
       <SafeAreaView className="flex-1 px-6">
         <View className="flex-1 justify-between">
           {/* Logo Section - Centered */}
@@ -43,8 +64,6 @@ export default function AuthIndex() {
 
           {/* Content Section - Bottom */}
           <View className="gap-8 pb-8">
-
-
             <View className="gap-4">
               <Button
                 variant="primary"
@@ -70,7 +89,7 @@ export default function AuthIndex() {
           </View>
         </View>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
