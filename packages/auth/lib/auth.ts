@@ -101,7 +101,7 @@ export const auth = betterAuth({
             clientSecret: process.env.APPLE_CLIENT_SECRET!,
         },
     },
-    trustedOrigins: ["balance://"],
+    trustedOrigins: ["balance://","https://appleid.apple.com"],
   plugins: [nextCookies(),expo(), emailOTP(
     {
         async sendVerificationOTP({ email, otp, type}) { 
