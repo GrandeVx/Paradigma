@@ -58,7 +58,7 @@ export default function TabLayout() {
         options={{
           // This title is used to set the title of the bottom tab
           title: "Budgets",
-          tabBarIcon: ({ color }) => <SvgIcon name="document" color={color} />,
+          tabBarIcon: ({ color }) => <SvgIcon name="target" color={color} />,
         }}
       />
 
@@ -84,7 +84,7 @@ export default function TabLayout() {
         options={{
           // This title is used to set the title of the bottom tab
           title: "Accounts",
-          tabBarIcon: ({ color }) => <SvgIcon name="pig-money" color={color} />,
+          tabBarIcon: ({ color }) => <SvgIcon name="wallet" size={30} color={color} />,
         }}
       />
 
@@ -97,7 +97,7 @@ export default function TabLayout() {
           title: "Profile",
           tabBarIcon: ({ color }) =>
             isIconReady ? (
-              <Text style={{ fontSize: 28, marginBottom: -3 }}>{icon}</Text>
+              <Text style={{ fontSize: 24, marginBottom: -3 }}>{icon}</Text>
             ) : (
               <TabBarIcon name="user" color={color} />
             )

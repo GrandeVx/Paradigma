@@ -33,6 +33,7 @@ type SupabaseContextProps = {
   signInWithGoogle: () => Promise<unknown>;
   signOut: () => Promise<void>;
   PasswordReset: () => Promise<void>;
+  forceRouting: () => void;
 
   // Storage
   uploadAvatar: (file: string) => Promise<string>;
@@ -58,6 +59,7 @@ export const SupabaseContext = createContext<SupabaseContextProps>({
   signInWithGoogle: async () => { },
   signOut: async () => { },
   PasswordReset: async () => { },
+  forceRouting: () => { },
   uploadAvatar: async () => "",
   getAvatarUrl: async () => "",
 });
@@ -296,8 +298,14 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
       }
 
       setInitialized(true);
-      // Reset routing flag to trigger a new routing decision
-      setIsInitialRoutingDone(false);
+      
+      // Skip auto routing for OAuth to allow notifications modal to open
+      setSkipAutoRouting(true);
+      setTimeout(() => {
+        setSkipAutoRouting(false);
+        setIsInitialRoutingDone(false);
+      }, 10000); // Give 10 seconds for the notifications modal to complete
+      
       return data;
     } catch (error) {
       console.error("❌ Error in signInWithApple:", error);
@@ -347,8 +355,14 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
       }
 
       setInitialized(true);
-      // Reset routing flag to trigger a new routing decision
-      setIsInitialRoutingDone(false);
+      
+      // Skip auto routing for OAuth to allow notifications modal to open
+      setSkipAutoRouting(true);
+      setTimeout(() => {
+        setSkipAutoRouting(false);
+        setIsInitialRoutingDone(false);
+      }, 10000); // Give 10 seconds for the notifications modal to complete
+      
       return data;
     } catch (error) {
       console.error("❌ Error in signInWithGoogle:", error);
@@ -374,6 +388,15 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
         console.log("error", error);
         throw error;
       });
+  };
+
+  /**
+   * Force routing when OAuth notifications modal is completed
+   */
+  const forceRouting = () => {
+    console.log("[🚥 Provider] Force routing requested - stopping skipAutoRouting");
+    setSkipAutoRouting(false);
+    setIsInitialRoutingDone(false);
   };
 
   /**
@@ -596,6 +619,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
           signInWithGoogle,
           sendVerificationOtp,
           signOut,
+          forceRouting,
           PasswordReset: async () => { },
           uploadAvatar: async () => "",
           getAvatarUrl: async () => "",
@@ -622,6 +646,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
         signInWithGoogle,
         sendVerificationOtp,
         signOut,
+        forceRouting,
         // Stub implementations to satisfy the context contract (not yet implemented on mobile)
         PasswordReset: async () => { },
         uploadAvatar: async () => "",
