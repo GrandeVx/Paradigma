@@ -854,8 +854,8 @@ export const TransactionsSection: React.FC = () => {
 
           {/* Subtitle */}
           <Text
-            className="text-gray-500 text-center"
-            style={{ fontFamily: 'DM Sans', fontSize: 14, lineHeight: 20 }}
+            className="text-gray-500 text-center text-sm"
+            style={{ fontFamily: 'DM Sans', lineHeight: 20 }}
           >
             Aggiungi una transazione per visualizzare il tuo andamento
           </Text>

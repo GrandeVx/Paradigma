@@ -9,25 +9,25 @@ export const typography = {
   // Font sizes with their respective line heights
   fontSize: {
     // Extra Small - 12px
-    xs: ["0.75rem", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
+    xs: ["12px", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
     // Small - 14px
-    sm: ["0.875rem", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
+    sm: ["14px", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
     // Base - 16px
-    base: ["1rem", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
+    base: ["16px", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
     // Large - 18px
-    lg: ["1.125rem", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
+    lg: ["18px", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
     // Extra Large - 20px
-    xl: ["1.25rem", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
+    xl: ["20px", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
     // 2XL - 24px
-    "2xl": ["1.5rem", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
+    "2xl": ["24px", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
     // 3XL - 32px
-    "3xl": ["2rem", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
-    "4xl": ["2.5rem", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
-    "5xl": ["3rem", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
-    "6xl": ["3.5rem", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
-    "7xl": ["4rem", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
-    "8xl": ["4.5rem", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
-    "9xl": ["5rem", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
+    "3xl": ["32px", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
+    "4xl": ["48px", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
+    "5xl": ["64px", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
+    "6xl": ["96px", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
+    "7xl": ["128px", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
+    "8xl": ["192px", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
+    "9xl": ["256px", { lineHeight: "1.5", letterSpacing: "-0.02em" }],
   },
   // Font weights
   fontWeight: {

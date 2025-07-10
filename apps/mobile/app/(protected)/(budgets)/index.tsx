@@ -545,13 +545,13 @@ export default function BudgetScreen() {
                 {/* Background emojis with staggered animations */}
                 <Animated.Text
                   entering={FadeIn.delay(200).duration(800)}
-                  className="absolute top-[200px] right-[45px] text-9xl rotate-[15deg] opacity-5 scale-150"
+                  className="absolute top-[200px] right-[45px] text-4xl rotate-[15deg] opacity-5 scale-150"
                 >
                   💰
                 </Animated.Text>
                 <Animated.Text
                   entering={FadeIn.delay(400).duration(800)}
-                  className="text-[48px] text-gray-500 absolute rotate-[20deg] top-[418px] right-[40px]"
+                  className="text-4xl text-gray-500 absolute rotate-[20deg] top-[418px] right-[40px]"
                 >
                   🛒
                 </Animated.Text>

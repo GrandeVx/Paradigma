@@ -60,7 +60,6 @@ module.exports = {
         lime: {
           500: "var(--lime-500)",
         },
-
         // State Colors
         success: {
           50: "var(--success-50)",
