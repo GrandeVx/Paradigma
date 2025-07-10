@@ -14,7 +14,10 @@ console.log("🚀 [BetterAuth] Initializing with config:", {
     emailUser: process.env.EMAIL_USER || "Missing",
     hasEmailPassword: !!process.env.EMAIL_PASSWORD,
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ? "Set" : "Missing",
-    betterAuthUrl: process.env.BETTER_AUTH_URL || "Missing"
+    betterAuthUrl: process.env.BETTER_AUTH_URL || "Missing",
+    googleClientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
+    appleClientId: process.env.APPLE_CLIENT_ID ? "Set" : "Missing",
 });
  
 export const auth = betterAuth({
@@ -86,7 +89,17 @@ export const auth = betterAuth({
     }),
     emailAndPassword: { 
         enabled: true, 
-    }, 
+    },
+    socialProviders: {
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        },
+        apple: {
+            clientId: process.env.APPLE_CLIENT_ID!,
+            clientSecret: process.env.APPLE_CLIENT_SECRET!,
+        },
+    },
     trustedOrigins: ["balance://"],
   plugins: [nextCookies(),expo(), emailOTP(
     {
