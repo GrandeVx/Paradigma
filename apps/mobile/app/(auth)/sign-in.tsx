@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
@@ -6,12 +6,42 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
+import { useSupabase } from "@/context/supabase-provider";
 
 
 
 export default function SignUp() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { signInWithGoogle, signInWithApple } = useSupabase();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      // Navigation will be handled automatically by the provider
+    } catch (error) {
+      console.error("Google Sign-In error:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setIsAppleLoading(true);
+    try {
+      await signInWithApple();
+      // Navigation will be handled automatically by the provider
+    } catch (error) {
+      console.error("Apple Sign-In error:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsAppleLoading(false);
+    }
+  };
 
   return (
     <HeaderContainer variant="secondary">
@@ -48,20 +78,25 @@ export default function SignUp() {
                   size="lg"
                   textClassName="text-[16px] font-sans font-semibold text-black"
                   className="flex-1 bg-gray-50"
+                  isLoading={isGoogleLoading}
+                  disabled={isAppleLoading}
+                  onPress={handleGoogleSignIn}
                 >
                   <Text>
-                    "Google"
+                    Google
                   </Text>
                 </Button>
                 <Button
                   variant="primary"
                   size="lg"
-
                   textClassName="text-[16px] font-sans font-semibold text-black"
                   className="flex-1 bg-gray-50"
+                  isLoading={isAppleLoading}
+                  disabled={isGoogleLoading}
+                  onPress={handleAppleSignIn}
                 >
                   <Text>
-                    "Apple"
+                    Apple
                   </Text>
                 </Button>
               </View>

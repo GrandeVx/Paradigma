@@ -18,26 +18,58 @@ import { useSupabase } from "@/context/supabase-provider";
 export default function AuthIndex() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { sendVerificationOtp } = useSupabase();
+  const { sendVerificationOtp, signInWithGoogle, signInWithApple } = useSupabase();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
 
   const canSignUp = email && z.string().email().safeParse(email).success;
 
   const handleSignUp = async () => {
-
     setIsLoading(true);
-    await sendVerificationOtp(email);
-    setIsLoading(false);
-    router.push({
-      pathname: "/(auth)/sign-in-verify",
-      params: {
-        email: email,
-        fromLogin: "true",
-      },
-    });
+    try {
+      await sendVerificationOtp(email);
+      router.push({
+        pathname: "/(auth)/sign-in-verify",
+        params: {
+          email: email,
+          fromLogin: "true",
+        },
+      });
+    } catch (error) {
+      console.error("Error sending verification OTP:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  }
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      // Navigation will be handled automatically by the provider
+    } catch (error) {
+      console.error("Google Sign-In error:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setIsAppleLoading(true);
+    try {
+      await signInWithApple();
+      // Navigation will be handled automatically by the provider
+    } catch (error) {
+      console.error("Apple Sign-In error:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsAppleLoading(false);
+    }
+  };
 
   return (
     <HeaderContainer variant="secondary">
@@ -95,20 +127,25 @@ export default function AuthIndex() {
                     size="lg"
                     textClassName="text-[16px] font-sans font-semibold text-black"
                     className="flex-1 bg-gray-50"
+                    isLoading={isGoogleLoading}
+                    disabled={isLoading || isAppleLoading}
+                    onPress={handleGoogleSignIn}
                   >
                     <Text>
-                      "Google"
+                      Google
                     </Text>
                   </Button>
                   <Button
                     variant="primary"
                     size="lg"
-
                     textClassName="text-[16px] font-sans font-semibold text-black"
                     className="flex-1 bg-gray-50"
+                    isLoading={isAppleLoading}
+                    disabled={isLoading || isGoogleLoading}
+                    onPress={handleAppleSignIn}
                   >
                     <Text>
-                      "Apple"
+                      Apple
                     </Text>
                   </Button>
                 </View>

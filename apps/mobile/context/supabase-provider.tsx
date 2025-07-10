@@ -7,6 +7,9 @@ import { authClient } from "@/lib/auth-client";
 import { Session } from "better-auth/types";
 import { User } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import Constants from 'expo-constants';
 
 
 const STORAGE_KEY = "hasCompletedOnboarding";
@@ -236,17 +239,54 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
    */
   const signInWithApple = async () => {
     try {
+      console.log("🍎 Starting Apple Sign-In...");
+
+      // Check if Apple Authentication is available
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      if (!isAvailable) {
+        throw new Error("Apple Authentication is not available on this device");
+      }
+
+      // Sign in with Apple
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      console.log("✅ Apple Sign-In successful:", credential);
+
+      if (!credential.identityToken) {
+        throw new Error("No identity token received from Apple");
+      }
+
+      // Decode the identity token to debug
+      try {
+        const parts = credential.identityToken.split('.');
+        const payload = JSON.parse(atob(parts[1]));
+        console.log("🔍 Apple Identity Token payload:", payload);
+      } catch (e) {
+        console.log("Could not decode identity token");
+      }
+
+      // Use the identity token to authenticate with Better Auth
+      // Better Auth expects idToken in a specific format
       const { error, data } = await authClient.signIn.social({
         provider: "apple",
+        idToken: {
+          token: credential.identityToken,
+
+        },
       });
 
       if (error) {
-        console.error("Error signing in with Apple:", error);
+        console.error("❌ Better Auth Apple Sign-In error:", error);
         throw error;
       }
 
       if (!data) {
-        throw new Error("No user data returned");
+        throw new Error("No user data returned from Better Auth");
       }
 
       // Safe access with type checking
@@ -260,7 +300,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
       setIsInitialRoutingDone(false);
       return data;
     } catch (error) {
-      console.error("Error in signInWithApple:", error);
+      console.error("❌ Error in signInWithApple:", error);
       throw error;
     }
   };
@@ -271,22 +311,49 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
    * @throws If there is an error during the sign-in process.
    */
   const signInWithGoogle = async () => {
-    const { data, error } = await authClient.signIn.social({
-      provider: "google",
-    });
+    try {
+      console.log("🔑 Starting Google Sign-In...");
 
-    if (error) throw error;
+      // Check if Google Play Services are available (Android)
+      await GoogleSignin.hasPlayServices();
 
-    // Safe access with type checking
-    if ('user' in data && 'token' in data) {
-      setUser(data.user as unknown as User);
-      setSession(data.token as unknown as Session);
+      // Sign in with Google
+      const userInfo = await GoogleSignin.signIn();
+      console.log("✅ Google Sign-In successful:", userInfo);
+
+      // Get the ID token
+      const tokens = await GoogleSignin.getTokens();
+      console.log("🔐 Retrieved Google tokens");
+
+      // Use the ID token to authenticate with Better Auth
+      // Better Auth supports signing in with ID tokens directly
+      const { data, error } = await authClient.signIn.social({
+        provider: "google",
+        idToken: {
+          token: tokens.idToken,
+          accessToken: tokens.accessToken,
+        },
+      });
+
+      if (error) {
+        console.error("❌ Better Auth Google Sign-In error:", error);
+        throw error;
+      }
+
+      // Safe access with type checking
+      if ('user' in data && 'token' in data) {
+        setUser(data.user as unknown as User);
+        setSession(data.token as unknown as Session);
+      }
+
+      setInitialized(true);
+      // Reset routing flag to trigger a new routing decision
+      setIsInitialRoutingDone(false);
+      return data;
+    } catch (error) {
+      console.error("❌ Error in signInWithGoogle:", error);
+      throw error;
     }
-
-    setInitialized(true);
-    // Reset routing flag to trigger a new routing decision
-    setIsInitialRoutingDone(false);
-    return data;
   };
 
   /**
@@ -351,6 +418,26 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
   //   return url;
   // };
+
+  // Initialize Google Sign-In
+  useEffect(() => {
+    const initializeGoogleSignIn = async () => {
+      try {
+        const webClientId = Constants.expoConfig?.extra?.googleSignIn?.webClientId;
+        const iosClientId = Constants.expoConfig?.extra?.googleSignIn?.iosClientId;
+
+        await GoogleSignin.configure({
+          webClientId: webClientId,
+          iosClientId: iosClientId,
+        });
+        console.log("✅ Google Sign-In configured successfully");
+      } catch (error) {
+        console.error("❌ Error configuring Google Sign-In:", error);
+      }
+    };
+
+    initializeGoogleSignIn();
+  }, []);
 
   // Initialize app state
   useEffect(() => {

@@ -48,11 +48,19 @@
     "plugins": [
       "expo-router",
       "expo-localization",
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.1010271507170-gq1tot6k4ojt9u55fpt3et3g9lthm2qo"
+        }
+      ],
       [
         "expo-build-properties",
         {
           "ios": {
-            "newArchEnabled": true
+            "newArchEnabled": true,
+            "usesAppleSignIn": true
           },
           "android": {
             "minSdkVersion": 26,
@@ -81,6 +89,9 @@
       },
       "eas": {
         "projectId": "680ac63d-08e7-4607-8083-ee064a9bdeea"
+      },
+      "googleSignIn": {
+        "iosClientId": "1010271507170-gq1tot6k4ojt9u55fpt3et3g9lthm2qo.apps.googleusercontent.com"
       }
     },
     "runtimeVersion": {
