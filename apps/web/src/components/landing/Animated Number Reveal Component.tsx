@@ -1,53 +1,92 @@
 import React, { useEffect, useState } from 'react';
 
+type AnimationPhase = 'idle' | 'revealing' | 'displayed' | 'fading';
+
 const BalanceComponent = () => {
+  const [phase, setPhase] = useState<AnimationPhase>('idle');
   const [animationKey, setAnimationKey] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimationKey(prev => prev + 1);
-    }, 4000);
+  const runAnimationCycle = () => {
+    setPhase('idle');
+    setAnimationKey(prev => prev + 1);
 
-    return () => clearInterval(interval);
+    setTimeout(() => {
+      setPhase('revealing');
+
+      setTimeout(() => {
+        setPhase('displayed');
+
+        setTimeout(() => {
+          setPhase('fading');
+
+          setTimeout(() => {
+            runAnimationCycle(); // Ricomincia
+          }, 1000);
+        }, 1500); // Mostra per 1.5 secondi
+      }, 2000); // Revealing duration
+    }, 500); // Pausa iniziale
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(runAnimationCycle, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
-  const AnimatedNumber = ({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) => (
-    <div
-      key={`${animationKey}-${delay}`}
-      className="inline-block"
-      style={{
-        fontFamily: 'Apfel Grotezk, -apple-system, BlinkMacSystemFont, sans-serif',
-        animation: `revealNumber 4s ease-out ${delay}s both infinite`,
-        filter: 'blur(8px)',
-        animationFillMode: 'both'
-      }}
-    >
-      {children}
-    </div>
-  );
+  const AnimatedNumber = ({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) => {
+    const getStyle = () => {
+      const baseDelay = delay * 100; // Convert delay to ms
+      
+      switch (phase) {
+        case 'idle':
+          return {
+            filter: 'blur(12px)',
+            opacity: 0.2,
+            transform: 'scale(0.95)',
+            transition: 'all 0.3s ease-out'
+          };
+        case 'revealing':
+          return {
+            filter: 'blur(0px)',
+            opacity: 1,
+            transform: 'scale(1)',
+            transition: `all 0.8s ease-out ${baseDelay}ms`
+          };
+        case 'displayed':
+          return {
+            filter: 'blur(0px)',
+            opacity: 1,
+            transform: 'scale(1)',
+            transition: 'all 0.3s ease-out'
+          };
+        case 'fading':
+          return {
+            filter: 'blur(8px)',
+            opacity: 0.3,
+            transform: 'scale(0.98)',
+            transition: 'all 0.6s ease-in'
+          };
+        default:
+          return {};
+      }
+    };
+
+    return (
+      <div
+        key={`${animationKey}-${delay}`}
+        className="inline-block"
+        style={{
+          fontFamily: 'Apfel Grotezk, -apple-system, BlinkMacSystemFont, sans-serif',
+          ...getStyle()
+        }}
+      >
+        {children}
+      </div>
+    );
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 scale-50 md:scale-75">
       <style jsx>{`
-        @keyframes revealNumber {
-          0% {
-            filter: blur(8px);
-            opacity: 0.3;
-          }
-          35% {
-            filter: blur(0px);
-            opacity: 1;
-          }
-          75% {
-            filter: blur(0px);
-            opacity: 1;
-          }
-          100% {
-            filter: blur(8px);
-            opacity: 0.3;
-          }
-        }
-        
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
       `}</style>
 
@@ -69,7 +108,7 @@ const BalanceComponent = () => {
               <path fill="url(#a)" d="M1.05 13.191h100v1.37h-100z" transform="rotate(-2.941 1.05 13.191)" />
               <path fill="#fff" d="M74.532 15.075c-2.715.14-4.722-1.79-4.868-4.637-.147-2.846 1.615-4.97 4.238-5.104 2.937-.151 4.766 2.291 4.66 5.262l-6.798.35c.313 1.401 1.359 2.299 2.689 2.23 1.053-.054 1.872-.693 2.049-1.579l2.013.606c-.4 1.606-1.988 2.77-3.983 2.872Zm-2.824-5.581 4.747-.244c-.251-1.293-1.257-2.118-2.458-2.056-1.219.063-2.097.984-2.29 2.3Zm-6.178 6.041c-2.639.136-4.612-1.796-4.757-4.623-.147-2.865 1.599-4.988 4.22-5.122 2.125-.11 3.9 1.18 4.273 3.1l-1.875.693c-.245-1.2-1.186-1.99-2.322-1.932-1.429.073-2.353 1.39-2.264 3.12.09 1.748 1.179 2.923 2.626 2.848 1.191-.06 2.064-.945 2.126-2.254l2.01.531c-.223 2.082-1.894 3.53-4.037 3.64Zm-13.411.518-.48-9.352 1.564-.08.376 1.518c.45-1.073 1.586-1.844 2.927-1.913 2.048-.105 3.584 1.447 3.698 3.673l.294 5.723-1.955.1-.278-5.404c-.067-1.31-.971-2.201-2.219-2.137-1.36.07-2.31 1.188-2.233 2.684l.261 5.088-1.955.1Zm-5.305.445c-1.83.094-3.12-.94-3.204-2.558-.064-1.247.854-2.338 2.316-2.693l2.923-.729c.278-.051.454-.265.442-.507-.049-.949-.775-1.602-1.747-1.552-1.01.052-1.758.8-1.778 1.864l-2.043-.38c.208-1.802 1.712-3.147 3.637-3.246 2.167-.111 3.793 1.26 3.896 3.269l.216 4.204.133 1.858-1.551.08-.401-1.248c-.533.942-1.568 1.573-2.839 1.638Zm-1.106-2.927c.035.67.6 1.088 1.496 1.042 1.308-.067 2.269-1.068 2.197-2.463l-.022-.428c-.185.047-.388.113-.591.161l-2.018.477c-.684.166-1.091.634-1.062 1.21Zm-4.191 3.027-.65-12.655 1.881-.096.65 12.654-1.88.097Zm-5.305.445c-1.832.094-3.121-.94-3.204-2.558-.064-1.247.854-2.338 2.316-2.693l2.922-.729c.279-.051.455-.265.442-.507-.048-.949-.775-1.602-1.747-1.552-1.009.052-1.757.8-1.777 1.864l-2.043-.38c.207-1.802 1.712-3.147 3.636-3.246 2.168-.111 3.793 1.26 3.896 3.269l.216 4.204.133 1.858-1.55.08-.402-1.248c-.532.941-1.568 1.573-2.838 1.638Zm-1.106-2.927c.034.67.599 1.088 1.496 1.042 1.308-.067 2.268-1.068 2.196-2.463l-.022-.428c-.185.047-.387.113-.59.161l-2.018.477c-.685.166-1.092.634-1.062 1.21Zm-6.283 3.306c-1.335.069-2.498-.485-3.274-1.486l-.242 1.444-1.576.08-.648-12.603 1.947-.1.239 4.652a3.871 3.871 0 0 1 3.055-1.699c2.41-.124 4.256 1.788 4.401 4.606.147 2.854-1.492 4.982-3.902 5.106Zm-.599-1.883c1.54-.08 2.57-1.377 2.482-3.083-.09-1.742-1.248-2.927-2.787-2.848-1.557.08-2.588 1.378-2.498 3.12.088 1.705 1.245 2.89 2.803 2.81Z" />
               <g filter="url(#b)">
-                <rect width="26.884" height="1.37" x="1.05" y="13.191" fill="url(#c)" rx=".685" shape-rendering="crispEdges" transform="rotate(-2.941 1.05 13.191)" />
+                <rect width="26.884" height="1.37" x="1.05" y="13.191" fill="url(#c)" rx=".685" shapeRendering="crispEdges" transform="rotate(-2.941 1.05 13.191)" />
               </g>
               <defs>
                 <linearGradient id="a" x1="1.05" x2="101.05" y1="13.876" y2="13.876" gradientUnits="userSpaceOnUse">

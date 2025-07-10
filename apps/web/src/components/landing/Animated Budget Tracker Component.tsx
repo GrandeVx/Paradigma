@@ -1,52 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+type AnimationPhase = 'idle' | 'loading' | 'calculating' | 'complete' | 'resetting';
+
 const AnimatedBudgetComponent = () => {
   const [currentTotal, setCurrentTotal] = useState(1600);
   const [currentSpent, setCurrentSpent] = useState(0);
+  const [phase, setPhase] = useState<AnimationPhase>('idle');
 
-  useEffect(() => {
-    const runAnimation = () => {
-      const duration = 4000; // 4 seconds
-      const startTime = Date.now();
-      const initialTotal = 1600;
-      const finalTotal = 476.00;
-      const initialSpent = 0;
-      const finalSpent = 1124;
+  const animateValues = (
+    fromTotal: number, 
+    toTotal: number, 
+    fromSpent: number, 
+    toSpent: number, 
+    duration: number, 
+    callback?: () => void
+  ) => {
+    const startTime = performance.now();
 
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progressRatio = Math.min(elapsed / duration, 1);
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
 
-        // Easing function for smooth animation
-        const easeOutCubic = 1 - Math.pow(1 - progressRatio, 3);
+      // Easing function for smooth animation
+      const easeOutCubic = 1 - Math.pow(1 - progress, 3);
 
-        // Animate total from 1600 to 476.66
-        const newTotal = initialTotal - (initialTotal - finalTotal) * easeOutCubic;
-        setCurrentTotal(newTotal);
+      // Animate values
+      const newTotal = fromTotal + (toTotal - fromTotal) * easeOutCubic;
+      const newSpent = fromSpent + (toSpent - fromSpent) * easeOutCubic;
+      
+      setCurrentTotal(newTotal);
+      setCurrentSpent(newSpent);
 
-        // Animate spent from 0 to 1124
-        const newSpent = initialSpent + (finalSpent - initialSpent) * easeOutCubic;
-        setCurrentSpent(newSpent);
-
-        if (progressRatio < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          // Restart animation after a brief pause
-          setTimeout(runAnimation, 1000);
-        }
-      };
-
-      requestAnimationFrame(animate);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else if (callback) {
+        callback();
+      }
     };
 
-    // Start the loop
-    runAnimation();
+    requestAnimationFrame(animate);
+  };
+
+  const runAnimationCycle = () => {
+    // Phase 1: Idle state
+    setPhase('idle');
+    setCurrentTotal(1600);
+    setCurrentSpent(0);
+
+    setTimeout(() => {
+      setPhase('loading');
+      
+      // Phase 2: Start spending animation
+      setTimeout(() => {
+        setPhase('calculating');
+        
+        animateValues(1600, 476, 0, 1124, 3000, () => {
+          setPhase('complete');
+          
+          // Phase 3: Show complete state for a moment
+          setTimeout(() => {
+            setPhase('resetting');
+            
+            // Phase 4: Quick reset
+            animateValues(476, 1600, 1124, 0, 800, () => {
+              setTimeout(runAnimationCycle, 500); // Restart cycle
+            });
+          }, 1500);
+        });
+      }, 1000);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(runAnimationCycle, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 scale-50 md:scale-75">
-      <div className="bg-white rounded-3xl p-8 shadow-lg w-full relative min-w-[500px] h-72">
+      <div className={`rounded-3xl p-8 w-full relative min-w-[500px] h-72 transition-all duration-500 ${
+        phase === 'complete' ? 'bg-red-50 shadow-2xl border-2 border-red-200 scale-105' :
+        phase === 'calculating' ? 'bg-yellow-50 shadow-xl border border-yellow-200' :
+        phase === 'loading' ? 'bg-blue-50 shadow-lg border border-blue-200' :
+        phase === 'resetting' ? 'bg-gray-100 shadow-sm scale-95' :
+        'bg-white shadow-lg'
+      }`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <ChevronLeft className="w-6 h-6 text-gray-600" />
@@ -74,7 +113,11 @@ const AnimatedBudgetComponent = () => {
             </span>
           </div>
           <p className="text-gray-500 text-base" style={{ fontFamily: 'DM Sans, sans-serif' }}>
-            ancora a disposizione per questo mese
+            {phase === 'calculating' ? 'Calcolando spese...' :
+             phase === 'complete' ? 'Budget quasi esaurito!' :
+             phase === 'loading' ? 'Caricamento dati...' :
+             phase === 'resetting' ? 'Reimpostazione...' :
+             'ancora a disposizione per questo mese'}
           </p>
         </div>
 

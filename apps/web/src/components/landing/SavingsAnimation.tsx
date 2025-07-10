@@ -1,17 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
+type AnimationPhase = 'idle' | 'loading' | 'waiting' | 'celebrating' | 'resetting';
+
 const SavingsAnimation = () => {
-  const [animationKey, setAnimationKey] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimationKey(prev => prev + 1);
-    }, 5000); // Riavvia l'animazione ogni 5 secondi
-
-    return () => clearInterval(interval);
-  }, []);
-
   const [currentAmount, setCurrentAmount] = useState(0);
+  const [phase, setPhase] = useState<AnimationPhase>('idle');
+  const [isComplete, setIsComplete] = useState(false);
 
   const animateValue = (start: number, end: number, duration: number, callback?: () => void) => {
     const startTime = performance.now();
@@ -36,36 +30,55 @@ const SavingsAnimation = () => {
     requestAnimationFrame(update);
   };
 
-  const createCelebration = () => {
-    // Celebration animation could be added here
-    console.log('🎉 Obiettivo raggiunto!');
-  };
-
-  const startAnimation = () => {
-    // Reset iniziale
+  const runAnimationCycle = () => {
+    // Fase 1: Idle → Loading
+    setPhase('idle');
     setCurrentAmount(0);
+    setIsComplete(false);
 
-    const duration = 3000; // 3 secondi per l'animazione completa
+    setTimeout(() => {
+      setPhase('loading');
 
-    // Anima l'importo da 0 a 1000
-    animateValue(0, 1000, duration, () => {
-      setTimeout(() => {
-        createCelebration();
-      }, 300);
-    });
+      // Anima l'importo da 0 a 1000 in 3 secondi
+      animateValue(0, 1000, 3000, () => {
+        setIsComplete(true);
+        setPhase('celebrating');
+        console.log('🎉 Obiettivo raggiunto!');
+
+        // Fase 3: Waiting (mostra il risultato per 2 secondi)
+        setTimeout(() => {
+          setPhase('waiting');
+
+          // Fase 4: Reset e ricomincia dopo 1.5 secondi
+          setTimeout(() => {
+            setPhase('resetting');
+
+            // Animazione di reset veloce
+            animateValue(1000, 0, 800, () => {
+              // Ricomincia il ciclo dopo una breve pausa
+              setTimeout(runAnimationCycle, 500);
+            });
+          }, 1500);
+        }, 2000);
+      });
+    }, 1000); // Pausa iniziale
   };
 
   useEffect(() => {
-    // Avvia automaticamente l'animazione al caricamento e ogni volta che cambia animationKey
-    const timer = setTimeout(startAnimation, 1000);
+    // Avvia il primo ciclo automaticamente
+    const timer = setTimeout(runAnimationCycle, 500);
     return () => clearTimeout(timer);
-  }, [animationKey]);
+  }, []);
 
   const progress = (currentAmount / 1000) * 100;
   const remaining = 1000 - currentAmount;
 
   return (
-    <div className="bg-sky-500 rounded-3xl p-8 text-white w-full max-w-md shadow-xl relative overflow-hidden min-w-[400px]">
+    <div className={`rounded-3xl p-8 text-white w-[450px] max-w-md shadow-xl relative overflow-hidden min-w-[400px] transition-all duration-500 ${phase === 'celebrating' ? 'bg-green-500 scale-105 shadow-2xl' :
+      phase === 'loading' ? 'bg-sky-500 shadow-xl' :
+        phase === 'resetting' ? 'bg-gray-500 scale-95' :
+          'bg-sky-500'
+      }`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center">
@@ -103,12 +116,16 @@ const SavingsAnimation = () => {
           />
         </div>
         <div className="text-sm" style={{ fontFamily: 'DM Sans, sans-serif' }}>
-          {currentAmount < 1000 ? (
+          {phase === 'celebrating' || isComplete ? (
+            <span className="font-medium animate-pulse">🎉 Hai raggiunto il tuo obiettivo!</span>
+          ) : phase === 'loading' ? (
             <span>
               Hai accumulato <span className="font-medium">€ {currentAmount},00</span>, ti mancano <span className="font-medium">€ {remaining},00</span> per l'obiettivo
             </span>
+          ) : phase === 'resetting' ? (
+            <span className="opacity-50">Riavvio in corso...</span>
           ) : (
-            <span className="font-medium">🎉 Hai raggiunto il tuo obiettivo!</span>
+            <span className="opacity-75">Pronto per iniziare</span>
           )}
         </div>
       </div>

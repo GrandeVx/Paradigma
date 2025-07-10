@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,6 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
-  const videoRef = useRef<HTMLVideoElement>(null);
 
 
   // Whitelist mutation
@@ -69,36 +68,6 @@ export default function Home() {
 
   const isValidEmail = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // Effect to try to play video on mobile
-  useEffect(() => {
-    const tryToPlayVideo = async () => {
-      if (videoRef.current) {
-        try {
-          await videoRef.current.play();
-        } catch (error) {
-          console.log('Video autoplay failed:', error);
-        }
-      }
-    };
-
-    // Try to play video when component mounts
-    tryToPlayVideo();
-
-    // Also try on first user interaction
-    const handleFirstTouch = () => {
-      tryToPlayVideo();
-      document.removeEventListener('touchstart', handleFirstTouch);
-      document.removeEventListener('click', handleFirstTouch);
-    };
-
-    document.addEventListener('touchstart', handleFirstTouch);
-    document.addEventListener('click', handleFirstTouch);
-
-    return () => {
-      document.removeEventListener('touchstart', handleFirstTouch);
-      document.removeEventListener('click', handleFirstTouch);
-    };
-  }, []);
 
   return (
     <main className="h-screen w-full relative overflow-hidden bg-white">
@@ -108,45 +77,11 @@ export default function Home() {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <div
-          className="hidden md:block w-full h-full bg-cover bg-center bg-black"
+          className="w-full h-full bg-cover bg-center bg-black"
           style={{
-            backgroundImage: 'url(./background.png)',
+            backgroundImage: 'url(/background.png)',
           }}
         />
-      </div>
-
-      <div className="absolute inset-0 z-0">
-        {/* Mobile Background Video with Fallback */}
-        <div className="block md:hidden w-full h-full">
-          {/* Video */}
-          <video
-            ref={videoRef}
-            src="/background.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="w-full h-full object-cover object-center"
-            style={{ backgroundColor: 'transparent' }}
-            onError={() => {
-              console.log('Video failed to load');
-            }}
-            onCanPlay={() => {
-              if (videoRef.current) {
-                videoRef.current.play().catch(e => console.log('Video play failed:', e));
-              }
-            }}
-          />
-
-          {/* Fallback background image */}
-          <div
-            className="absolute inset-0 w-full h-full bg-cover bg-center bg-black -z-10"
-            style={{
-              backgroundImage: 'url(/background.png)',
-            }}
-          />
-        </div>
       </div>
 
       {/* Header con Logo */}
@@ -160,16 +95,16 @@ export default function Home() {
               <defs>
                 <linearGradient id="a" x1="0" x2="1280" y1="42.299" y2="42.299" gradientUnits="userSpaceOnUse">
                   <stop />
-                  <stop offset=".25" stop-color="#0E295D" />
-                  <stop offset=".5" stop-color="#0673FF" />
-                  <stop offset=".75" stop-color="#0E295D" />
+                  <stop offset=".25" stopColor="#0E295D" />
+                  <stop offset=".5" stopColor="#0673FF" />
+                  <stop offset=".75" stopColor="#0E295D" />
                   <stop offset="1" />
                 </linearGradient>
                 <linearGradient id="b" x1="0" x2="1280" y1="42.5" y2="42.5" gradientUnits="userSpaceOnUse">
                   <stop />
-                  <stop offset=".25" stop-color="#0E295D" />
-                  <stop offset=".5" stop-color="#0673FF" />
-                  <stop offset=".75" stop-color="#0E295D" />
+                  <stop offset=".25" stopColor="#0E295D" />
+                  <stop offset=".5" stopColor="#0673FF" />
+                  <stop offset=".75" stopColor="#0E295D" />
                   <stop offset="1" />
                 </linearGradient>
               </defs>
@@ -183,16 +118,16 @@ export default function Home() {
               <defs>
                 <linearGradient id="a" x1="0" x2="393" y1="12.989" y2="12.989" gradientUnits="userSpaceOnUse">
                   <stop />
-                  <stop offset=".25" stop-color="#0E295D" />
-                  <stop offset=".5" stop-color="#0673FF" />
-                  <stop offset=".75" stop-color="#0E295D" />
+                  <stop offset=".25" stopColor="#0E295D" />
+                  <stop offset=".5" stopColor="#0673FF" />
+                  <stop offset=".75" stopColor="#0E295D" />
                   <stop offset="1" />
                 </linearGradient>
                 <linearGradient id="b" x1="0" x2="393" y1="13.051" y2="13.051" gradientUnits="userSpaceOnUse">
                   <stop />
-                  <stop offset=".25" stop-color="#0E295D" />
-                  <stop offset=".5" stop-color="#0673FF" />
-                  <stop offset=".75" stop-color="#0E295D" />
+                  <stop offset=".25" stopColor="#0E295D" />
+                  <stop offset=".5" stopColor="#0673FF" />
+                  <stop offset=".75" stopColor="#0E295D" />
                   <stop offset="1" />
                 </linearGradient>
               </defs>
