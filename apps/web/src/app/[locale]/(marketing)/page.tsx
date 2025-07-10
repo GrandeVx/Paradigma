@@ -220,7 +220,7 @@ export default function Home() {
         </div>
 
         {/* Savings Component - Bottom Center */}
-        <div className="absolute bottom-40 rotate-3 left-1/2 transform -translate-x-1/2 hidden lg:block z-10">
+        <div className="absolute bottom-48 rotate-3 left-1/2 transform -translate-x-1/2 hidden lg:block z-10">
           <div className="relative z-10">
             <SavingsAnimation />
           </div>
@@ -233,13 +233,13 @@ export default function Home() {
           {/* Main Heading */}
           <div className="space-y-4 mb-8 text-center">
             <h1
-              className="text-5xl  lg:text-6xl font-normal tracking-tight"
+              className="text-5xl  lg:text-6xl font-medium tracking-tight"
               style={{
                 background: 'linear-gradient(135deg, #0E295D 0%, #0673FF 50%, #0E295D 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                fontWeight: 'normal',
+                fontWeight: '500',
                 fontFamily: 'DM Sans, sans-serif',
                 letterSpacing: '-0.02em'
               }}
@@ -253,9 +253,9 @@ export default function Home() {
           </div>
 
           {/* Email Form */}
-          <div className="space-y-4">
+          <div className="space-y-1">
             {!isSubmitted ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-1">
                 {/* Input Container */}
                 <div
                   className="relative p-4 rounded-2xl backdrop-blur-md border border-white/20"
