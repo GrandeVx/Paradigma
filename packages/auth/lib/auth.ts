@@ -97,7 +97,9 @@ export const auth = betterAuth({
         },
         apple: {
             clientId: process.env.APPLE_CLIENT_ID!,
-            clientSecret: process.env.APPLE_CLIENT_SECRET!,
+            teamId: process.env.APPLE_TEAM_ID!,
+            keyId: process.env.APPLE_KEY_ID!,
+            privateKey: process.env.APPLE_PRIVATE_KEY!,
         },
     },
     trustedOrigins: ["balance://"],
