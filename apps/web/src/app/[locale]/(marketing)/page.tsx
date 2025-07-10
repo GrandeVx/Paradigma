@@ -253,9 +253,9 @@ export default function Home() {
           </div>
 
           {/* Email Form */}
-          <div className="space-y-1">
+          <div className="space-y-1 md:space-y-2">
             {!isSubmitted ? (
-              <form onSubmit={handleSubmit} className="space-y-1">
+              <form onSubmit={handleSubmit} className="space-y-1 md:space-y-2">
                 {/* Input Container */}
                 <div
                   className="relative p-4 rounded-2xl backdrop-blur-md border border-white/20"
