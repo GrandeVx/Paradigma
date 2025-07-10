@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, Image } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 
@@ -81,10 +81,14 @@ export default function SignUp() {
                   isLoading={isGoogleLoading}
                   disabled={isAppleLoading}
                   onPress={handleGoogleSignIn}
+                  leftIcon={
+                    <Image
+                      source={require("@/assets/icons/google.png")}
+                      style={{ width: 20, height: 20 }}
+                    />
+                  }
                 >
-                  <Text>
-                    Google
-                  </Text>
+
                 </Button>
                 <Button
                   variant="primary"
@@ -94,10 +98,14 @@ export default function SignUp() {
                   isLoading={isAppleLoading}
                   disabled={isGoogleLoading}
                   onPress={handleAppleSignIn}
+                  leftIcon={
+                    <Image
+                      source={require("@/assets/icons/apple.png")}
+                      style={{ width: 20, height: 20 }}
+                    />
+                  }
                 >
-                  <Text>
-                    Apple
-                  </Text>
+
                 </Button>
               </View>
             </View>
