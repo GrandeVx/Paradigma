@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { useToast } from "@/components/ui/use-toast";
 import AnimatedBudgetComponent from "@/components/landing/Animated Budget Tracker Component";
 import AnimatedNumberRevealComponent from "@/components/landing/Animated Number Reveal Component";
 import SavingsAnimation from "@/components/landing/SavingsAnimation";
+
+
 
 // Funzione per gestire il controllo dell'hash URL lato client
 function ClientHashCheck() {
@@ -32,6 +34,7 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
+  const videoRef = useRef<HTMLVideoElement>(null);
 
 
   // Whitelist mutation
@@ -66,23 +69,88 @@ export default function Home() {
 
   const isValidEmail = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  // Effect to try to play video on mobile
+  useEffect(() => {
+    const tryToPlayVideo = async () => {
+      if (videoRef.current) {
+        try {
+          await videoRef.current.play();
+        } catch (error) {
+          console.log('Video autoplay failed:', error);
+        }
+      }
+    };
+
+    // Try to play video when component mounts
+    tryToPlayVideo();
+
+    // Also try on first user interaction
+    const handleFirstTouch = () => {
+      tryToPlayVideo();
+      document.removeEventListener('touchstart', handleFirstTouch);
+      document.removeEventListener('click', handleFirstTouch);
+    };
+
+    document.addEventListener('touchstart', handleFirstTouch);
+    document.addEventListener('click', handleFirstTouch);
+
+    return () => {
+      document.removeEventListener('touchstart', handleFirstTouch);
+      document.removeEventListener('click', handleFirstTouch);
+    };
+  }, []);
+
   return (
-    <main className="h-screen w-full relative overflow-hidden bg-white ">
+    <main className="h-screen w-full relative overflow-hidden bg-white">
       {/* Componente client per controllare l'hash URL */}
       <ClientHashCheck />
 
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <div
-          className="w-full h-full bg-cover bg-center bg-black"
+          className="hidden md:block w-full h-full bg-cover bg-center bg-black"
           style={{
             backgroundImage: 'url(./background.png)',
           }}
         />
       </div>
 
+      <div className="absolute inset-0 z-0">
+        {/* Mobile Background Video with Fallback */}
+        <div className="block md:hidden w-full h-full">
+          {/* Video */}
+          <video
+            ref={videoRef}
+            src="/background.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="w-full h-full object-cover object-center"
+            style={{ backgroundColor: 'transparent' }}
+            onError={() => {
+              console.log('Video failed to load');
+            }}
+            onCanPlay={() => {
+              if (videoRef.current) {
+                videoRef.current.play().catch(e => console.log('Video play failed:', e));
+              }
+            }}
+          />
+
+          {/* Fallback background image */}
+          <div
+            className="absolute inset-0 w-full h-full bg-cover bg-center bg-black -z-10"
+            style={{
+              backgroundImage: 'url(/background.png)',
+            }}
+          />
+        </div>
+      </div>
+
       {/* Header con Logo */}
-      <header className="relative z-10 w-full py-12">
+      <header className="relative z-10 w-full py-12 max-w-screen-4xl mx-auto">
         <div className="flex items-center justify-center">
           <div className="items-center h-full hidden md:flex">
             <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="69" fill="none" viewBox="0 0 1280 69">
@@ -135,7 +203,7 @@ export default function Home() {
       </header>
 
       {/* Components Container with Absolute Positioning */}
-      <div className="relative z-10 w-full h-screen">
+      <div className="relative z-10 w-full h-screen max-w-screen-2xl mx-auto">
 
         {/* Budget Tracker Component - Top Left */}
         <div className="absolute md:-top-64 rotate-6 md:-rotate-6 left-8 md:left-16 lg:-left-8 hidden lg:block">
@@ -145,7 +213,7 @@ export default function Home() {
         </div>
 
         {/* Number Reveal Component - Top Right with Background Effects */}
-        <div className="absolute top-[25vh] md:-top-52 right-8 md:right-16 lg:right-2 -rotate-6 ">
+        <div className="absolute top-[14vh] md:-top-52 right-8 md:right-16 lg:right-2 -rotate-6 ">
           <div className="relative z-10">
             <AnimatedNumberRevealComponent />
           </div>
@@ -165,12 +233,13 @@ export default function Home() {
           {/* Main Heading */}
           <div className="space-y-4 mb-8 text-center">
             <h1
-              className="text-5xl  lg:text-6xl font-medium tracking-tight"
+              className="text-5xl  lg:text-6xl font-normal tracking-tight"
               style={{
                 background: 'linear-gradient(135deg, #0E295D 0%, #0673FF 50%, #0E295D 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
+                fontWeight: 'normal',
                 fontFamily: 'DM Sans, sans-serif',
                 letterSpacing: '-0.02em'
               }}
@@ -178,7 +247,7 @@ export default function Home() {
               Ci siamo quasi
             </h1>
             <p className="text-grey-400 text-base md:text-lg" style={{ fontFamily: 'DM Sans, sans-serif' }}>
-              Ti invieremo una email quando balance sarà disponibile<br className="hidden md:block" />
+              Ti invieremo una email quando balance sarà disponibile <br className="hidden md:block" />
               su App Store e Play Store. Manca poco 👀
             </p>
           </div>
@@ -201,7 +270,7 @@ export default function Home() {
                     placeholder="La tua email più usata"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full text-white bg-transparent border-none h-4 md:h-8 text-center text-lg placeholder:text-grey-400 focus:ring-0 focus:outline-none"
+                    className="w-full text-white bg-transparent border-none h-6 md:h-8 text-center  text-lg placeholder:text-grey-400 focus:ring-0 focus:outline-none"
                     style={{ fontFamily: 'DM Sans, sans-serif' }}
                     required
                   />
