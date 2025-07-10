@@ -677,4 +677,85 @@ export const notificationUtils = {
       console.error('Failed to clear daily reminder settings:', error);
     }
   }
+}
+
+// Biometric authentication utilities for managing Face ID/Touch ID settings
+export const biometricUtils = {
+  // Enable biometric authentication
+  setBiometricEnabled: (enabled: boolean): void => {
+    try {
+      mmkvStorage.set('biometric-authentication-enabled', enabled);
+      console.log(`[Biometric] Authentication ${enabled ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Failed to set biometric authentication setting:', error);
+    }
+  },
+
+  // Check if biometric authentication is enabled
+  getBiometricEnabled: (): boolean => {
+    try {
+      const enabled = mmkvStorage.getBoolean('biometric-authentication-enabled');
+      return enabled || false;
+    } catch {
+      return false;
+    }
+  },
+
+  // Set whether the app needs biometric authentication (after going to background)
+  setNeedsBiometricAuth: (needs: boolean): void => {
+    try {
+      mmkvStorage.set('needs-biometric-auth', needs);
+    } catch (error) {
+      console.error('Failed to set needs biometric auth flag:', error);
+    }
+  },
+
+  // Check if the app needs biometric authentication
+  getNeedsBiometricAuth: (): boolean => {
+    try {
+      const needs = mmkvStorage.getBoolean('needs-biometric-auth');
+      return needs || false;
+    } catch {
+      return false;
+    }
+  },
+
+  // Record the last time the app was authenticated
+  setLastAuthenticatedTime: (): void => {
+    try {
+      mmkvStorage.set('last-authenticated-time', Date.now());
+    } catch (error) {
+      console.error('Failed to set last authenticated time:', error);
+    }
+  },
+
+  // Get the last authenticated time
+  getLastAuthenticatedTime: (): number => {
+    try {
+      const time = mmkvStorage.getNumber('last-authenticated-time');
+      return time || 0;
+    } catch {
+      return 0;
+    }
+  },
+
+  // Clear all biometric settings
+  clearBiometricSettings: (): void => {
+    try {
+      mmkvStorage.delete('biometric-authentication-enabled');
+      mmkvStorage.delete('needs-biometric-auth');
+      mmkvStorage.delete('last-authenticated-time');
+      console.log('[Biometric] All settings cleared');
+    } catch (error) {
+      console.error('Failed to clear biometric settings:', error);
+    }
+  },
+
+  // Check if enough time has passed to require re-authentication (5 minutes)
+  shouldRequireAuth: (): boolean => {
+    const lastAuthTime = biometricUtils.getLastAuthenticatedTime();
+    const now = Date.now();
+    const timeoutMs = 5 * 60 * 1000; // 5 minutes
+    return (now - lastAuthTime) > timeoutMs;
+  }
 } 

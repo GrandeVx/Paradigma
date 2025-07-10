@@ -1,6 +1,6 @@
 import { SplashScreen, useRouter, useSegments, useRootNavigation } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, AppState } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { authClient } from "@/lib/auth-client";
@@ -10,6 +10,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import Constants from 'expo-constants';
+import { biometricUtils } from "@/lib/mmkv-storage";
+import { BiometricAuthScreen } from "@/components/BiometricAuthScreen";
 
 
 const STORAGE_KEY = "hasCompletedOnboarding";
@@ -78,6 +80,8 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
   const [isInitialRoutingDone, setIsInitialRoutingDone] = useState<boolean>(false);
   const [shouldShowSplash, setShouldShowSplash] = useState<boolean>(true);
   const [skipAutoRouting, setSkipAutoRouting] = useState<boolean>(false);
+  const [needsBiometricAuth, setNeedsBiometricAuth] = useState<boolean>(false);
+  const [showBiometricScreen, setShowBiometricScreen] = useState<boolean>(false);
 
   // Check onboarding status from AsyncStorage
   const checkOnboardingStatus = async () => {
@@ -400,6 +404,28 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
   };
 
   /**
+   * Handle successful biometric authentication
+   */
+  const handleBiometricAuthSuccess = () => {
+    console.log("[Biometric] Authentication successful, proceeding to app");
+    setShowBiometricScreen(false);
+    setNeedsBiometricAuth(false);
+    biometricUtils.setNeedsBiometricAuth(false);
+    biometricUtils.setLastAuthenticatedTime();
+    setIsInitialRoutingDone(false); // Trigger routing to protected area
+  };
+
+  /**
+   * Handle failed biometric authentication (user chose to exit)
+   */
+  const handleBiometricAuthFailure = () => {
+    console.log("[Biometric] Authentication failed, signing out user");
+    signOut();
+    setShowBiometricScreen(false);
+    setNeedsBiometricAuth(false);
+  };
+
+  /**
    * Uploads an avatar file to the Supabase storage.
    *
    * @param file - The avatar file to upload.
@@ -543,6 +569,27 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
       if (session) {
         // User is authenticated
         if (isOnboarded) {
+          // Check if biometric authentication is required
+          const isBiometricEnabled = biometricUtils.getBiometricEnabled();
+          const needsAuth = biometricUtils.getNeedsBiometricAuth();
+          const shouldRequireAuth = biometricUtils.shouldRequireAuth();
+          
+          if (isBiometricEnabled && (needsAuth || shouldRequireAuth)) {
+            // Show biometric authentication screen
+            console.log("Biometric authentication required");
+            setShowBiometricScreen(true);
+            setNeedsBiometricAuth(true);
+            
+            // Mark initial routing as done and hide splash screen
+            setIsInitialRoutingDone(true);
+            setTimeout(() => {
+              setShouldShowSplash(false);
+              SplashScreen.hideAsync();
+            }, 300);
+            
+            return; // Stop routing until biometric auth is complete
+          }
+          
           // User is authenticated and onboarded → go to app
           expectedSection = "(protected)";
         } else {
@@ -585,6 +632,36 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
     handleRouting();
   }, [isLoading, session, isOnboarded, isInitialRoutingDone, rootNavigation?.isReady]);
+
+  // Monitor AppState changes for auto-lock functionality
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      const isBiometricEnabled = biometricUtils.getBiometricEnabled();
+      
+      if (!isBiometricEnabled || !session || !isOnboarded) {
+        return; // Don't monitor if biometric is disabled or user not authenticated
+      }
+
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // App going to background, mark that we need auth when returning
+        console.log("[Biometric] App going to background, requiring auth on return");
+        biometricUtils.setNeedsBiometricAuth(true);
+      } else if (nextAppState === 'active') {
+        // App returning to foreground, check if we need to authenticate
+        const needsAuth = biometricUtils.getNeedsBiometricAuth();
+        const shouldRequireAuth = biometricUtils.shouldRequireAuth();
+        
+        if (needsAuth || shouldRequireAuth) {
+          console.log("[Biometric] App returning to foreground, showing biometric auth");
+          setShowBiometricScreen(true);
+          setNeedsBiometricAuth(true);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [session, isOnboarded]);
 
   // Custom Loading Screen Component
   const LoadingScreen = () => (
@@ -653,7 +730,14 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
         getAvatarUrl: async () => "",
       }}
     >
-      {children}
+      {showBiometricScreen ? (
+        <BiometricAuthScreen
+          onAuthSuccess={handleBiometricAuthSuccess}
+          onAuthFailure={handleBiometricAuthFailure}
+        />
+      ) : (
+        children
+      )}
     </SupabaseContext.Provider>
   );
 };

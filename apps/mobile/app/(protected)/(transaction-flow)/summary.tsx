@@ -805,8 +805,8 @@ export default function SummaryScreen() {
                               <SvgIcon name="link" size={16} color="black" />
                               {isRecurring ? (
                                 <View className="flex-col">
-                                  <Text className="text-black text-base font-normal">{t('transaction.installments.multiple', { count: numInstallments })}</Text>
-                                  <Text className="text-gray-600 text-xs font-normal">
+                                  <Text style={{ fontSize: 16 }} className="text-black font-normal">{t('transaction.installments.multiple', { count: numInstallments })}</Text>
+                                  <Text style={{ fontSize: 12 }} className="text-gray-600 font-normal">
                                     {frequency === 'daily' && frequencyDays === 14 && t('transaction.installments.every14Days')}
                                     {frequency === 'monthly' && frequencyDays === 30 && t('transaction.installments.every30Days')}
                                     {frequency === 'monthly' && frequencyDays === 60 && t('transaction.installments.every60Days')}
@@ -816,7 +816,7 @@ export default function SummaryScreen() {
                                   </Text>
                                 </View>
                               ) : (
-                                <Text className="text-black text-base">{t('transaction.installments.single')}</Text>
+                                <Text style={{ fontSize: 16 }} className="text-black">{t('transaction.installments.single')}</Text>
                               )}
                             </View>
                             <Switch

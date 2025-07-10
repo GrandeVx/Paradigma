@@ -35,7 +35,7 @@ export default function NameStepFlow(
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
-        keyboardVerticalOffset={Platform.OS === "ios" ? 120 : 0} // Adjust offset as needed
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // Adjust offset as needed
       >
         <View className="flex-1 justify-between p-4 bg-white gap-2 w-full">
           <View className="flex-1 justify-center items-center w-full ">

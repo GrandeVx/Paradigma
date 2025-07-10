@@ -94,11 +94,11 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
         backgroundColor: "#FFFFFF" // Consider theme variables
       }}
     >
-      <View className="w-full h-full pt-4 px-4 flex flex-col">
-        <View className="flex flex-row justify-between items-center border-b border-gray-300 mb-5 pb-4">
-          <Text className="text-2xl font-normal">RATE</Text>
+      <View className="w-full h-full pt-1 px-4 flex flex-col">
+        <View className="flex flex-row justify-between items-center mb-5 pb-4 mx-2">
+          <Text className="text-lg font-normal">RATE</Text>
           <Pressable onPress={handleClosePress}>
-            <SvgIcon name="close" size={24} color="black" />
+            <SvgIcon name="close" size={16} color="black" />
           </Pressable>
         </View>
 
@@ -113,12 +113,12 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
               }}
               className="w-12 h-12 bg-white rounded-full items-center justify-center border border-gray-200"
             >
-              <Text className="text-2xl font-medium">-</Text>
+              <Text className="text-xl font-medium">-</Text>
             </Pressable>
 
             <View className="flex flex-row items-baseline">
-              <Text className="text-primary-500 text-3xl font-semibold">{numInstallments}</Text>
-              <Text className="text-gray-400 text-3xl font-normal ml-1">Rate</Text>
+              <Text className="text-primary-700 text-4xl font-semibold">{numInstallments}</Text>
+              <Text className="text-gray-400 text-4xl font-normal ml-1">Rate</Text>
             </View>
 
             <Pressable
@@ -129,7 +129,7 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
               }}
               className="w-12 h-12 bg-white rounded-full items-center justify-center border border-gray-200"
             >
-              <Text className="text-2xl font-medium">+</Text>
+              <Text className="text-2xlxl font-medium">+</Text>
             </Pressable>
           </View>
 
@@ -137,6 +137,16 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
 
             <AwesomeSlider
               minimumValue={min}
+              renderMark={() => {
+                return (
+                  null
+                )
+              }}
+              renderThumb={() => {
+                return (
+                  <View className="w-[22px] h-[22px] bg-white shadow-md rounded-full" />
+                )
+              }}
               maximumValue={max}
               progress={progress}
               theme={{
@@ -165,7 +175,7 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
                   className="items-center flex-1"
                 >
                   <Text
-                    className={`uppercase text-xs font-medium ${numInstallments === option ? 'text-primary-500' : 'text-gray-500'
+                    className={`uppercase text-base font-medium ${numInstallments === option ? 'text-primary-700' : 'text-gray-500'
                       }`}
                   >
                     {option}
@@ -178,8 +188,8 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
 
         {/* Frequency Section */}
         <View className="mb-6">
-          <Text className="text-lg font-semibold mb-2">Frequenza</Text>
-          <View className="flex flex-col bg-gray-50 rounded-lg p-1">
+          <Text className="text-lg font-semibold mb-2 text-gray-400">Frequenza</Text>
+          <View className="flex flex-col  rounded-lg p-1">
             {frequencyOptions.map((option, index) => {
               const isSelected = frequency === option.value && frequencyDays === option.days;
 
@@ -194,16 +204,16 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
                         setFrequency(option.value);
                       }
                     }}
-                    className={`flex flex-row items-center py-3 px-3 rounded-md ${isSelected ? 'bg-primary-100' : 'bg-transparent'}`}
+                    className={`flex flex-row items-center py-3 px-3 rounded-md`}
                   >
                     <View className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center
-                      ${isSelected ? 'border-primary-500 bg-primary-500' : 'border-gray-400'}`}
+                      ${isSelected ? 'border-primary-500 border-2' : 'border-gray-400'}`}
                     >
                       {isSelected && (
-                        <SvgIcon name="checks" size={10} color="white" />
+                        <View className="w-[10px] h-[10px] bg-primary-700 rounded-full" />
                       )}
                     </View>
-                    <Text className={`text-base ${isSelected ? 'text-primary-700 font-medium' : 'text-gray-700'}`}>{option.label}</Text>
+                    <Text style={{ fontSize: 16 }} className={`text-base ${isSelected ? 'text-primary-700 font-medium' : 'text-black'}`}>{option.label}</Text>
                   </Pressable>
                 </React.Fragment>
               );

@@ -4,6 +4,8 @@
     "home": "Home",
     "profile": "Profile",
     "settings": "Settings",
+    "sign-in": "Create an account",
+    "sign-up": "Sign Update",
     "budgets": "Budgets",
     "accounts": "Accounts"
   },
@@ -296,7 +298,7 @@
     "accountDeletedMessage": "Your account and all associated data have been permanently deleted.",
     "errorDeletingAccount": "Unable to delete account. Please try again or contact support.",
     "selectCurrency": "Select Currency",
-    "selectIcon": "Select Icon",
+    "selectIcon": "Avatar",
     "currencyUpdated": "Currency updated",
     "currencyUpdatedMessage": "Currency has been changed to {{currency}}, the app will restart in a moment to apply the new currency.",
     "iconUpdated": "Icon updated",

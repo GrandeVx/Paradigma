@@ -4,6 +4,8 @@
     "home": "Home",
     "profile": "Profilo",
     "accounts": "Conti",
+    "sign-in": "Crea un account",
+    "sign-up": "Accedi",
     "settings": "Impostazioni",
     "budgets": "Budget",
     "transactions": "Transazioni"
@@ -320,7 +322,7 @@
     "accountDeletedMessage": "Il tuo account e tutti i dati associati sono stati eliminati permanentemente.",
     "errorDeletingAccount": "Impossibile eliminare l'account. Riprova o contatta il supporto.",
     "selectCurrency": "Seleziona Valuta",
-    "selectIcon": "Seleziona Icona",
+    "selectIcon": "Avatar",
     "currencyUpdated": "Valuta aggiornata",
     "currencyUpdatedMessage": "La valuta è stata cambiata in {{currency}}, l'app si riavvierà in un momento per applicare la nuova valuta.",
     "iconUpdated": "Icona aggiornata",

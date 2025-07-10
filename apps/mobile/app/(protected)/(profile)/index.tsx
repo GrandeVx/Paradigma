@@ -12,12 +12,12 @@ import BottomSheet, { BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import * as WebBrowser from "expo-web-browser";
 import { reloadAppAsync } from "expo";
 import { api } from "@/lib/api";
-import { useTabBar } from "@/context/TabBarContext";
 import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { ManualUpdateChecker } from "@/components/ui";
 import { useCurrency, type Currency } from "@/hooks/use-currency";
 import { useProfileIcon } from "@/hooks/use-profile-icon";
 import { cacheUtils, budgetUtils, transactionUtils, goalsUtils, notificationUtils } from "@/lib/mmkv-storage";
+import { useBiometricAuth } from "@/hooks/use-biometric-auth";
 import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
 
 const LANGUAGES = [
@@ -68,6 +68,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { signOut, user } = useSupabase();
   const { data: userInfo } = api.user.getUserInfo.useQuery();
+  const { isSupported, isEnabled, enableBiometric, disableBiometric } = useBiometricAuth();
   const { mutate: deleteAccount, isLoading: isDeletingAccount } = api.user.deleteAccount.useMutation({
     onSuccess: async (data) => {
       console.log('✅ Account deleted successfully:', data.deletedData);
@@ -149,7 +150,6 @@ export default function ProfileScreen() {
     },
   });
   const { t, i18n: i18nInstance } = useTranslation();
-  const { hideTabBar } = useTabBar();
   const { currency, setCurrency, supportedCurrencies } = useCurrency();
   const { icon, setIcon, supportedIcons } = useProfileIcon();
 
@@ -200,6 +200,23 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error("Error changing icon:", error);
       Alert.alert(t('common.error'), t('profile.errorChangingIcon'));
+    }
+  };
+
+  const handleBiometricToggle = async () => {
+    if (!isSupported) {
+      Alert.alert(
+        'Biometric Authentication',
+        'Biometric authentication is not available on this device or no biometrics are enrolled.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    if (isEnabled) {
+      disableBiometric();
+    } else {
+      await enableBiometric();
     }
   };
 
@@ -328,10 +345,8 @@ export default function ProfileScreen() {
             <CategoryItem
               label={t('profile.faceIdLogin')}
               isToggle={true}
-              toggleValue={false}
-              onPress={() => {
-                Alert.alert(t('accounts.comingSoon'))
-              }}
+              toggleValue={isEnabled}
+              onPress={handleBiometricToggle}
             />
           </Section>
 
@@ -724,18 +739,19 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   iconOption: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    borderWidth: 2,
+    borderColor: "#F9FAFB",
+    borderRadius: 12,
   },
   selectedIcon: {
     borderWidth: 2,
     borderColor: "#1E94FF",
   },
   iconText: {
-    fontSize: 28,
+    fontSize: 32,
   },
 });
