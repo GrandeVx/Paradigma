@@ -18,6 +18,7 @@ console.log("🚀 [BetterAuth] Initializing with config:", {
     googleClientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
     appleClientId: process.env.APPLE_CLIENT_ID ? "Set" : "Missing",
+    appleClientSecret: process.env.APPLE_CLIENT_SECRET ? "Set" : "Missing",
 });
  
 export const auth = betterAuth({
@@ -97,9 +98,7 @@ export const auth = betterAuth({
         },
         apple: {
             clientId: process.env.APPLE_CLIENT_ID!,
-            teamId: process.env.APPLE_TEAM_ID!,
-            keyId: process.env.APPLE_KEY_ID!,
-            privateKey: process.env.APPLE_PRIVATE_KEY!,
+            clientSecret: process.env.APPLE_CLIENT_SECRET!,
         },
     },
     trustedOrigins: ["balance://"],
