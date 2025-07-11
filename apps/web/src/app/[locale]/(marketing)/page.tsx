@@ -214,7 +214,7 @@ export default function Home() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full bg-primary-600 hover:bg-primary-700  h-12 md:h-16 text-white border border-primary-600 rounded-2xl py-3 px-6 text-lg font-medium transition-all duration-200"
+                  className="w-full bg-primary-600 hover:bg-primary-700 backdrop-blur-md h-12 md:h-16 text-white border border-primary-600 rounded-2xl py-3 px-6 text-lg font-medium transition-all duration-200"
                   style={{ fontFamily: 'DM Sans, sans-serif' }}
                   disabled={!isValidEmail || addToWhitelistMutation.isLoading}
                 >
