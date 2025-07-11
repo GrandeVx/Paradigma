@@ -2,7 +2,7 @@ import { SplashScreen, useRouter, useSegments, useRootNavigation } from "expo-ro
 import { createContext, useContext, useEffect, useState } from "react";
 import { View, Text, StyleSheet, AppState, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence } from "react-native-reanimated";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from "react-native-reanimated";
 
 import { authClient } from "@/lib/auth-client";
 import { Session } from "better-auth/types";
@@ -666,56 +666,78 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
   // Custom Loading Screen Component
   const LoadingScreen = () => {
-    // Animation values for currency symbols
+    // Animation values for currency symbols - moved outside to optimize performance
     const dollarOpacity = useSharedValue(0);
     const euroOpacity = useSharedValue(0);
     const poundOpacity = useSharedValue(0);
     const yenOpacity = useSharedValue(0);
 
-    // Start animations when component mounts
+    // Smooth easing configuration
+    const easeInOut = Easing.bezier(0.4, 0, 0.2, 1);
+    const animationConfig = {
+      duration: 1200,
+      easing: easeInOut,
+    };
+
+    // Start smooth animations when component mounts
     useEffect(() => {
       const animateSymbols = () => {
-        // Animate symbols appearing with staggered timing
-        dollarOpacity.value = withSequence(
-          withTiming(0, { duration: 0 }),
-          withTiming(1, { duration: 800 }),
-          withTiming(0.7, { duration: 300 }),
-          withTiming(1, { duration: 300 })
+        // Reset all symbols to 0 opacity
+        dollarOpacity.value = 0;
+        euroOpacity.value = 0;
+        poundOpacity.value = 0;
+        yenOpacity.value = 0;
+
+        // Staggered smooth fade-in animations with longer visibility
+        dollarOpacity.value = withDelay(
+          0,
+          withTiming(1, animationConfig, () => {
+            // Stay visible for 2.5 seconds, then fade out
+            dollarOpacity.value = withDelay(
+              2500,
+              withTiming(0, { duration: 800, easing: easeInOut })
+            );
+          })
         );
 
-        setTimeout(() => {
-          euroOpacity.value = withSequence(
-            withTiming(0, { duration: 0 }),
-            withTiming(1, { duration: 800 }),
-            withTiming(0.7, { duration: 300 }),
-            withTiming(1, { duration: 300 })
-          );
-        }, 200);
+        euroOpacity.value = withDelay(
+          400,
+          withTiming(1, animationConfig, () => {
+            euroOpacity.value = withDelay(
+              2500,
+              withTiming(0, { duration: 800, easing: easeInOut })
+            );
+          })
+        );
 
-        setTimeout(() => {
-          poundOpacity.value = withSequence(
-            withTiming(0, { duration: 0 }),
-            withTiming(1, { duration: 800 }),
-            withTiming(0.7, { duration: 300 }),
-            withTiming(1, { duration: 300 })
-          );
-        }, 400);
+        poundOpacity.value = withDelay(
+          800,
+          withTiming(1, animationConfig, () => {
+            poundOpacity.value = withDelay(
+              2500,
+              withTiming(0, { duration: 800, easing: easeInOut })
+            );
+          })
+        );
 
-        setTimeout(() => {
-          yenOpacity.value = withSequence(
-            withTiming(0, { duration: 0 }),
-            withTiming(1, { duration: 800 }),
-            withTiming(0.7, { duration: 300 }),
-            withTiming(1, { duration: 300 })
-          );
-        }, 600);
+        yenOpacity.value = withDelay(
+          1200,
+          withTiming(1, animationConfig, () => {
+            yenOpacity.value = withDelay(
+              2500,
+              withTiming(0, { duration: 800, easing: easeInOut })
+            );
+          })
+        );
       };
 
+      // Start initial animation immediately
       animateSymbols();
-      // Repeat animation every 3 seconds
-      const interval = setInterval(animateSymbols, 3000);
+      
+      // Repeat animation every 7 seconds for a more relaxed experience
+      const interval = setInterval(animateSymbols, 7000);
       return () => clearInterval(interval);
-    }, []);
+    }, [dollarOpacity, euroOpacity, poundOpacity, yenOpacity]);
 
     // Animated styles for currency symbols
     const dollarStyle = useAnimatedStyle(() => ({
@@ -746,7 +768,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
             />
           </View>
 
-          {/* Animated currency symbols */}
+          {/* Animated currency symbols with smooth transitions */}
           <Animated.Text style={[styles.currencySymbol, styles.dollarSymbol, dollarStyle]}>
             $
           </Animated.Text>
