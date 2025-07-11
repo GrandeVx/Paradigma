@@ -74,10 +74,10 @@ const SavingsAnimation = () => {
   const remaining = 1000 - currentAmount;
 
   return (
-    <div className={`rounded-3xl p-8 text-white w-[450px] max-w-md shadow-xl relative overflow-hidden min-w-[400px] transition-all duration-500 ${phase === 'celebrating' ? 'bg-green-500 scale-105 shadow-2xl' :
-      phase === 'loading' ? 'bg-sky-500 shadow-xl' :
-        phase === 'resetting' ? 'bg-gray-500 scale-95' :
-          'bg-sky-500'
+    <div className={`rounded-3xl p-8 text-white w-[450px] max-w-md shadow-xl relative overflow-hidden min-w-[400px] transition-all duration-500 bg-sky-500 ${phase === 'celebrating' ? 'scale-105 shadow-2xl' :
+      phase === 'loading' ? 'shadow-xl' :
+        phase === 'resetting' ? 'scale-95' :
+          ''
       }`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
@@ -111,7 +111,7 @@ const SavingsAnimation = () => {
       <div className="space-y-3">
         <div className="bg-white/30 h-2 rounded-full overflow-hidden">
           <div
-            className="bg-white h-full rounded-full transition-all duration-1000 ease-out"
+            className="bg-white h-full rounded-full transition-all duration-[3000ms] ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
