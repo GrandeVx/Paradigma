@@ -1,5 +1,5 @@
 import { SplashScreen, useRouter, useSegments, useRootNavigation } from "expo-router";
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { View, Text, StyleSheet, AppState, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from "react-native-reanimated";
@@ -68,6 +68,169 @@ export const SupabaseContext = createContext<SupabaseContextProps>({
 });
 
 export const useSupabase = () => useContext(SupabaseContext);
+
+// Stable Loading Screen Component with visibility control
+interface LoadingScreenProps {
+  isVisible: boolean;
+}
+
+const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible }) => {
+  // Animation values for currency symbols - stable across provider re-renders
+  const dollarOpacity = useSharedValue(0);
+  const euroOpacity = useSharedValue(0);
+  const poundOpacity = useSharedValue(0);
+  const yenOpacity = useSharedValue(0);
+  
+  // Container visibility control
+  const containerOpacity = useSharedValue(1);
+  
+  // Animation state tracking to prevent restarts
+  const [hasStartedAnimation, setHasStartedAnimation] = useState(false);
+  const [animationInterval, setAnimationInterval] = useState<NodeJS.Timeout | null>(null);
+
+  // Smooth easing configuration
+  const easeInOut = Easing.bezier(0.4, 0, 0.2, 1);
+  const animationConfig = {
+    duration: 1200,
+    easing: easeInOut,
+  };
+
+  // Animation function
+  const animateSymbols = useCallback(() => {
+    // Reset all symbols to 0 opacity
+    dollarOpacity.value = 0;
+    euroOpacity.value = 0;
+    poundOpacity.value = 0;
+    yenOpacity.value = 0;
+
+    // Staggered smooth fade-in animations with longer visibility
+    dollarOpacity.value = withDelay(
+      0,
+      withTiming(1, animationConfig, () => {
+        // Stay visible for 2.5 seconds, then fade out
+        dollarOpacity.value = withDelay(
+          2500,
+          withTiming(0, { duration: 800, easing: easeInOut })
+        );
+      })
+    );
+
+    euroOpacity.value = withDelay(
+      400,
+      withTiming(1, animationConfig, () => {
+        euroOpacity.value = withDelay(
+          2500,
+          withTiming(0, { duration: 800, easing: easeInOut })
+        );
+      })
+    );
+
+    poundOpacity.value = withDelay(
+      800,
+      withTiming(1, animationConfig, () => {
+        poundOpacity.value = withDelay(
+          2500,
+          withTiming(0, { duration: 800, easing: easeInOut })
+        );
+      })
+    );
+
+    yenOpacity.value = withDelay(
+      1200,
+      withTiming(1, animationConfig, () => {
+        yenOpacity.value = withDelay(
+          2500,
+          withTiming(0, { duration: 800, easing: easeInOut })
+        );
+      })
+    );
+  }, [dollarOpacity, euroOpacity, poundOpacity, yenOpacity, animationConfig, easeInOut]);
+
+  // Start animation only once when component first mounts
+  useEffect(() => {
+    if (!hasStartedAnimation) {
+      setHasStartedAnimation(true);
+      
+      // Start initial animation immediately
+      animateSymbols();
+      
+      // Set up interval for repeated animations
+      const interval = setInterval(animateSymbols, 7000);
+      setAnimationInterval(interval);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (animationInterval) {
+        clearInterval(animationInterval);
+      }
+    };
+  }, [hasStartedAnimation, animateSymbols]);
+
+  // Handle container visibility changes
+  useEffect(() => {
+    containerOpacity.value = withTiming(isVisible ? 1 : 0, {
+      duration: 300,
+      easing: easeInOut,
+    });
+  }, [isVisible, containerOpacity, easeInOut]);
+
+  // Animated styles for currency symbols
+  const dollarStyle = useAnimatedStyle(() => ({
+    opacity: dollarOpacity.value,
+  }));
+
+  const euroStyle = useAnimatedStyle(() => ({
+    opacity: euroOpacity.value,
+  }));
+
+  const poundStyle = useAnimatedStyle(() => ({
+    opacity: poundOpacity.value,
+  }));
+
+  const yenStyle = useAnimatedStyle(() => ({
+    opacity: yenOpacity.value,
+  }));
+
+  // Container animated style
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: containerOpacity.value,
+  }));
+
+  return (
+    <Animated.View style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }, containerStyle]}>
+      <SafeAreaView style={styles.loadingContainer}>
+        <View style={styles.loadingContent}>
+          {/* Logo in the center */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Animated currency symbols with smooth transitions */}
+          <Animated.Text style={[styles.currencySymbol, styles.dollarSymbol, dollarStyle]}>
+            $
+          </Animated.Text>
+          <Animated.Text style={[styles.currencySymbol, styles.euroSymbol, euroStyle]}>
+            €
+          </Animated.Text>
+          <Animated.Text style={[styles.currencySymbol, styles.poundSymbol, poundStyle]}>
+            £
+          </Animated.Text>
+          <Animated.Text style={[styles.currencySymbol, styles.yenSymbol, yenStyle]}>
+            ¥
+          </Animated.Text>
+        </View>
+      </SafeAreaView>
+    </Animated.View>
+  );
+});
+
+LoadingScreen.displayName = 'LoadingScreen';
+
 export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 
   const router = useRouter();
@@ -664,157 +827,8 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
     return () => subscription?.remove();
   }, [session, isOnboarded]);
 
-  // Custom Loading Screen Component
-  const LoadingScreen = () => {
-    // Animation values for currency symbols - moved outside to optimize performance
-    const dollarOpacity = useSharedValue(0);
-    const euroOpacity = useSharedValue(0);
-    const poundOpacity = useSharedValue(0);
-    const yenOpacity = useSharedValue(0);
 
-    // Smooth easing configuration
-    const easeInOut = Easing.bezier(0.4, 0, 0.2, 1);
-    const animationConfig = {
-      duration: 1200,
-      easing: easeInOut,
-    };
-
-    // Start smooth animations when component mounts
-    useEffect(() => {
-      const animateSymbols = () => {
-        // Reset all symbols to 0 opacity
-        dollarOpacity.value = 0;
-        euroOpacity.value = 0;
-        poundOpacity.value = 0;
-        yenOpacity.value = 0;
-
-        // Staggered smooth fade-in animations with longer visibility
-        dollarOpacity.value = withDelay(
-          0,
-          withTiming(1, animationConfig, () => {
-            // Stay visible for 2.5 seconds, then fade out
-            dollarOpacity.value = withDelay(
-              2500,
-              withTiming(0, { duration: 800, easing: easeInOut })
-            );
-          })
-        );
-
-        euroOpacity.value = withDelay(
-          400,
-          withTiming(1, animationConfig, () => {
-            euroOpacity.value = withDelay(
-              2500,
-              withTiming(0, { duration: 800, easing: easeInOut })
-            );
-          })
-        );
-
-        poundOpacity.value = withDelay(
-          800,
-          withTiming(1, animationConfig, () => {
-            poundOpacity.value = withDelay(
-              2500,
-              withTiming(0, { duration: 800, easing: easeInOut })
-            );
-          })
-        );
-
-        yenOpacity.value = withDelay(
-          1200,
-          withTiming(1, animationConfig, () => {
-            yenOpacity.value = withDelay(
-              2500,
-              withTiming(0, { duration: 800, easing: easeInOut })
-            );
-          })
-        );
-      };
-
-      // Start initial animation immediately
-      animateSymbols();
-      
-      // Repeat animation every 7 seconds for a more relaxed experience
-      const interval = setInterval(animateSymbols, 7000);
-      return () => clearInterval(interval);
-    }, [dollarOpacity, euroOpacity, poundOpacity, yenOpacity]);
-
-    // Animated styles for currency symbols
-    const dollarStyle = useAnimatedStyle(() => ({
-      opacity: dollarOpacity.value,
-    }));
-
-    const euroStyle = useAnimatedStyle(() => ({
-      opacity: euroOpacity.value,
-    }));
-
-    const poundStyle = useAnimatedStyle(() => ({
-      opacity: poundOpacity.value,
-    }));
-
-    const yenStyle = useAnimatedStyle(() => ({
-      opacity: yenOpacity.value,
-    }));
-
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <View style={styles.loadingContent}>
-          {/* Logo in the center */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('@/assets/images/logo.png')}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Animated currency symbols with smooth transitions */}
-          <Animated.Text style={[styles.currencySymbol, styles.dollarSymbol, dollarStyle]}>
-            $
-          </Animated.Text>
-          <Animated.Text style={[styles.currencySymbol, styles.euroSymbol, euroStyle]}>
-            €
-          </Animated.Text>
-          <Animated.Text style={[styles.currencySymbol, styles.poundSymbol, poundStyle]}>
-            £
-          </Animated.Text>
-          <Animated.Text style={[styles.currencySymbol, styles.yenSymbol, yenStyle]}>
-            ¥
-          </Animated.Text>
-        </View>
-      </SafeAreaView>
-    );
-  };
-
-  // Show loading screen only when shouldShowSplash is true
-  if (shouldShowSplash) {
-    return (
-      <SupabaseContext.Provider
-        value={{
-          user,
-          session,
-          initialized,
-          isOnboarded,
-          isLoading,
-          setIsOnboarded,
-          signUp,
-          signInWithPassword,
-          signInWithVerificationOtp,
-          signInWithApple,
-          signInWithGoogle,
-          sendVerificationOtp,
-          signOut,
-          forceRouting,
-          PasswordReset: async () => { },
-          uploadAvatar: async () => "",
-          getAvatarUrl: async () => "",
-        }}
-      >
-        <LoadingScreen />
-      </SupabaseContext.Provider>
-    );
-  }
-
+  // Always render LoadingScreen but control its visibility
   return (
     <SupabaseContext.Provider
       value={{
@@ -832,19 +846,24 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
         sendVerificationOtp,
         signOut,
         forceRouting,
-        // Stub implementations to satisfy the context contract (not yet implemented on mobile)
         PasswordReset: async () => { },
         uploadAvatar: async () => "",
         getAvatarUrl: async () => "",
       }}
     >
-      {showBiometricScreen ? (
-        <BiometricAuthScreen
-          onAuthSuccess={handleBiometricAuthSuccess}
-          onAuthFailure={handleBiometricAuthFailure}
-        />
-      ) : (
-        children
+      {/* Always render LoadingScreen to prevent unmounting/remounting */}
+      <LoadingScreen isVisible={shouldShowSplash} />
+      
+      {/* Render main content when splash is not showing */}
+      {!shouldShowSplash && (
+        showBiometricScreen ? (
+          <BiometricAuthScreen
+            onAuthSuccess={handleBiometricAuthSuccess}
+            onAuthFailure={handleBiometricAuthFailure}
+          />
+        ) : (
+          children
+        )
       )}
     </SupabaseContext.Provider>
   );
