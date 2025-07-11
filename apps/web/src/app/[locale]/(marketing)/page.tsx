@@ -155,7 +155,7 @@ export default function Home() {
         </div>
 
         {/* Savings Component - Bottom Center */}
-        <div className="absolute bottom-48 rotate-3 left-1/2 transform -translate-x-1/2 hidden lg:block z-10">
+        <div className="absolute bottom-56 rotate-3 left-1/2 transform -translate-x-1/2 hidden lg:block z-10">
           <div className="relative z-10">
             <SavingsAnimation />
           </div>
