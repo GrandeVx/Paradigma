@@ -4,6 +4,7 @@ import { useBiometricAuth } from '@/hooks/use-biometric-auth';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { Button } from '@/components/ui/button';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { useTranslation } from 'react-i18next';
 
 interface BiometricAuthScreenProps {
   onAuthSuccess: () => void;
@@ -14,6 +15,7 @@ export const BiometricAuthScreen: React.FC<BiometricAuthScreenProps> = ({
   onAuthSuccess,
   onAuthFailure
 }) => {
+  const { t } = useTranslation();
   const { authenticateWithBiometric, supportedTypes } = useBiometricAuth();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [hasTriedAutoAuth, setHasTriedAutoAuth] = useState(false);
@@ -22,13 +24,13 @@ export const BiometricAuthScreen: React.FC<BiometricAuthScreenProps> = ({
   // Get biometric type text
   const getBiometricTypeText = (): string => {
     if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-      return 'Face ID';
+      return t('biometric.types.faceId');
     } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-      return 'Touch ID';
+      return t('biometric.types.touchId');
     } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.IRIS)) {
-      return 'Iris';
+      return t('biometric.types.iris');
     }
-    return 'Biometric';
+    return t('biometric.types.biometric');
   };
 
   // Get biometric icon name  
@@ -93,15 +95,15 @@ export const BiometricAuthScreen: React.FC<BiometricAuthScreenProps> = ({
 
   const handleExitApp = () => {
     Alert.alert(
-      'Exit App',
-      'Authentication is required to access the app. Do you want to exit?',
+      t('biometric.alerts.exitApp.title'),
+      t('biometric.alerts.exitApp.message'),
       [
         {
-          text: 'Cancel',
+          text: t('biometric.alerts.exitApp.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Exit',
+          text: t('biometric.alerts.exitApp.exit'),
           style: 'destructive',
           onPress: () => {
             onAuthFailure?.();
@@ -118,13 +120,13 @@ export const BiometricAuthScreen: React.FC<BiometricAuthScreenProps> = ({
       {/* App Logo/Icon */}
       <View className="mb-12">
         <View className="w-24 h-24 bg-primary-600 rounded-3xl items-center justify-center mb-6">
-          <Text className="text-4xl font-bold text-white">B</Text>
+          <Text className="text-4xl font-bold text-white">{t('biometric.appInfo.logoLetter')}</Text>
         </View>
         <Text className="text-2xl font-bold text-center text-gray-900 mb-2">
-          Balance
+          {t('biometric.appInfo.name')}
         </Text>
         <Text className="text-lg text-center text-gray-600">
-          Your financial companion
+          {t('biometric.appInfo.tagline')}
         </Text>
       </View>
 
@@ -138,10 +140,10 @@ export const BiometricAuthScreen: React.FC<BiometricAuthScreenProps> = ({
           />
         </View>
         <Text className="text-xl font-semibold text-center text-gray-900 mb-2">
-          Unlock with {getBiometricTypeText()}
+          {t('biometric.authentication.unlockWith', { type: getBiometricTypeText() })}
         </Text>
         <Text className="text-base text-center text-gray-600 leading-6">
-          Use {getBiometricTypeText()} to securely access your financial data
+          {t('biometric.authentication.useToAccess', { type: getBiometricTypeText() })}
         </Text>
       </View>
 
@@ -156,16 +158,16 @@ export const BiometricAuthScreen: React.FC<BiometricAuthScreenProps> = ({
           className="w-full"
         >
           <Text className="text-white font-semibold text-lg">
-            {isAuthenticating ? 'Authenticating...' :
-              authAttempts >= 3 ? 'Try Again' :
-                `Use ${getBiometricTypeText()}`}
+            {isAuthenticating ? t('biometric.authentication.authenticating') :
+              authAttempts >= 3 ? t('biometric.authentication.tryAgain') :
+                t('biometric.authentication.use', { type: getBiometricTypeText() })}
           </Text>
         </Button>
 
         {authAttempts >= 3 && (
           <View className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
             <Text className="text-yellow-800 text-sm text-center">
-              Multiple authentication attempts failed. Please try again or contact support.
+              {t('biometric.status.multipleFailures')}
             </Text>
           </View>
         )}
@@ -176,7 +178,7 @@ export const BiometricAuthScreen: React.FC<BiometricAuthScreenProps> = ({
           disabled={isAuthenticating}
         >
           <Text className="text-red-600 font-medium text-center">
-            Exit App
+            {t('biometric.alerts.exitApp.title')}
           </Text>
         </Pressable>
       </View>
@@ -184,8 +186,8 @@ export const BiometricAuthScreen: React.FC<BiometricAuthScreenProps> = ({
       {/* Footer */}
       <View className="absolute bottom-8 left-8 right-8">
         <Text className="text-sm text-gray-500 text-center leading-5">
-          Your financial data is securely protected with biometric authentication.
-          {authAttempts > 0 && authAttempts < 3 && ` Attempting authentication... (${authAttempts}/3)`}
+          {t('biometric.status.protectionMessage')}
+          {authAttempts > 0 && authAttempts < 3 && ` ${t('biometric.status.attemptingAuth', { current: authAttempts })}`}
         </Text>
       </View>
     </View>

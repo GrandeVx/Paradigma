@@ -92,9 +92,9 @@ export default function ValueStepFlow() {
           </View>
 
           <View className="flex flex-row items-center gap-2 justify-center">
-            <Text className="text-gray-400 text-5xl font-bold">{getCurrencySymbol()}</Text>
+            <Text className="text-gray-400 text-4xl font-bold">{getCurrencySymbol()}</Text>
             <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
-              <Text className={`text-7xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
+              <Text className={`text-4xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black'}`}>
                 {formattedAmount.split('.')[0]}
               </Text>
               <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>

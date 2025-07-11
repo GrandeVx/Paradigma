@@ -707,7 +707,7 @@ export default function SummaryScreen() {
                   <View className="flex-row items-baseline gap-1">
                     <Text className="text-gray-400 text-2xl font-bold">{getCurrencySymbol()}</Text>
                     <View className="flex-row items-baseline">
-                      <Text className="text-primary-700 text-5xl font-bold">{integerPart}</Text>
+                      <Text className="text-primary-700 text-4xl font-bold">{integerPart}</Text>
                       <Text className="text-primary-700 text-2xl font-bold">{decimalPart}</Text>
                     </View>
                   </View>

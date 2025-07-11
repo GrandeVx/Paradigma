@@ -4,9 +4,11 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Text } from "@/components/ui/text";
+import { useTranslation } from "react-i18next";
 
 export default function FeaturesScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleNext = () => {
     router.push("/(onboarding)/final");
@@ -22,31 +24,31 @@ export default function FeaturesScreen() {
         >
           <View style={styles.header}>
             <Ionicons name="checkmark-circle" size={48} color="#0A7EA4" />
-            <Text style={styles.title}>Ready to Use</Text>
+            <Text style={styles.title}>{t('onboarding.features.title')}</Text>
           </View>
 
           <View style={styles.features}>
             <Feature
               icon="cart-sharp"
-              title="In-App Purchases"
-              description="Superwall integration for subscriptions and one-time purchases"
+              title={t('onboarding.features.inAppPurchases.title')}
+              description={t('onboarding.features.inAppPurchases.description')}
             />
             <Feature
               icon="navigate"
-              title="Modern Navigation"
-              description="File-based routing with Expo Router for a great UX"
+              title={t('onboarding.features.modernNavigation.title')}
+              description={t('onboarding.features.modernNavigation.description')}
             />
             <Feature
               icon="sunny"
-              title="Theming System"
-              description="Beautiful dark and light mode support out of the box"
+              title={t('onboarding.features.themingSystem.title')}
+              description={t('onboarding.features.themingSystem.description')}
             />
           </View>
         </ScrollView>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={handleNext}>
-            <Text style={styles.buttonText}>Almost There</Text>
+            <Text style={styles.buttonText}>{t('onboarding.features.almostThere')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -71,7 +73,6 @@ function Feature({
         </View>
         <View style={styles.featureText}>
           <Text style={styles.featureTitle}>{title}</Text>
-          {title}
           <Text style={styles.featureDescription}>{description}</Text>
         </View>
       </View>

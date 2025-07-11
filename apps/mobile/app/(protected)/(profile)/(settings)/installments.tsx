@@ -54,25 +54,25 @@ type InstallmentTransaction = {
 // };
 
 // Get frequency text
-const getFrequencyText = (frequencyType: string, frequencyInterval: number) => {
+const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: any) => {
   const interval = frequencyInterval || 1;
 
   switch (frequencyType) {
     case 'DAILY':
-      return interval === 1 ? 'Ogni giorno' : `Ogni ${interval} giorni`;
+      return interval === 1 ? t('installments.frequency.daily') : t('installments.frequency.dailyInterval', { count: interval });
     case 'WEEKLY':
-      return interval === 1 ? 'Ogni settimana' : `Ogni ${interval} settimane`;
+      return interval === 1 ? t('installments.frequency.weekly') : t('installments.frequency.weeklyInterval', { count: interval });
     case 'MONTHLY':
-      return interval === 1 ? 'Ogni mese' : `Ogni ${interval} mesi`;
+      return interval === 1 ? t('installments.frequency.monthly') : t('installments.frequency.monthlyInterval', { count: interval });
     case 'YEARLY':
-      return interval === 1 ? 'Ogni anno' : `Ogni ${interval} anni`;
+      return interval === 1 ? t('installments.frequency.yearly') : t('installments.frequency.yearlyInterval', { count: interval });
     default:
-      return `Ogni ${interval} ${frequencyType.toLowerCase()}`;
+      return t('installments.frequency.default', { count: interval, type: frequencyType.toLowerCase() });
   }
 };
 
 // Get days until next execution
-const getDaysUntilNext = (nextDate?: Date | string) => {
+const getDaysUntilNext = (nextDate?: Date | string, t: any) => {
   if (!nextDate) return null;
 
   const next = new Date(nextDate);
@@ -80,9 +80,9 @@ const getDaysUntilNext = (nextDate?: Date | string) => {
   const diffTime = next.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'oggi';
-  if (diffDays === 1) return 'in 1 giorno';
-  if (diffDays > 1 && diffDays < 4) return `in ${diffDays} giorni`;
+  if (diffDays === 0) return t('installments.timing.today');
+  if (diffDays === 1) return t('installments.timing.inOneDay');
+  if (diffDays > 1 && diffDays < 4) return t('installments.timing.inDays', { days: diffDays });
   return null;
 };
 
@@ -133,8 +133,8 @@ const formatProgressDate = (date: Date) => {
 };
 
 // Safe format date for progress components (handles null/undefined)
-const formatProgressDateSafe = (nextDate?: Date | string | null) => {
-  if (!nextDate) return 'N/A';
+const formatProgressDateSafe = (nextDate?: Date | string | null, t: any) => {
+  if (!nextDate) return t('installments.status.notAvailable');
 
   const date = new Date(nextDate);
   return formatProgressDate(date);
@@ -146,13 +146,15 @@ const CheckIconsGrid = ({
   total,
   nextDueDate,
   frequencyType,
-  frequencyInterval
+  frequencyInterval,
+  t
 }: {
   current: number;
   total: number;
   nextDueDate?: Date | string | null;
   frequencyType: string;
   frequencyInterval: number;
+  t: any;
 }) => {
   // Calculate future dates if we have nextDueDate
   const futureDates = nextDueDate
@@ -202,7 +204,7 @@ const CheckIconsGrid = ({
                 key={index}
                 style={styles.dateFrame}
               >
-                <Text style={styles.dateText}>N/A</Text>
+                <Text style={styles.dateText}>{t('installments.status.notAvailable')}</Text>
               </View>
             );
           }
@@ -213,7 +215,7 @@ const CheckIconsGrid = ({
   );
 };
 
-const DotsGrid = ({ current, total, nextDueDate }: { current: number; total: number; nextDueDate?: Date | string | null }) => {
+const DotsGrid = ({ current, total, nextDueDate, t }: { current: number; total: number; nextDueDate?: Date | string | null; t: any }) => {
   const items = Array.from({ length: total }, (_, i) => i + 1);
 
   return (
@@ -237,7 +239,7 @@ const DotsGrid = ({ current, total, nextDueDate }: { current: number; total: num
           </View>
           <View style={styles.progressItem}>
             <SvgIcon name="calendar" size={16} color="#6B7280" />
-            <Text style={styles.progressText}>{formatProgressDateSafe(nextDueDate)}</Text>
+            <Text style={styles.progressText}>{formatProgressDateSafe(nextDueDate, t)}</Text>
           </View>
         </View>
       </View>
@@ -245,7 +247,7 @@ const DotsGrid = ({ current, total, nextDueDate }: { current: number; total: num
   );
 };
 
-const ProgressBar = ({ current, total, nextDueDate }: { current: number; total: number; nextDueDate?: Date | string | null }) => {
+const ProgressBar = ({ current, total, nextDueDate, t }: { current: number; total: number; nextDueDate?: Date | string | null; t: any }) => {
   const percentage = Math.round((current / total) * 100);
   const progressWidth = (current / total) * 188; // 188px total width
 
@@ -269,7 +271,7 @@ const ProgressBar = ({ current, total, nextDueDate }: { current: number; total: 
         </View>
         <View style={styles.progressItem}>
           <SvgIcon name="calendar" size={16} color="#6B7280" />
-          <Text style={styles.progressText}>{formatProgressDateSafe(nextDueDate)}</Text>
+          <Text style={styles.progressText}>{formatProgressDateSafe(nextDueDate, t)}</Text>
         </View>
       </View>
     </View>
@@ -305,20 +307,20 @@ export default function InstallmentsScreen() {
     // Calculate installment amount by dividing total amount by number of occurrences
     const installmentAmountNum = total > 0 ? totalAmount / total : totalAmount;
 
-    const isUpcoming = getDaysUntilNext(installment.nextDueDate || undefined);
-    const accountName = installment.moneyAccount?.name || 'Account';
+    const isUpcoming = getDaysUntilNext(installment.nextDueDate || undefined, t);
+    const accountName = installment.moneyAccount?.name || t('installments.status.account');
     const categoryName = installment.subCategory ?
       `${installment.subCategory.icon} ${installment.subCategory.name}` :
-      'Categoria';
+      t('installments.status.category');
 
     // Determine which progress type to show based on total occurrences (not remaining)
     let progressComponent;
     if (total <= 5) {
-      progressComponent = <CheckIconsGrid current={current} total={total} nextDueDate={installment.nextDueDate} frequencyType={installment.frequencyType} frequencyInterval={installment.frequencyInterval} />;
+      progressComponent = <CheckIconsGrid current={current} total={total} nextDueDate={installment.nextDueDate} frequencyType={installment.frequencyType} frequencyInterval={installment.frequencyInterval} t={t} />;
     } else if (total <= 24) {
-      progressComponent = <DotsGrid current={current} total={total} nextDueDate={installment.nextDueDate} />;
+      progressComponent = <DotsGrid current={current} total={total} nextDueDate={installment.nextDueDate} t={t} />;
     } else {
-      progressComponent = <ProgressBar current={current} total={total} nextDueDate={installment.nextDueDate} />;
+      progressComponent = <ProgressBar current={current} total={total} nextDueDate={installment.nextDueDate} t={t} />;
     }
 
     return (
@@ -352,7 +354,7 @@ export default function InstallmentsScreen() {
             <Text style={styles.installmentAmount}>{formatCurrency(installmentAmountNum, { showSign: false })}</Text>
           </View>
           <View style={styles.frequencyCard}>
-            <Text style={styles.frequencyText}>{getFrequencyText(installment.frequencyType, installment.frequencyInterval)}</Text>
+            <Text style={styles.frequencyText}>{getFrequencyText(installment.frequencyType, installment.frequencyInterval, t)}</Text>
           </View>
         </View>
 
@@ -368,7 +370,7 @@ export default function InstallmentsScreen() {
 
         {!installment.isActive && (
           <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>⏸️ Sospesa</Text>
+            <Text style={styles.statusText}>⏸️ {t('installments.status.suspended')}</Text>
           </View>
         )}
       </Pressable>
@@ -394,7 +396,7 @@ export default function InstallmentsScreen() {
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Caricamento rate...</Text>
+            <Text style={styles.loadingText}>{t('installments.loading')}</Text>
           </View>
         ) : installmentData && installmentData.length > 0 ? (
           <View style={styles.installmentsList}>
@@ -444,9 +446,9 @@ export default function InstallmentsScreen() {
               </View>
             </View>
 
-            <Text style={styles.emptyTitle}>Nessuna rata trovata</Text>
+            <Text style={styles.emptyTitle}>{t('installments.empty.title')}</Text>
             <Text style={styles.emptyDescription}>
-              Non hai ancora nessuna rata configurata.
+              {t('installments.empty.description')}
             </Text>
           </View>
         )}

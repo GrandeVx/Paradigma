@@ -4,9 +4,11 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Text } from "@/components/ui/text";
+import { useTranslation } from "react-i18next";
 
 export default function ProblemScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleNext = () => {
     router.push("/(onboarding)/solution");
@@ -21,10 +23,9 @@ export default function ProblemScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>The Problem</Text>
+            <Text style={styles.title}>{t('onboarding.problem.title')}</Text>
             <Text style={styles.description}>
-              Describe the main challenge or pain point your users face. Make it
-              relatable and specific.
+              {t('onboarding.problem.description')}
             </Text>
           </View>
 
@@ -32,8 +33,7 @@ export default function ProblemScreen() {
             <View style={styles.example}>
               <Ionicons name="alert-circle" size={32} color="#0A7EA4" />
               <Text style={styles.exampleText}>
-                "I struggle with X every day, and it costs me Y hours per
-                week..."
+                "{t('onboarding.problem.exampleText')}"
               </Text>
             </View>
 
@@ -41,19 +41,19 @@ export default function ProblemScreen() {
               <View style={styles.point}>
                 <Ionicons name="close" size={24} color="#E11D48" />
                 <Text style={styles.pointText}>
-                  Current solutions are expensive and complex
+                  {t('onboarding.problem.points.expensive')}
                 </Text>
               </View>
               <View style={styles.point}>
                 <Ionicons name="close" size={24} color="#E11D48" />
                 <Text style={styles.pointText}>
-                  Users waste time on manual workarounds
+                  {t('onboarding.problem.points.timeWaste')}
                 </Text>
               </View>
               <View style={styles.point}>
                 <Ionicons name="close" size={24} color="#E11D48" />
                 <Text style={styles.pointText}>
-                  Existing tools lack key features
+                  {t('onboarding.problem.points.missingFeatures')}
                 </Text>
               </View>
             </View>
@@ -62,7 +62,7 @@ export default function ProblemScreen() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={handleNext}>
-            <Text style={styles.buttonText}>See the Solution</Text>
+            <Text style={styles.buttonText}>{t('onboarding.problem.seeTheSolution')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

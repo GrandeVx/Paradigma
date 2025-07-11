@@ -138,7 +138,7 @@ export default function SignInVerify(
       await Notifications.scheduleNotificationAsync({
         content: {
           title: 'Balance',
-          body: 'Hai aggiunto le tue spese oggi? 👀',
+          body: t('notifications.dailyReminder.body'),
           sound: 'default',
         },
         trigger: {
@@ -177,7 +177,7 @@ export default function SignInVerify(
 
   return (
     <>
-      <HeaderContainer variant="secondary" customTitle={t("auth.email.title", "LA TUA EMAIL")}>
+      <HeaderContainer variant="secondary" customTitle={t("auth.email.title")}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           className="flex-1"
@@ -187,14 +187,14 @@ export default function SignInVerify(
             <View className="flex-1 justify-center items-center w-max ">
               <Pressable onPress={() => otpInputRef.current?.focus()}>
                 <Text className="text-gray-600 text-base font-sans font-normal mb-2 text-center">
-                  {t("auth.verify.prompt", "Ti abbiamo inviato un codice di verifica")}
+                  {t("auth.verify.prompt")}
                 </Text>
                 <View className="relative w-max items-center">
                   <TextInput
                     autoFocus={true}
                     ref={otpInputRef}
                     className="text-[34px] placeholder:font-medium font-sans text-black pb-2"
-                    placeholder={t("auth.verify.placeholder", "XXX-XXX")}
+                    placeholder={t("auth.verify.placeholder")}
                     placeholderTextColor="text-gray-400" // Use Tailwind class if possible or direct color
                     value={otp}
                     onChangeText={setOtp}
@@ -223,19 +223,19 @@ export default function SignInVerify(
                 className="mb-8" // Add margin if needed
               >
                 <Text className="text-[16px] font-sans font-semibold">
-                  {t("auth.actions.continue", "Continua")}
+                  {t("auth.actions.continue")}
                 </Text>
               </Button>
               {/* Resend Code Section */}
               <View className="items-center">
                 {!canResend ? (
                   <Text className="text-gray-500 text-sm font-sans">
-                    {t("auth.verify.resend_timer", "Reinvia il codice tra")} {countdown}s
+                    {t("auth.verify.resend_timer")} {countdown}s
                   </Text>
                 ) : (
                   <Pressable onPress={handleResendCode}>
                     <Text className="text-primary-600 text-sm font-sans font-semibold ">
-                      {t("auth.verify.resend", "Reinvia il codice")}
+                      {t("auth.verify.resend")}
                     </Text>
                   </Pressable>
                 )}

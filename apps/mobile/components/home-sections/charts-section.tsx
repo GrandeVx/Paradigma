@@ -166,7 +166,7 @@ const SummaryContainer: React.FC<{
   const { t } = useTranslation();
 
   return (
-    <View className="bg-gray-50 rounded-3xl p-4 mb-4">
+    <View className="bg-gray-50 rounded-3xl pt-2 pb-6 px-4 mb-4">
       <MonthSelector
         currentMonth={currentMonth}
         currentYear={currentYear}
@@ -635,7 +635,7 @@ export const ChartsSection: React.FC = () => {
 
   return (
     <Animated.View style={contentStyle} className="flex-1">
-      <ScrollView className="flex-1 p-4  bg-white" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
         {/* Summary Container */}
         <Animated.View style={summaryStyle}>
           <SummaryContainer

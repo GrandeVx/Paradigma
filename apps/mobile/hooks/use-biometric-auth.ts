@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { Alert } from 'react-native';
 import { biometricUtils } from '@/lib/mmkv-storage';
+import { useTranslation } from 'react-i18next';
 
 export interface BiometricAuthHook {
   isSupported: boolean;
@@ -15,6 +16,7 @@ export interface BiometricAuthHook {
 }
 
 export const useBiometricAuth = (): BiometricAuthHook => {
+  const { t } = useTranslation();
   const [isSupported, setIsSupported] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,13 +63,13 @@ export const useBiometricAuth = (): BiometricAuthHook => {
 
   const getBiometricTypeText = (): string => {
     if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-      return 'Face ID';
+      return t('biometric.types.faceId');
     } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-      return 'Touch ID';
+      return t('biometric.types.touchId');
     } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.IRIS)) {
-      return 'Iris';
+      return t('biometric.types.iris');
     }
-    return 'Biometric';
+    return t('biometric.types.biometric');
   };
 
   const enableBiometric = useCallback(async (): Promise<boolean> => {
@@ -76,18 +78,18 @@ export const useBiometricAuth = (): BiometricAuthHook => {
       
       if (!isSupported) {
         Alert.alert(
-          'Biometric Authentication',
-          'Biometric authentication is not available on this device or no biometrics are enrolled.',
-          [{ text: 'OK' }]
+          t('biometric.alerts.authTitle'),
+          t('biometric.alerts.authNotAvailable'),
+          [{ text: t('common.ok') }]
         );
         return false;
       }
 
       // Test biometric authentication before enabling
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: `Authenticate with ${getBiometricTypeText()}`,
-        fallbackLabel: 'Use Passcode',
-        cancelLabel: 'Cancel',
+        promptMessage: t('biometric.prompts.authenticate', { type: getBiometricTypeText() }),
+        fallbackLabel: t('biometric.prompts.usePasscode'),
+        cancelLabel: t('biometric.prompts.cancel'),
         disableDeviceFallback: false,
       });
 
@@ -98,9 +100,9 @@ export const useBiometricAuth = (): BiometricAuthHook => {
         setIsEnabled(true);
         
         Alert.alert(
-          'Success',
-          `${getBiometricTypeText()} authentication has been enabled for this app.`,
-          [{ text: 'OK' }]
+          t('biometric.alerts.success'),
+          t('biometric.alerts.authEnabled', { type: getBiometricTypeText() }),
+          [{ text: t('common.ok') }]
         );
         return true;
       } else {
@@ -111,21 +113,21 @@ export const useBiometricAuth = (): BiometricAuthHook => {
           return false;
         } else if (result.error === 'system_cancel') {
           Alert.alert(
-            'Authentication Cancelled',
-            'The system cancelled the authentication process.',
-            [{ text: 'OK' }]
+            t('biometric.alerts.authCancelled'),
+            t('biometric.alerts.systemCancelled'),
+            [{ text: t('common.ok') }]
           );
         } else if (result.error === 'not_available') {
           Alert.alert(
-            'Not Available',
-            'Biometric authentication is not available at this time.',
-            [{ text: 'OK' }]
+            t('biometric.alerts.notAvailable'),
+            t('biometric.alerts.notAvailableNow'),
+            [{ text: t('common.ok') }]
           );
         } else {
           Alert.alert(
-            'Authentication Failed',
-            'Could not authenticate with biometrics. Please try again.',
-            [{ text: 'OK' }]
+            t('biometric.alerts.authFailed'),
+            t('biometric.alerts.failedMessage'),
+            [{ text: t('common.ok') }]
           );
         }
         return false;
@@ -133,15 +135,15 @@ export const useBiometricAuth = (): BiometricAuthHook => {
     } catch (error) {
       console.error('[Biometric] Error enabling biometric auth:', error);
       Alert.alert(
-        'Error',
-        'An error occurred while setting up biometric authentication.',
-        [{ text: 'OK' }]
+        t('biometric.alerts.error'),
+        t('biometric.alerts.errorMessage'),
+        [{ text: t('common.ok') }]
       );
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [isSupported, supportedTypes]);
+  }, [isSupported, supportedTypes, t]);
 
   const disableBiometric = useCallback((): void => {
     try {
@@ -150,14 +152,14 @@ export const useBiometricAuth = (): BiometricAuthHook => {
       setIsEnabled(false);
       
       Alert.alert(
-        'Disabled',
-        `${getBiometricTypeText()} authentication has been disabled for this app.`,
-        [{ text: 'OK' }]
+        t('biometric.alerts.disabled'),
+        t('biometric.alerts.disabledMessage', { type: getBiometricTypeText() }),
+        [{ text: t('common.ok') }]
       );
     } catch (error) {
       console.error('[Biometric] Error disabling biometric auth:', error);
     }
-  }, [supportedTypes]);
+  }, [supportedTypes, t]);
 
   const authenticateWithBiometric = useCallback(async (): Promise<boolean> => {
     try {
@@ -167,9 +169,9 @@ export const useBiometricAuth = (): BiometricAuthHook => {
       }
 
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: `Unlock with ${getBiometricTypeText()}`,
-        fallbackLabel: 'Use Passcode',
-        cancelLabel: 'Cancel',
+        promptMessage: t('biometric.prompts.unlock', { type: getBiometricTypeText() }),
+        fallbackLabel: t('biometric.prompts.usePasscode'),
+        cancelLabel: t('biometric.prompts.cancel'),
         disableDeviceFallback: false,
       });
 
@@ -186,7 +188,7 @@ export const useBiometricAuth = (): BiometricAuthHook => {
       console.error('[Biometric] Error during authentication:', error);
       return false;
     }
-  }, [isSupported, isEnabled, supportedTypes]);
+  }, [isSupported, isEnabled, supportedTypes, t]);
 
   return {
     isSupported,

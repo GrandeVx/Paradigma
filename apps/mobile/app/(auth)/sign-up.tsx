@@ -63,7 +63,7 @@ export default function AuthIndex() {
       await Notifications.scheduleNotificationAsync({
         content: {
           title: 'Balance',
-          body: 'Hai aggiunto le tue spese oggi? 👀',
+          body: t('notifications.dailyReminder.body'),
           sound: 'default',
         },
         trigger: {

@@ -57,26 +57,26 @@ const formatCurrency = (amount: number | Decimal) => {
 };
 
 // Get frequency text
-const getFrequencyText = (frequencyType: string, frequencyInterval: number) => {
+const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: any) => {
   const interval = frequencyInterval || 1;
 
   switch (frequencyType) {
     case 'DAILY':
-      return interval === 1 ? 'Ogni giorno' : `Ogni ${interval} giorni`;
+      return interval === 1 ? t('recurring.frequency.daily') : t('recurring.frequency.dailyInterval', { interval });
     case 'WEEKLY':
-      return interval === 1 ? 'Ogni settimana' : `Ogni ${interval} settimane`;
+      return interval === 1 ? t('recurring.frequency.weekly') : t('recurring.frequency.weeklyInterval', { interval });
     case 'MONTHLY':
-      return interval === 1 ? 'Ogni mese' : `Ogni ${interval} mesi`;
+      return interval === 1 ? t('recurring.frequency.monthly') : t('recurring.frequency.monthlyInterval', { interval });
     case 'YEARLY':
-      return interval === 1 ? 'Ogni anno' : `Ogni ${interval} anni`;
+      return interval === 1 ? t('recurring.frequency.yearly') : t('recurring.frequency.yearlyInterval', { interval });
     default:
-      return 'Frequenza sconosciuta';
+      return t('recurring.frequency.unknown');
   }
 };
 
 // Get category display with emoji
-const getCategoryDisplay = (subCategory?: SubCategory | null) => {
-  if (!subCategory) return '❓ Altro';
+const getCategoryDisplay = (subCategory?: SubCategory | null, t: any) => {
+  if (!subCategory) return t('recurring.category.other');
   return `${subCategory.icon} ${subCategory.name}`;
 };
 
@@ -85,11 +85,12 @@ const RecurringCard: React.FC<{
   recurring: RecurringTransaction;
   onEdit: (id: string) => void;
 }> = ({ recurring, onEdit }) => {
+  const { t } = useTranslation();
   const isIncome = recurring.type === 'INCOME';
   const formattedAmount = formatCurrency(Math.abs(Number(recurring.amount)));
-  const frequencyText = getFrequencyText(recurring.frequencyType, recurring.frequencyInterval);
-  const categoryText = getCategoryDisplay(recurring.subCategory);
-  const accountName = recurring.moneyAccount?.name || 'Conto non specificato';
+  const frequencyText = getFrequencyText(recurring.frequencyType, recurring.frequencyInterval, t);
+  const categoryText = getCategoryDisplay(recurring.subCategory, t);
+  const accountName = recurring.moneyAccount?.name || t('recurring.account.unspecified');
 
   return (
     <View style={styles.card}>
@@ -129,7 +130,7 @@ const RecurringCard: React.FC<{
       {/* Status indicator for inactive rules */}
       {!recurring.isActive && (
         <View style={styles.inactiveIndicator}>
-          <Text style={styles.inactiveText}>⏸️ Sospesa</Text>
+          <Text style={styles.inactiveText}>{t('recurring.status.suspended')}</Text>
         </View>
       )}
     </View>
@@ -171,7 +172,7 @@ export default function RecurringTransactionsScreen() {
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Caricamento ricorrenze...</Text>
+            <Text style={styles.loadingText}>{t('recurring.loading')}</Text>
           </View>
         ) : recurringData && recurringData.length > 0 ? (
           recurringData.map((recurring) => (
@@ -225,9 +226,9 @@ export default function RecurringTransactionsScreen() {
               </View>
             </View>
 
-            <Text style={styles.emptyText}>Nessuna transazione ricorrente trovata</Text>
+            <Text style={styles.emptyText}>{t('recurring.empty.title')}</Text>
             <Text style={styles.emptySubtext}>
-              Le tue ricorrenze appariranno qui quando ne creerai una
+              {t('recurring.empty.subtitle')}
             </Text>
           </View>
         )}

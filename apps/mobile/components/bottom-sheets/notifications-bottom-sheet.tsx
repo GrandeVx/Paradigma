@@ -10,6 +10,7 @@ import { api } from '@/lib/api';
 import * as Notifications from 'expo-notifications';
 import * as Haptics from 'expo-haptics';
 import DatePicker from 'react-native-modern-datepicker';
+import { useTranslation } from 'react-i18next';
 
 
 interface NotificationsBottomSheetProps {
@@ -33,6 +34,9 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
   initialNotifications = false,
   initialNotificationToken,
 }) => {
+  // Translation hook
+  const { t } = useTranslation();
+
   // States
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
   const [recurringNotificationsEnabled, setRecurringNotificationsEnabled] = useState(initialNotifications);
@@ -138,8 +142,8 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
 
       if (finalStatus !== 'granted') {
         Alert.alert(
-          'Autorizzazione necessaria',
-          'Per attivare le notifiche, è necessario concedere i permessi nelle impostazioni del dispositivo.',
+          t('notifications.permissions.required'),
+          t('notifications.permissions.message'),
           [{ text: 'OK' }]
         );
         return false;
@@ -193,8 +197,8 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
 
       const notificationRequest = await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Balance',
-          body: 'Hai aggiunto le tue spese oggi? 👀',
+          title: t('notifications.preview.appName'),
+          body: t('notifications.dailyReminder.body'),
           sound: 'default',
         },
         trigger: {
@@ -272,7 +276,7 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
     } catch (error) {
       console.error('Error saving notification settings:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Errore', 'Si è verificato un errore durante il salvataggio delle impostazioni.');
+      Alert.alert(t('common.error'), t('notifications.errors.saveError'));
     } finally {
       setIsLoading(false);
     }
@@ -327,7 +331,7 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
         <View className="flex-row justify-between items-center px-4 py-2">
           <View className="flex-1">
             <Text className="text-black text-center font-medium text-xs uppercase tracking-wider">
-              NOTIFICHE
+              {t('notifications.title')}
             </Text>
           </View>
           <Pressable onPress={handleClosePress} className="p-2">
@@ -342,10 +346,10 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
             <View className="flex-row justify-center gap-x-6">
               <View className="flex-1 gap-y-1">
                 <Text className="text-black text-base font-semibold">
-                  Reminder giornaliero
+                  {t('notifications.dailyReminder.title')}
                 </Text>
                 <Text className="text-gray-500 text-sm leading-5">
-                  Ti invieremo una notifica al giorno, all'orario che preferisci, per ricordarti di aggiornare i tuoi conti
+                  {t('notifications.dailyReminder.description')}
                 </Text>
               </View>
               <Toggle
@@ -361,7 +365,7 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
                   onPress={handleOpenTimePicker}
                   className="bg-gray-50 rounded-xl p-3 flex-row justify-center items-center gap-x-2"
                 >
-                  <Text className="text-gray-500 text-base font-semibold">Orario</Text>
+                  <Text className="text-gray-500 text-base font-semibold">{t('notifications.dailyReminder.timeLabel')}</Text>
                   <Text className="text-black text-base font-medium text-right min-w-[60px]" style={{ fontFamily: 'Apfel Grotezk' }}>
                     {reminderTime}
                   </Text>
@@ -398,10 +402,10 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
             <View className="flex-row justify-center gap-x-6">
               <View className="flex-1 gap-y-1">
                 <Text className="text-black text-base font-semibold">
-                  Ricorrenze e rate
+                  {t('notifications.recurringPayments.title')}
                 </Text>
                 <Text className="text-gray-500 text-sm leading-5">
-                  Ti invieremo una notifica per ricordarti dei tuoi pagamenti ricorrenti e delle rate
+                  {t('notifications.recurringPayments.description')}
                 </Text>
               </View>
               <Toggle
@@ -413,7 +417,7 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
             {/* Preview Section */}
             <View className="gap-y-2 mt-4">
               <Text className="text-gray-500 text-xs uppercase font-medium tracking-wider">
-                ANTEPRIMA
+                {t('notifications.preview.title')}
               </Text>
 
               <View className="bg-gray-100/90 rounded-[20px] p-3 flex-row items-center gap-x-3">
@@ -425,11 +429,11 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
 
                 <View className="flex-1 gap-y-[-4px] py-1">
                   <View className="flex-row justify-between items-center gap-x-1 py-1">
-                    <Text className="text-black text-[15px] font-semibold">Balance</Text>
-                    <Text className="text-black/50 text-[13px]">Adesso</Text>
+                    <Text className="text-black text-[15px] font-semibold">{t('notifications.preview.appName')}</Text>
+                    <Text className="text-black/50 text-[13px]">{t('notifications.preview.timeNow')}</Text>
                   </View>
                   <Text className="text-black text-[15px] leading-[17px]">
-                    Hai aggiunto le tue spese oggi? 👀
+                    {t('notifications.dailyReminder.body')}
                   </Text>
                 </View>
               </View>
@@ -448,7 +452,7 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
             onPress={handleSave}
             isLoading={isLoading}
           >
-            <Text className="text-white font-semibold">Salva</Text>
+            <Text className="text-white font-semibold">{t('notifications.actions.save')}</Text>
           </Button>
 
           <Pressable
@@ -459,7 +463,7 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
             className="w-full py-3"
           >
             <Text className="text-blue-600 font-semibold text-center text-sm">
-              Salta per ora
+              {t('notifications.actions.skipForNow')}
             </Text>
           </Pressable>
         </View>

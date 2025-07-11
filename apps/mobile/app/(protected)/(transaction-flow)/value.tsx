@@ -115,9 +115,9 @@ export default function ValueScreen() {
 
         <View className="flex-1 justify-center items-center px-4">
           <View className="flex flex-row items-center gap-2">
-            <Text className="text-gray-400 text-5xl font-bold">{getCurrencySymbol()}</Text>
+            <Text className="text-gray-400 text-4xl font-bold">{getCurrencySymbol()}</Text>
             <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
-              <Text className={`text-9xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700'}`}>
+              <Text className={`text-6xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700'}`}>
                 {formattedAmount.split('.')[0]}
               </Text>
               <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
@@ -133,7 +133,7 @@ export default function ValueScreen() {
               className={`rounded-full px-3 py-1.5 ${transactionType === 'income' ? 'bg-success-500' : 'bg-transparent'}`}
               onPress={() => setTransactionType('income')}
             >
-              <Text className={`font-medium text-base ${transactionType === 'income' ? 'text-white' : 'text-gray-700'}`}>
+              <Text className={`font-medium text-sm ${transactionType === 'income' ? 'text-white' : 'text-gray-700'}`}>
                 {t('transaction.types.income')}
               </Text>
             </Pressable>
@@ -142,7 +142,7 @@ export default function ValueScreen() {
               className={`rounded-full px-3 py-1.5 ${transactionType === 'expense' ? 'bg-error-500' : 'bg-transparent'}`}
               onPress={() => setTransactionType('expense')}
             >
-              <Text className={`font-medium text-base ${transactionType === 'expense' ? 'text-white' : 'text-gray-700'}`}>
+              <Text className={`font-medium text-sm ${transactionType === 'expense' ? 'text-white' : 'text-gray-700'}`}>
                 {t('transaction.types.expense')}
               </Text>
             </Pressable>
@@ -151,7 +151,7 @@ export default function ValueScreen() {
               className={`rounded-full px-3 py-1.5 ${transactionType === 'transfer' ? 'bg-gray-400' : 'bg-transparent'}`}
               onPress={() => setTransactionType('transfer')}
             >
-              <Text className={`font-medium text-base ${transactionType === 'transfer' ? 'text-white' : 'text-gray-700'}`}>
+              <Text className={`font-medium text-sm ${transactionType === 'transfer' ? 'text-white' : 'text-gray-700'}`}>
                 {t('transaction.types.transfer')}
               </Text>
             </Pressable>

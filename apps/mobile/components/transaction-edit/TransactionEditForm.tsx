@@ -27,7 +27,7 @@ type TransactionType = 'income' | 'expense' | 'transfer';
 
 const defaultRecurrenceOption: RecurrenceOption = {
   id: 'none',
-  label: 'Mai',
+  label: 'Mai', // This will be overridden by the translation in the component
   value: 0,
   days: 0,
   type: 'none'
@@ -309,26 +309,26 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
       setError(null);
 
       if (!selectedAccountId) {
-        throw new Error("Seleziona un conto");
+        throw new Error(t('transaction.errors.selectAccount'));
       }
 
       const sourceAccount = moneyAccounts?.find(item => item.account.id === selectedAccountId);
       if (!sourceAccount) {
-        throw new Error("Conto selezionato non disponibile. Riprova o seleziona un altro conto.");
+        throw new Error(t('transaction.errors.accountNotAvailable'));
       }
 
       if (transactionType !== 'transfer' && !selectedCategoryId) {
-        throw new Error("Seleziona una categoria");
+        throw new Error(t('transaction.errors.selectCategory'));
       }
 
       if (parseFloat(amount) <= 0) {
-        throw new Error("L'importo deve essere maggiore di zero");
+        throw new Error(t('transaction.errors.amountMustBePositive'));
       }
 
       const finalDescription = description || note ||
-        (transactionType === 'expense' ? "Spesa" :
-          transactionType === 'income' ? "Entrata" :
-            "Trasferimento");
+        (transactionType === 'expense' ? t('transaction.descriptions.expense') :
+          transactionType === 'income' ? t('transaction.descriptions.income') :
+            t('transaction.descriptions.transfer'));
 
       await updateMutation.mutateAsync({
         transactionId: transactionId,
@@ -351,7 +351,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
       } else if (typeof err === 'object' && err !== null && 'message' in err) {
         errorMessage = String((err as { message: unknown }).message);
       } else {
-        errorMessage = "Si è verificato un errore nel salvataggio della transazione";
+        errorMessage = t('transaction.errors.saveTransactionError');
       }
 
       setError(errorMessage);
@@ -362,15 +362,15 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
   const handleDelete = () => {
     Alert.alert(
-      "Elimina transazione",
-      "Sei sicuro di voler eliminare questa transazione? Questa azione non può essere annullata.",
+      t('recurring.alerts.delete.title'),
+      t('recurring.alerts.delete.message'),
       [
         {
-          text: "Annulla",
+          text: t('recurring.alerts.delete.cancel'),
           style: "cancel"
         },
         {
-          text: "Elimina",
+          text: t('recurring.alerts.delete.delete'),
           style: "destructive",
           onPress: async () => {
             try {
@@ -380,7 +380,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             } catch (error) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              Alert.alert("Errore", "Si è verificato un errore durante l'eliminazione della transazione");
+              Alert.alert(t('common.error'), t('recurring.alerts.deleteError.message'));
             }
           }
         }
@@ -395,9 +395,9 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) return 'Oggi';
-    if (date.toDateString() === tomorrow.toDateString()) return 'Domani';
-    if (date.toDateString() === yesterday.toDateString()) return 'Ieri';
+    if (date.toDateString() === today.toDateString()) return t('transaction.dates.today');
+    if (date.toDateString() === tomorrow.toDateString()) return t('transaction.dates.tomorrow');
+    if (date.toDateString() === yesterday.toDateString()) return t('transaction.dates.yesterday');
     return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
@@ -414,27 +414,27 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
   const getTransactionTypeText = () => {
     switch (transactionType) {
-      case 'income': return 'Entrata';
-      case 'expense': return 'Uscita';
-      case 'transfer': return 'Trasferimento';
-      default: return 'Uscita';
+      case 'income': return t('transaction.types.income');
+      case 'expense': return t('transaction.types.expense');
+      case 'transfer': return t('transaction.types.transfer');
+      default: return t('transaction.types.expense');
     }
   };
 
   const getCategoryName = () => {
     if (selectedCategoryId) {
       const subCategory = categories?.flatMap(cat => cat.subCategories).find(sc => sc.id === selectedCategoryId);
-      return subCategory ? `${subCategory.icon} ${subCategory.name}` : 'Seleziona categoria';
+      return subCategory ? `${subCategory.icon} ${subCategory.name}` : t('transaction.placeholders.selectCategory');
     }
-    return 'Seleziona una categoria';
+    return t('transaction.placeholders.selectCategory');
   };
 
   const getAccountName = () => {
     if (selectedAccountId) {
       const accountData = moneyAccounts?.find(item => item.account.id === selectedAccountId);
-      return accountData ? accountData.account.name : 'Seleziona un conto';
+      return accountData ? accountData.account.name : t('transaction.placeholders.selectAccount');
     }
-    return 'Seleziona un conto';
+    return t('transaction.placeholders.selectAccount');
   };
 
   const getAccountIcon = () => {
@@ -448,9 +448,9 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
   const getTransferAccountName = () => {
     if (selectedTransferAccountId) {
       const accountData = moneyAccounts?.find(item => item.account.id === selectedTransferAccountId);
-      return accountData ? accountData.account.name : 'Seleziona un conto';
+      return accountData ? accountData.account.name : t('transaction.placeholders.selectAccount');
     }
-    return 'Seleziona un conto';
+    return t('transaction.placeholders.selectAccount');
   };
 
   const formattedAmount = parseFloat(amount).toLocaleString('it-IT', {
@@ -465,7 +465,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
       <HeaderContainer variant="secondary" customTitle={t('transaction.edit.title')} tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white w-screen">
           <View className="flex-1 items-center justify-center">
-            <Text className="text-center text-gray-500">Caricamento...</Text>
+            <Text className="text-center text-gray-500">{t('common.loading')}</Text>
           </View>
         </SafeAreaView>
       </HeaderContainer>
@@ -477,7 +477,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
       <HeaderContainer variant="secondary" customTitle={t('transaction.edit.title')} tabBarHidden={true}>
         <SafeAreaView className="flex-1 bg-white w-screen">
           <View className="flex-1 items-center justify-center">
-            <Text className="text-center text-red-500">Errore nel caricamento della transazione</Text>
+            <Text className="text-center text-red-500">{t('recurring.form.loadingError')}</Text>
           </View>
         </SafeAreaView>
       </HeaderContainer>
@@ -515,12 +515,12 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
             <View className="flex-col">
               <Pressable disabled={transactionType === 'transfer'} onPress={handleOpenCategoryBottomSheet} className="border-b border-t border-gray-200 py-4">
                 <View className="flex-row gap-8 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Categoria</Text>
+                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.category')}</Text>
                   <View className="flex-row items-center">
                     {transactionType === 'transfer' ? (
                       <View className="flex-row items-center gap-3">
                         <SvgIcon name="target" size={16} color="gray" />
-                        <Text className="text-gray-400" style={{ fontSize: 16, fontWeight: 'regular' }}>Trasferimento</Text>
+                        <Text className="text-gray-400" style={{ fontSize: 16, fontWeight: 'regular' }}>{t('transaction.types.transfer')}</Text>
                       </View>
                     ) : (
                       <Text className="text-black text-base">{getCategoryName()}</Text>
@@ -531,7 +531,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
               <Pressable onPress={handleOpenMoneyAccountBottomSheet} className="border-b border-gray-200 py-4">
                 <View className="flex-row gap-8 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{transactionType === 'transfer' ? 'Da conto' : 'Conto'}</Text>
+                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{transactionType === 'transfer' ? t('transaction.fields.fromAccount') : t('transaction.fields.account')}</Text>
                   <View className="flex-row items-center gap-3">
                     <SvgIcon name={getAccountIcon()} size={16} color="gray" />
                     <Text className="text-black text-base">{getAccountName()}</Text>
@@ -542,7 +542,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
               {transactionType === 'transfer' && (
                 <Pressable onPress={handleOpenTransferAccountBottomSheet} className="border-b border-gray-200 py-4">
                   <View className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Al conto</Text>
+                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.toAccount')}</Text>
                     <View className="flex-row items-center">
                       <Text className="text-black text-base">{getTransferAccountName()}</Text>
                     </View>
@@ -553,7 +553,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
               <View className="border-b border-gray-200 py-4">
                 <View className="flex-row justify-between pr-2 items-center">
                   <Pressable onPress={handleOpenDateBottomSheet} className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Data</Text>
+                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.date')}</Text>
                     <View className="flex-row items-center gap-4">
                       <SvgIcon name="calendar" size={16} color="black" />
                       <Text className="text-black text-base">{getDateText(selectedDate)}</Text>
@@ -573,13 +573,13 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
               {!transaction.transferId && (
                 <View className="border-b border-gray-200 py-4">
                   <View className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>Ripeti</Text>
+                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.repeat')}</Text>
                     <Pressable onPress={handleOpenRecurrenceBottomSheet} style={{ flex: 1 }}>
                       <View className="flex-row items-center gap-4 w-full">
                         <SvgIcon name="schedule" size={16} color="black" />
                         <View className="flex-row justify-between items-center pr-4" style={{ flex: 1 }}>
                           <Text className="text-black text-base">
-                            {recurrenceOption.id !== 'none' ? recurrenceOption.label : 'Mai'}
+                            {recurrenceOption.id !== 'none' ? recurrenceOption.label : t('transaction.recurrence.never')}
                           </Text>
                           <SvgIcon name="refresh" size={16} color="black" />
                         </View>
@@ -591,12 +591,12 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
               <View className="border-b border-gray-200 py-4">
                 <View className="flex-row gap-x-4 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16, marginRight: 18 }}>Note</Text>
+                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16, marginRight: 18 }}>{t('transaction.fields.notes')}</Text>
                   <SvgIcon name="schedule" size={16} color="black" />
                   <TextInput
                     value={note}
                     onChangeText={setNote}
-                    placeholder="Aggiungi una nota"
+                    placeholder={t('transaction.placeholders.addNote')}
                     className="text-black text-base flex-1 text-left"
                     placeholderTextColor="#9CA3AF"
                   />
@@ -621,7 +621,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
               isLoading={isLoading}
               disabled={!canSaveTransaction()}
             >
-              <Text className="text-white font-semibold text-lg">Salva modifiche</Text>
+              <Text className="text-white font-semibold text-lg">{t('recurring.form.save')}</Text>
             </Button>
           </View>
         </SafeAreaView>

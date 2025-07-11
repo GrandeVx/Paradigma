@@ -54,7 +54,7 @@ export default function SignUp() {
       await Notifications.scheduleNotificationAsync({
         content: {
           title: 'Balance',
-          body: 'Hai aggiunto le tue spese oggi? 👀',
+          body: t('notifications.dailyReminder.body'),
           sound: 'default',
         },
         trigger: {
@@ -263,7 +263,7 @@ export default function SignUp() {
           </View>
           <View className="flex-row gap-2 flex-1 justify-center items-center mt-4  mx-1">
             <Text className="text-gray-500 text-sm font-sans font-normal text-center">
-              Creando un account, accetti i <Text className="text-primary-700 underline text-sm font-sans font-normal">Termini e Condizioni</Text> e riconosci di aver letto e compreso la <Text className="text-primary-700 underline text-sm font-sans font-normal">Privacy Policy</Text>
+              {t('auth.terms.prefix')} <Text className="text-primary-700 underline text-sm font-sans font-normal">{t('auth.terms.termsAndConditions')}</Text> {t('auth.terms.middle')} <Text className="text-primary-700 underline text-sm font-sans font-normal">{t('auth.terms.privacyPolicy')}</Text>
             </Text>
           </View>
         </View>

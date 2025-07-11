@@ -752,11 +752,11 @@ export const TransactionsSection: React.FC = () => {
         className="flex-1 p-4"
       >
         <View className="flex-1 justify-center items-center">
-          <Text className="text-center text-red-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>Errore nel caricamento delle transazioni</Text>
+          <Text className="text-center text-red-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>{t('home.transactions.error')}</Text>
           <Pressable onPress={() => {
             refetch();
           }}>
-            <Text className="text-center text-primary-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>Riprova</Text>
+            <Text className="text-center text-primary-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>{t('home.transactions.retry')}</Text>
           </Pressable>
         </View>
       </Animated.View>
@@ -770,7 +770,7 @@ export const TransactionsSection: React.FC = () => {
         entering={FadeIn.duration(400)}
         className="flex-1 p-4 justify-center items-center"
       >
-        <Text className="text-center text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>Caricamento...</Text>
+        <Text className="text-center text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 16 }}>{t('home.transactions.loading')}</Text>
       </Animated.View>
     );
   }
@@ -849,7 +849,7 @@ export const TransactionsSection: React.FC = () => {
             className="text-black text-center font-medium"
             style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 24 }}
           >
-            Tutto tace... per ora
+            {t('home.transactions.emptyTitle')}
           </Text>
 
           {/* Subtitle */}
@@ -857,7 +857,7 @@ export const TransactionsSection: React.FC = () => {
             className="text-gray-500 text-center text-sm"
             style={{ fontFamily: 'DM Sans', lineHeight: 20 }}
           >
-            Aggiungi una transazione per visualizzare il tuo andamento
+            {t('home.transactions.emptyDescription')}
           </Text>
         </Animated.View>
       ) : (

@@ -5,9 +5,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleNext = () => {
     router.push("/(onboarding)/problem");
@@ -19,16 +21,16 @@ export default function WelcomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.main}>
-            <Text className="text-5xl font-sans text-primary-500">Paradigma</Text>
+            <Text className="text-5xl font-sans text-primary-500">{t('onboarding.welcome.appName')}</Text>
             <View style={styles.subtitleContainer}>
               <Text style={styles.subtitle}>
-                A short, compelling tagline that captures your app's value
+                {t('onboarding.welcome.tagline')}
               </Text>
             </View>
           </View>
 
           <Button className="bg-primary-500 rounded-2xl" variant="ghost" onPress={handleNext}>
-            <Text className="text-white text-2xl font-sans">Get Started</Text>
+            <Text className="text-white text-2xl font-sans">{t('onboarding.welcome.getStarted')}</Text>
           </Button>
         </View>
       </SafeAreaView>

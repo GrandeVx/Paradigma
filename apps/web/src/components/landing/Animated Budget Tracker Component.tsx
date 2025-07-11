@@ -9,11 +9,11 @@ const AnimatedBudgetComponent = () => {
   const [phase, setPhase] = useState<AnimationPhase>('idle');
 
   const animateValues = (
-    fromTotal: number, 
-    toTotal: number, 
-    fromSpent: number, 
-    toSpent: number, 
-    duration: number, 
+    fromTotal: number,
+    toTotal: number,
+    fromSpent: number,
+    toSpent: number,
+    duration: number,
     callback?: () => void
   ) => {
     const startTime = performance.now();
@@ -28,7 +28,7 @@ const AnimatedBudgetComponent = () => {
       // Animate values
       const newTotal = fromTotal + (toTotal - fromTotal) * easeOutCubic;
       const newSpent = fromSpent + (toSpent - fromSpent) * easeOutCubic;
-      
+
       setCurrentTotal(newTotal);
       setCurrentSpent(newSpent);
 
@@ -50,18 +50,18 @@ const AnimatedBudgetComponent = () => {
 
     setTimeout(() => {
       setPhase('loading');
-      
+
       // Phase 2: Start spending animation
       setTimeout(() => {
         setPhase('calculating');
-        
+
         animateValues(1600, 476, 0, 1124, 3000, () => {
           setPhase('complete');
-          
+
           // Phase 3: Show complete state for a moment
           setTimeout(() => {
             setPhase('resetting');
-            
+
             // Phase 4: Quick reset
             animateValues(476, 1600, 1124, 0, 800, () => {
               setTimeout(runAnimationCycle, 500); // Restart cycle
@@ -79,13 +79,12 @@ const AnimatedBudgetComponent = () => {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 scale-50 md:scale-75">
-      <div className={`rounded-3xl p-8 w-full relative min-w-[500px] h-72 transition-all duration-500 ${
-        phase === 'complete' ? 'bg-red-50 shadow-2xl border-2 border-red-200 scale-105' :
-        phase === 'calculating' ? 'bg-yellow-50 shadow-xl border border-yellow-200' :
-        phase === 'loading' ? 'bg-blue-50 shadow-lg border border-blue-200' :
-        phase === 'resetting' ? 'bg-gray-100 shadow-sm scale-95' :
-        'bg-white shadow-lg'
-      }`}>
+      <div className={`rounded-3xl p-8 w-full relative min-w-[500px] h-72 transition-all duration-500 ${phase === 'complete' ? 'bg-white shadow-2xl border-2 border-gray-200 scale-105' :
+        phase === 'calculating' ? 'bg-white shadow-xl border border-gray-200' :
+          phase === 'loading' ? 'bg-white shadow-lg border border-gray-200' :
+            phase === 'resetting' ? 'bg-white shadow-sm scale-95' :
+              'bg-white shadow-lg'
+        }`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <ChevronLeft className="w-6 h-6 text-gray-600" />
@@ -114,10 +113,10 @@ const AnimatedBudgetComponent = () => {
           </div>
           <p className="text-gray-500 text-base" style={{ fontFamily: 'DM Sans, sans-serif' }}>
             {phase === 'calculating' ? 'Calcolando spese...' :
-             phase === 'complete' ? 'Budget quasi esaurito!' :
-             phase === 'loading' ? 'Caricamento dati...' :
-             phase === 'resetting' ? 'Reimpostazione...' :
-             'ancora a disposizione per questo mese'}
+              phase === 'complete' ? 'Budget quasi esaurito!' :
+                phase === 'loading' ? 'Caricamento dati...' :
+                  phase === 'resetting' ? 'Reimpostazione...' :
+                    'ancora a disposizione per questo mese'}
           </p>
         </div>
 

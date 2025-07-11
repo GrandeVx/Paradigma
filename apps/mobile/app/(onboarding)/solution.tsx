@@ -4,9 +4,11 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Text } from "@/components/ui/text";
+import { useTranslation } from "react-i18next";
 
 export default function SolutionScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleNext = () => {
     router.push("/(onboarding)/features");
@@ -22,14 +24,13 @@ export default function SolutionScreen() {
         >
           <View style={styles.header}>
             <Ionicons name="link-outline" size={48} color="#0A7EA4" />
-            <Text style={styles.title}>Introducing a Better Way</Text>
+            <Text style={styles.title}>{t('onboarding.solution.title')}</Text>
           </View>
 
           <View style={styles.mainFeature}>
-            <Text style={styles.mainTitle}>Your App's Core Value</Text>
+            <Text style={styles.mainTitle}>{t('onboarding.solution.coreValue')}</Text>
             <Text style={styles.mainDescription}>
-              One clear, powerful sentence that explains exactly how you solve
-              the user's problem.
+              {t('onboarding.solution.description')}
             </Text>
           </View>
 
@@ -37,20 +38,19 @@ export default function SolutionScreen() {
             <View style={styles.benefit}>
               <Ionicons name="checkmark-circle" size={24} color="#0A7EA4" />
               <Text style={styles.benefitText}>
-                Key benefit or feature that solves their pain
+                {t('onboarding.solution.benefits.keyBenefit')}
               </Text>
             </View>
             <View style={styles.benefit}>
               <Ionicons name="checkmark-circle" size={24} color="#0A7EA4" />
               <Text style={styles.benefitText}>
-                Another important advantage of your solution
+                {t('onboarding.solution.benefits.advantage')}
               </Text>
             </View>
             <View style={styles.benefit}>
               <Ionicons name="checkmark-circle" size={24} color="#0A7EA4" />
-
               <Text style={styles.benefitText}>
-                A third compelling reason to use your app
+                {t('onboarding.solution.benefits.compellingReason')}
               </Text>
             </View>
           </View>
@@ -58,7 +58,7 @@ export default function SolutionScreen() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={handleNext}>
-            <Text style={styles.buttonText}>Show Me How</Text>
+            <Text style={styles.buttonText}>{t('onboarding.solution.showMeHow')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
