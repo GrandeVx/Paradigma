@@ -392,13 +392,13 @@ export default function BudgetScreen() {
   const { hideTabBar, showTabBar } = useTabBar();
 
   const handleOpenBottomSheet = useCallback(() => {
-    hideTabBar();
+    hideTabBar('budget-bottom-sheet');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     bottomSheetRef.current?.expand();
   }, [hideTabBar]);
 
   const handleCloseBottomSheet = useCallback(() => {
-    showTabBar();
+    showTabBar('budget-bottom-sheet');
     bottomSheetRef.current?.close();
 
     // Invalidate queries when bottom sheet is closed to refresh data
@@ -422,7 +422,7 @@ export default function BudgetScreen() {
         appearsOnIndex={0}
         opacity={0.5}
         onPress={() => {
-          showTabBar();
+          showTabBar('budget-bottom-sheet');
         }}
         enableTouchThrough={false}
         pressBehavior="close"

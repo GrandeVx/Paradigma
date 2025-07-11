@@ -43,6 +43,13 @@
         "november": "November",
         "december": "December"
       },
+      "error": "Error loading transactions",
+      "retry": "Retry",
+      "loading": "Loading...",
+      "empty": {
+        "title": "All quiet... for now",
+        "subtitle": "Add a transaction to view your progress"
+      },
       "days": {
         "sun": "SUN",
         "mon": "MON",
@@ -169,7 +176,21 @@
       "placeholder": "Email"
     },
     "name": {
-      "title": "YOUR NAME"
+      "title": "YOUR NAME",
+      "prompt": "What's your name?"
+    },
+    "verify": {
+      "prompt": "We've sent you a verification code",
+      "placeholder": "XXX-XXX",
+      "resend_timer": "Resend code in",
+      "resend": "Resend code"
+    },
+    "terms": {
+      "creating": "By creating an account, you agree to the",
+      "termsLink": "Terms and Conditions",
+      "and": "and",
+      "acknowledgeReading": "acknowledge that you have read and understood the",
+      "privacyLink": "Privacy Policy"
     }
   },
   "header": {
@@ -426,10 +447,279 @@
       "title": "EDIT BALANCE"
     }
   },
+  "biometric": {
+    "types": {
+      "faceId": "Face ID",
+      "touchId": "Touch ID",
+      "iris": "Iris",
+      "biometric": "Biometric"
+    },
+    "appInfo": {
+      "name": "Balance",
+      "tagline": "Your financial companion",
+      "logoLetter": "B"
+    },
+    "authentication": {
+      "unlockWith": "Unlock with {{type}}",
+      "useToAccess": "Use {{type}} to securely access your financial data",
+      "authenticating": "Authenticating...",
+      "tryAgain": "Try Again",
+      "use": "Use {{type}}"
+    },
+    "alerts": {
+      "exitApp": {
+        "title": "Exit App",
+        "message": "Authentication is required to access the app. Do you want to exit?",
+        "cancel": "Cancel",
+        "exit": "Exit"
+      },
+      "authTitle": "Biometric Authentication",
+      "authNotAvailable": "Biometric authentication is not available on this device or no biometrics are enrolled.",
+      "success": "Success",
+      "authEnabled": "{{type}} authentication has been enabled for this app.",
+      "authCancelled": "Authentication Cancelled",
+      "systemCancelled": "The system cancelled the authentication process.",
+      "notAvailable": "Not Available",
+      "notAvailableNow": "Biometric authentication is not available at this time.",
+      "authFailed": "Authentication Failed",
+      "failedMessage": "Could not authenticate with biometrics. Please try again.",
+      "error": "Error",
+      "errorMessage": "An error occurred while setting up biometric authentication.",
+      "disabled": "Disabled",
+      "disabledMessage": "{{type}} authentication has been disabled for this app."
+    },
+    "prompts": {
+      "authenticate": "Authenticate with {{type}}",
+      "usePasscode": "Use Passcode",
+      "cancel": "Cancel",
+      "unlock": "Unlock with {{type}}"
+    },
+    "status": {
+      "multipleFailures": "Multiple authentication attempts failed. Please try again or contact support.",
+      "protectionMessage": "Your financial data is securely protected with biometric authentication.",
+      "attemptingAuth": "Attempting authentication... ({{current}}/3)"
+    }
+  },
+  "notifications": {
+    "title": "NOTIFICATIONS",
+    "permissions": {
+      "required": "Authorization Required",
+      "message": "To enable notifications, you need to grant permissions in your device settings."
+    },
+    "dailyReminder": {
+      "title": "Daily reminder",
+      "description": "We'll send you a notification once a day, at your preferred time, to remind you to update your accounts",
+      "timeLabel": "Time",
+      "body": "Have you added your expenses today? 👀"
+    },
+    "recurringPayments": {
+      "title": "Recurring and installments",
+      "description": "We'll send you a notification to remind you of your recurring payments and installments"
+    },
+    "preview": {
+      "title": "PREVIEW",
+      "appName": "Balance",
+      "timeNow": "Now"
+    },
+    "actions": {
+      "save": "Save",
+      "skipForNow": "Skip for now"
+    },
+    "errors": {
+      "saveError": "An error occurred while saving settings."
+    },
+    "success": {
+      "title": "Success",
+      "message": "Notification settings have been updated."
+    }
+  },
   "recurring": {
-    "title": "RECURRING"
+    "title": "RECURRING",
+    "frequency": {
+      "daily": "Every day",
+      "multiDaily": "Every {{interval}} days",
+      "weekly": "Every week",
+      "multiWeekly": "Every {{interval}} weeks",
+      "monthly": "Every month",
+      "multiMonthly": "Every {{interval}} months",
+      "yearly": "Every year",
+      "multiYearly": "Every {{interval}} years",
+      "unknown": "Unknown frequency"
+    },
+    "status": {
+      "inactive": "⏸️ Suspended"
+    },
+    "defaults": {
+      "category": "❓ Other",
+      "account": "Account not specified"
+    },
+    "loading": "Loading recurring transactions...",
+    "empty": {
+      "title": "No recurring transactions found",
+      "subtitle": "Your recurring transactions will appear here when you create one"
+    },
+    "form": {
+      "title": "Edit Recurring",
+      "loadingError": "Error loading recurring transaction",
+      "category": "Category",
+      "account": "Account",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "noExpiry": "No expiry",
+      "frequency": "Frequency",
+      "notes": "Notes",
+      "notePlaceholder": "Add a note",
+      "save": "Save changes"
+    },
+    "alerts": {
+      "delete": {
+        "title": "Delete recurring",
+        "message": "Are you sure you want to delete this recurring transaction? This action cannot be undone.",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "deleteError": {
+        "title": "Error",
+        "message": "An error occurred while deleting the recurring transaction"
+      }
+    },
+    "errors": {
+      "selectAccount": "Select an account",
+      "selectCategory": "Select a category",
+      "amountMustBePositive": "Amount must be greater than zero",
+      "endDateAfterStart": "End date must be after start date",
+      "saveError": "An error occurred while saving the recurring transaction"
+    },
+    "descriptions": {
+      "income": "Recurring income",
+      "expense": "Recurring expense"
+    }
   },
   "installments": {
-    "title": "INSTALLMENTS"
+    "title": "INSTALLMENTS",
+    "frequency": {
+      "daily": "Every day",
+      "multiDaily": "Every {{interval}} days",
+      "weekly": "Every week",
+      "multiWeekly": "Every {{interval}} weeks",
+      "monthly": "Every month",
+      "multiMonthly": "Every {{interval}} months",
+      "yearly": "Every year",
+      "multiYearly": "Every {{interval}} years",
+      "unknown": "Unknown frequency"
+    },
+    "timing": {
+      "today": "today",
+      "inOneDay": "in 1 day",
+      "inXDays": "in {{days}} days"
+    },
+    "status": {
+      "inactive": "⏸️ Suspended"
+    },
+    "defaults": {
+      "notAvailable": "N/A",
+      "account": "Account",
+      "category": "Category"
+    },
+    "loading": "Loading installments...",
+    "empty": {
+      "title": "No installments found",
+      "subtitle": "You don't have any installments configured yet."
+    },
+    "form": {
+      "title": "Edit Installment",
+      "loadingError": "Error loading installment",
+      "totalAmount": "Total amount",
+      "category": "Category",
+      "account": "Account",
+      "totalInstallments": "Total installments",
+      "installmentsLabel": "installments",
+      "summary": "Installments Summary",
+      "paidInstallments": "Paid installments:",
+      "amountPaid": "Amount paid:",
+      "installmentToPay": "Installment to pay:",
+      "startDate": "Start date",
+      "notes": "Notes",
+      "notePlaceholder": "Add a note",
+      "save": "Save changes"
+    },
+    "alerts": {
+      "delete": {
+        "title": "Delete installment",
+        "message": "Are you sure you want to delete this installment? This action cannot be undone.",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "deleteError": {
+        "title": "Error",
+        "message": "An error occurred while deleting the installment"
+      }
+    },
+    "errors": {
+      "selectAccount": "Select an account",
+      "selectCategory": "Select a category",
+      "amountMustBePositive": "Amount must be greater than zero",
+      "installmentsMustBePositive": "Number of installments must be greater than zero",
+      "minimumInstallments": "For this payment frequency, you need to set at least {{min}} installments to cover a reasonable period",
+      "saveError": "An error occurred while saving the installment"
+    },
+    "descriptions": {
+      "default": "Installment"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "appName": "Paradigm",
+      "tagline": "A short, compelling tagline that captures your app's value",
+      "getStarted": "Get Started"
+    },
+    "problem": {
+      "title": "The Problem",
+      "description": "Describe the main challenge or pain point your users face. Make it relatable and specific.",
+      "exampleText": "I struggle with X every day, and it costs me Y hours per week...",
+      "points": {
+        "expensive": "Current solutions are expensive and complex",
+        "timeWaste": "Users waste time on manual workarounds",
+        "missingFeatures": "Existing tools lack key features"
+      },
+      "seeTheSolution": "See the Solution"
+    },
+    "solution": {
+      "title": "Introducing a Better Way",
+      "coreValue": "Your App's Core Value",
+      "description": "One clear, powerful sentence that explains exactly how you solve the user's problem.",
+      "benefits": {
+        "keyBenefit": "Key benefit or feature that solves their pain",
+        "advantage": "Another important advantage of your solution",
+        "compellingReason": "A third compelling reason to use your app"
+      },
+      "showMeHow": "Show Me How"
+    },
+    "features": {
+      "title": "Ready to Use",
+      "inAppPurchases": {
+        "title": "In-App Purchases",
+        "description": "Superwall integration for subscriptions and one-time purchases"
+      },
+      "modernNavigation": {
+        "title": "Modern Navigation",
+        "description": "File-based routing with Expo Router for a great UX"
+      },
+      "themingSystem": {
+        "title": "Theming System",
+        "description": "Beautiful dark and light mode support out of the box"
+      },
+      "almostThere": "Almost There"
+    },
+    "final": {
+      "title": "Start Building Today",
+      "description": "You're all set to create your next great app. Get started now and save weeks of development time!",
+      "benefits": {
+        "launchFaster": "Launch faster",
+        "professionalDesign": "Professional design",
+        "readyMonetization": "Ready for monetization"
+      },
+      "getStarted": "Get Started Now"
+    }
   }
 }

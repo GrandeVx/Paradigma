@@ -1,7 +1,8 @@
 import { SplashScreen, useRouter, useSegments, useRootNavigation } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet, AppState } from "react-native";
+import { View, Text, StyleSheet, AppState, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence } from "react-native-reanimated";
 
 import { authClient } from "@/lib/auth-client";
 import { Session } from "better-auth/types";
@@ -664,19 +665,104 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
   }, [session, isOnboarded]);
 
   // Custom Loading Screen Component
-  const LoadingScreen = () => (
-    <SafeAreaView style={styles.loadingContainer}>
-      <View style={styles.loadingContent}>
-        <View style={styles.logoContainer}>
-          <View style={styles.logoBackground}>
-            <Text style={styles.logoText}>B</Text>
+  const LoadingScreen = () => {
+    // Animation values for currency symbols
+    const dollarOpacity = useSharedValue(0);
+    const euroOpacity = useSharedValue(0);
+    const poundOpacity = useSharedValue(0);
+    const yenOpacity = useSharedValue(0);
+
+    // Start animations when component mounts
+    useEffect(() => {
+      const animateSymbols = () => {
+        // Animate symbols appearing with staggered timing
+        dollarOpacity.value = withSequence(
+          withTiming(0, { duration: 0 }),
+          withTiming(1, { duration: 800 }),
+          withTiming(0.7, { duration: 300 }),
+          withTiming(1, { duration: 300 })
+        );
+
+        setTimeout(() => {
+          euroOpacity.value = withSequence(
+            withTiming(0, { duration: 0 }),
+            withTiming(1, { duration: 800 }),
+            withTiming(0.7, { duration: 300 }),
+            withTiming(1, { duration: 300 })
+          );
+        }, 200);
+
+        setTimeout(() => {
+          poundOpacity.value = withSequence(
+            withTiming(0, { duration: 0 }),
+            withTiming(1, { duration: 800 }),
+            withTiming(0.7, { duration: 300 }),
+            withTiming(1, { duration: 300 })
+          );
+        }, 400);
+
+        setTimeout(() => {
+          yenOpacity.value = withSequence(
+            withTiming(0, { duration: 0 }),
+            withTiming(1, { duration: 800 }),
+            withTiming(0.7, { duration: 300 }),
+            withTiming(1, { duration: 300 })
+          );
+        }, 600);
+      };
+
+      animateSymbols();
+      // Repeat animation every 3 seconds
+      const interval = setInterval(animateSymbols, 3000);
+      return () => clearInterval(interval);
+    }, []);
+
+    // Animated styles for currency symbols
+    const dollarStyle = useAnimatedStyle(() => ({
+      opacity: dollarOpacity.value,
+    }));
+
+    const euroStyle = useAnimatedStyle(() => ({
+      opacity: euroOpacity.value,
+    }));
+
+    const poundStyle = useAnimatedStyle(() => ({
+      opacity: poundOpacity.value,
+    }));
+
+    const yenStyle = useAnimatedStyle(() => ({
+      opacity: yenOpacity.value,
+    }));
+
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <View style={styles.loadingContent}>
+          {/* Logo in the center */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
+
+          {/* Animated currency symbols */}
+          <Animated.Text style={[styles.currencySymbol, styles.dollarSymbol, dollarStyle]}>
+            $
+          </Animated.Text>
+          <Animated.Text style={[styles.currencySymbol, styles.euroSymbol, euroStyle]}>
+            €
+          </Animated.Text>
+          <Animated.Text style={[styles.currencySymbol, styles.poundSymbol, poundStyle]}>
+            £
+          </Animated.Text>
+          <Animated.Text style={[styles.currencySymbol, styles.yenSymbol, yenStyle]}>
+            ¥
+          </Animated.Text>
         </View>
-        <Text style={styles.loadingTitle}>Balance</Text>
-        <Text style={styles.loadingSubtitle}>Preparing your experience...</Text>
-      </View>
-    </SafeAreaView>
-  );
+      </SafeAreaView>
+    );
+  };
 
   // Show loading screen only when shouldShowSplash is true
   if (shouldShowSplash) {
@@ -746,45 +832,45 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#005EFD", // Blue background to match Figma
   },
   loadingContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
+    position: "relative",
   },
   logoContainer: {
-    marginBottom: 24,
-  },
-  logoBackground: {
-    width: 100,
-    height: 100,
-    borderRadius: 20,
-    backgroundColor: "#005EFD",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 10,
   },
-  logoText: {
-    fontSize: 60,
-    fontWeight: "bold",
-    color: "white",
+  logoImage: {
+    width: 200,
+    height: 100,
   },
-  loadingTitle: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 8,
+  currencySymbol: {
+    position: "absolute",
+    fontSize: 146,
+    fontWeight: "700",
+    color: "#359AF8", // Blue color for symbols
+    fontFamily: "System", // Will fallback to system font
     textAlign: "center",
-    color: "#000",
   },
-  loadingSubtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    marginBottom: 32,
-    textAlign: "center",
-    color: "#666",
+  dollarSymbol: {
+    top: "18%",
+    left: "15%",
   },
-  loader: {
-    marginTop: 20,
+  euroSymbol: {
+    top: "26%",
+    right: "10%",
+  },
+  poundSymbol: {
+    bottom: "35%",
+    left: "-6%",
+  },
+  yenSymbol: {
+    bottom: "20%",
+    right: "20%",
   },
 });

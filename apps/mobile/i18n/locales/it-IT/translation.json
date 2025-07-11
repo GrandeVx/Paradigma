@@ -30,6 +30,13 @@
       "expenses": "Uscite",
       "remaining": "Rimanente",
       "today": "OGGI",
+      "error": "Errore nel caricamento delle transazioni",
+      "retry": "Riprova",
+      "loading": "Caricamento...",
+      "empty": {
+        "title": "Tutto tace... per ora",
+        "subtitle": "Aggiungi una transazione per visualizzare il tuo andamento"
+      },
       "months": {
         "january": "Gennaio",
         "february": "Febbraio",
@@ -191,7 +198,21 @@
       "placeholder": "Email"
     },
     "name": {
-      "title": "IL TUO NOME"
+      "title": "IL TUO NOME",
+      "prompt": "Come ti chiami?"
+    },
+    "verify": {
+      "prompt": "Ti abbiamo inviato un codice di verifica",
+      "placeholder": "XXX-XXX",
+      "resend_timer": "Reinvia il codice tra",
+      "resend": "Reinvia il codice"
+    },
+    "terms": {
+      "creating": "Creando un account, accetti i",
+      "termsLink": "Termini e Condizioni",
+      "and": "e",
+      "acknowledgeReading": "riconosci di aver letto e compreso la",
+      "privacyLink": "Privacy Policy"
     }
   },
   "header": {
@@ -455,5 +476,280 @@
   },
   "installments": {
     "title": "RATE"
+  },
+  "biometric": {
+    "types": {
+      "faceId": "Face ID",
+      "touchId": "Touch ID", 
+      "iris": "Iris",
+      "biometric": "Biometrico"
+    },
+    "appInfo": {
+      "name": "Balance",
+      "tagline": "Il tuo compagno finanziario",
+      "logoLetter": "B"
+    },
+    "authentication": {
+      "unlockWith": "Sblocca con {{type}}",
+      "useToAccess": "Usa {{type}} per accedere in sicurezza ai tuoi dati finanziari",
+      "authenticating": "Autenticazione...",
+      "tryAgain": "Riprova",
+      "use": "Usa {{type}}"
+    },
+    "alerts": {
+      "exitApp": {
+        "title": "Esci dall'App",
+        "message": "L'autenticazione è necessaria per accedere all'app. Vuoi uscire?",
+        "cancel": "Annulla",
+        "exit": "Esci"
+      },
+      "authTitle": "Autenticazione Biometrica",
+      "authNotAvailable": "L'autenticazione biometrica non è disponibile su questo dispositivo o non ci sono biometrie registrate.",
+      "success": "Successo",
+      "authEnabled": "L'autenticazione {{type}} è stata abilitata per questa app.",
+      "authCancelled": "Autenticazione Annullata",
+      "systemCancelled": "Il sistema ha annullato il processo di autenticazione.",
+      "notAvailable": "Non Disponibile",
+      "notAvailableNow": "L'autenticazione biometrica non è disponibile in questo momento.",
+      "authFailed": "Autenticazione Fallita",
+      "failedMessage": "Impossibile autenticarsi con la biometria. Riprova.",
+      "error": "Errore",
+      "errorMessage": "Si è verificato un errore durante la configurazione dell'autenticazione biometrica.",
+      "disabled": "Disabilitato",
+      "disabledMessage": "L'autenticazione {{type}} è stata disabilitata per questa app."
+    },
+    "prompts": {
+      "authenticate": "Autenticati con {{type}}",
+      "usePasscode": "Usa Codice",
+      "cancel": "Annulla",
+      "unlock": "Sblocca con {{type}}"
+    },
+    "status": {
+      "multipleFailures": "Più tentativi di autenticazione falliti. Riprova o contatta il supporto.",
+      "protectionMessage": "I tuoi dati finanziari sono protetti in sicurezza con l'autenticazione biometrica.",
+      "attemptingAuth": "Tentativo di autenticazione... ({{current}}/3)"
+    }
+  },
+  "notifications": {
+    "title": "NOTIFICHE",
+    "permissions": {
+      "required": "Autorizzazione necessaria",
+      "message": "Per attivare le notifiche, è necessario concedere i permessi nelle impostazioni del dispositivo."
+    },
+    "dailyReminder": {
+      "title": "Reminder giornaliero", 
+      "description": "Ti invieremo una notifica al giorno, all'orario che preferisci, per ricordarti di aggiornare i tuoi conti",
+      "timeLabel": "Orario",
+      "body": "Hai aggiunto le tue spese oggi? 👀"
+    },
+    "recurringPayments": {
+      "title": "Ricorrenze e rate",
+      "description": "Ti invieremo una notifica per ricordarti dei tuoi pagamenti ricorrenti e delle rate"
+    },
+    "preview": {
+      "title": "ANTEPRIMA",
+      "appName": "Balance",
+      "timeNow": "Adesso"
+    },
+    "actions": {
+      "save": "Salva",
+      "skipForNow": "Salta per ora"
+    },
+    "errors": {
+      "saveError": "Si è verificato un errore durante il salvataggio delle impostazioni."
+    },
+    "success": {
+      "title": "Successo",
+      "message": "Le impostazioni delle notifiche sono state aggiornate."
+    }
+  },
+  "recurring": {
+    "title": "RICORRENTI",
+    "frequency": {
+      "daily": "Ogni giorno",
+      "multiDaily": "Ogni {{interval}} giorni",
+      "weekly": "Ogni settimana", 
+      "multiWeekly": "Ogni {{interval}} settimane",
+      "monthly": "Ogni mese",
+      "multiMonthly": "Ogni {{interval}} mesi",
+      "yearly": "Ogni anno",
+      "multiYearly": "Ogni {{interval}} anni",
+      "unknown": "Frequenza sconosciuta"
+    },
+    "status": {
+      "inactive": "⏸️ Sospesa"
+    },
+    "defaults": {
+      "category": "❓ Altro",
+      "account": "Conto non specificato"
+    },
+    "loading": "Caricamento ricorrenze...",
+    "empty": {
+      "title": "Nessuna transazione ricorrente trovata",
+      "subtitle": "Le tue ricorrenze appariranno qui quando ne creerai una"
+    },
+    "form": {
+      "title": "Modifica Ricorrenza",
+      "loadingError": "Errore nel caricamento della ricorrenza",
+      "category": "Categoria",
+      "account": "Conto",
+      "startDate": "Data inizio",
+      "endDate": "Data fine",
+      "noExpiry": "Nessuna scadenza",
+      "frequency": "Frequenza",
+      "notes": "Note",
+      "notePlaceholder": "Aggiungi una nota",
+      "save": "Salva modifiche"
+    },
+    "alerts": {
+      "delete": {
+        "title": "Elimina ricorrenza",
+        "message": "Sei sicuro di voler eliminare questa ricorrenza? Questa azione non può essere annullata.",
+        "cancel": "Annulla",
+        "delete": "Elimina"
+      },
+      "deleteError": {
+        "title": "Errore",
+        "message": "Si è verificato un errore durante l'eliminazione della ricorrenza"
+      }
+    },
+    "errors": {
+      "selectAccount": "Seleziona un conto",
+      "selectCategory": "Seleziona una categoria", 
+      "amountMustBePositive": "L'importo deve essere maggiore di zero",
+      "endDateAfterStart": "La data di fine deve essere successiva alla data di inizio",
+      "saveError": "Si è verificato un errore nel salvataggio della ricorrenza"
+    },
+    "descriptions": {
+      "income": "Entrata ricorrente",
+      "expense": "Spesa ricorrente"
+    }
+  },
+  "installments": {
+    "title": "RATE",
+    "frequency": {
+      "daily": "Ogni giorno",
+      "multiDaily": "Ogni {{interval}} giorni",
+      "weekly": "Ogni settimana",
+      "multiWeekly": "Ogni {{interval}} settimane", 
+      "monthly": "Ogni mese",
+      "multiMonthly": "Ogni {{interval}} mesi",
+      "yearly": "Ogni anno",
+      "multiYearly": "Ogni {{interval}} anni",
+      "unknown": "Frequenza sconosciuta"
+    },
+    "timing": {
+      "today": "oggi",
+      "inOneDay": "in 1 giorno",
+      "inXDays": "in {{days}} giorni"
+    },
+    "status": {
+      "inactive": "⏸️ Sospesa"
+    },
+    "defaults": {
+      "notAvailable": "N/A",
+      "account": "Account",
+      "category": "Categoria"
+    },
+    "loading": "Caricamento rate...",
+    "empty": {
+      "title": "Nessuna rata trovata",
+      "subtitle": "Non hai ancora nessuna rata configurata."
+    },
+    "form": {
+      "title": "Modifica Rata",
+      "loadingError": "Errore nel caricamento della rata",
+      "totalAmount": "Importo totale",
+      "category": "Categoria",
+      "account": "Conto",
+      "totalInstallments": "Rate totali",
+      "installmentsLabel": "rate",
+      "summary": "Riepilogo Rate",
+      "paidInstallments": "Rate pagate:",
+      "amountPaid": "Importo pagato:",
+      "installmentToPay": "Rata da pagare:",
+      "startDate": "Data inizio",
+      "notes": "Note",
+      "notePlaceholder": "Aggiungi una nota",
+      "save": "Salva modifiche"
+    },
+    "alerts": {
+      "delete": {
+        "title": "Elimina rata",
+        "message": "Sei sicuro di voler eliminare questa rata? Questa azione non può essere annullata.",
+        "cancel": "Annulla", 
+        "delete": "Elimina"
+      },
+      "deleteError": {
+        "title": "Errore",
+        "message": "Si è verificato un errore durante l'eliminazione della rata"
+      }
+    },
+    "errors": {
+      "selectAccount": "Seleziona un conto",
+      "selectCategory": "Seleziona una categoria",
+      "amountMustBePositive": "L'importo deve essere maggiore di zero",
+      "installmentsMustBePositive": "Il numero di rate deve essere maggiore di zero",
+      "minimumInstallments": "Per questa frequenza di pagamento, è necessario impostare almeno {{min}} rate per coprire un periodo ragionevole",
+      "saveError": "Si è verificato un errore nel salvataggio della rata"
+    },
+    "descriptions": {
+      "default": "Rata"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "appName": "Paradigma",
+      "tagline": "Una tagline breve e convincente che cattura il valore della tua app",
+      "getStarted": "Inizia"
+    },
+    "problem": {
+      "title": "Il Problema",
+      "description": "Descrivi la sfida principale o il punto dolente che i tuoi utenti affrontano. Rendilo relazionabile e specifico.",
+      "exampleText": "Lotto con X ogni giorno, e mi costa Y ore a settimana...",
+      "points": {
+        "expensive": "Le soluzioni attuali sono costose e complesse",
+        "timeWaste": "Gli utenti perdono tempo con soluzioni manuali", 
+        "missingFeatures": "Gli strumenti esistenti mancano di funzionalità chiave"
+      },
+      "seeTheSolution": "Vedi la Soluzione"
+    },
+    "solution": {
+      "title": "Introduciamo un Modo Migliore",
+      "coreValue": "Il Valore Centrale della Tua App",
+      "description": "Una frase chiara e potente che spiega esattamente come risolvi il problema dell'utente.",
+      "benefits": {
+        "keyBenefit": "Beneficio chiave o funzionalità che risolve il loro problema",
+        "advantage": "Un altro importante vantaggio della tua soluzione",
+        "compellingReason": "Una terza ragione convincente per usare la tua app"
+      },
+      "showMeHow": "Mostrami Come"
+    },
+    "features": {
+      "title": "Pronto all'Uso",
+      "inAppPurchases": {
+        "title": "Acquisti In-App",
+        "description": "Integrazione Superwall per abbonamenti e acquisti una tantum"
+      },
+      "modernNavigation": {
+        "title": "Navigazione Moderna",
+        "description": "Routing basato su file con Expo Router per una grande UX"
+      },
+      "themingSystem": {
+        "title": "Sistema di Temi",
+        "description": "Bellissimo supporto per modalità scura e chiara pronto all'uso"
+      },
+      "almostThere": "Ci Siamo Quasi"
+    },
+    "final": {
+      "title": "Inizia a Sviluppare Oggi",
+      "description": "Sei pronto a creare la tua prossima grande app. Inizia ora e risparmia settimane di sviluppo!",
+      "benefits": {
+        "launchFaster": "Lancia più velocemente",
+        "professionalDesign": "Design professionale",
+        "readyMonetization": "Pronto per la monetizzazione"
+      },
+      "getStarted": "Inizia Ora"
+    }
   }
 }

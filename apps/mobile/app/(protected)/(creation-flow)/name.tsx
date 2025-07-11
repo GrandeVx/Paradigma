@@ -1,10 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { View, TextInput, KeyboardAvoidingView, Platform, Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 
@@ -15,6 +15,18 @@ export default function NameStepFlow(
   const [name, setName] = useState("");
   const nameInputRef = useRef<TextInput>(null);
   const params = useLocalSearchParams<{ firstAccount: string }>();
+
+  // Reset state when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Reset name input to prevent old data from persisting
+      setName("");
+      return () => {
+        // Cleanup if necessary
+      };
+    }, [])
+  );
+
   // Automatically focus the input field when the screen mounts
 
 

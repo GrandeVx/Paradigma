@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { api } from "@/lib/api";
 
 // Import modular component for better performance
@@ -21,6 +21,21 @@ export default function SummaryScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const params = useLocalSearchParams<{ name: string, icon: string, color: string, value: string, firstAccount: string }>();
+
+  // Reset state when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Reset form settings to prevent old data from persisting
+      setDefaultAccount(false);
+      setSavingsAccount(false);
+      setSavingTarget("750,00");
+      setIsLoading(false);
+      setError(null);
+      return () => {
+        // Cleanup if necessary
+      };
+    }, [])
+  );
 
   const queryClient = api.useContext();
 

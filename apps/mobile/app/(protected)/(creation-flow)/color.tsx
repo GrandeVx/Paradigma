@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { View, TextInput, KeyboardAvoidingView, Platform, Pressable, FlatList } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { EyeCloseIcon, IconName } from "@/components/ui/icons";
@@ -19,6 +19,18 @@ export default function ColorStepFlow(
   const [color, setColor] = useState<string>();
   const nameInputRef = useRef<TextInput>(null);
   const params = useLocalSearchParams<{ name: string, icon: string, firstAccount: string }>();
+
+  // Reset state when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Reset color selection to prevent old data from persisting
+      setColor(undefined);
+      return () => {
+        // Cleanup if necessary
+      };
+    }, [])
+  );
+
   // Automatically focus the input field when the screen mounts
   useEffect(() => {
     nameInputRef.current?.focus();

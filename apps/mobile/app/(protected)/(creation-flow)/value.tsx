@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import * as Haptics from 'expo-haptics';
 
 import { IconName } from "@/components/ui/icons";
@@ -19,6 +19,19 @@ export default function ValueStepFlow() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isDecimalActive, setIsDecimalActive] = useState(false);
   const params = useLocalSearchParams<{ name: string, icon: string, color: string, firstAccount: string }>();
+
+  // Reset state when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Reset all form state to prevent old data from persisting
+      setAmount('0');
+      setIsAnimating(false);
+      setIsDecimalActive(false);
+      return () => {
+        // Cleanup if necessary
+      };
+    }, [])
+  );
 
   // Trigger animation when amount changes
   useEffect(() => {
