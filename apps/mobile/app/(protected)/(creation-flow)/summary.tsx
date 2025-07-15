@@ -45,7 +45,7 @@ export default function SummaryScreen() {
       // Only invalidate account list, no need for other queries
       await queryClient.account.listWithBalances.invalidate();
       // Navigate to home after successful account creation
-      router.replace("/(protected)/(home)");
+      router.replace("/(protected)/(accounts)");
     },
     onError: (error) => {
       setError(error.message);

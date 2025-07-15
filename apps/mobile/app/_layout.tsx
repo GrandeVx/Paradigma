@@ -8,7 +8,7 @@ import {
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -30,6 +30,7 @@ import { TabBarProvider } from "@/context/TabBarContext";
 import { useExpoUpdates } from "@/hooks/use-expo-updates";
 import { UpdateModal } from "@/components/ui/update-modal";
 import { useNotificationBadgeSimple } from "@/hooks/use-notification-badge-simple";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 import * as Notifications from 'expo-notifications';
 
@@ -99,57 +100,74 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
+  // Timer-based splash screen control - independent of authentication
+  const [showCustomSplash, setShowCustomSplash] = useState(true);
+
   // Integrazione Expo Updates
   const { updateInfo, downloadAndRestart, dismissUpdate } = useExpoUpdates();
-  
+
   // Clear notification badge when app becomes active
   useNotificationBadgeSimple();
 
+  // Hide custom splash after fixed duration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowCustomSplash(false);
+    }, 2000); // Show for 4 seconds to allow animation to complete
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <SupabaseProvider>
-      {/* API System */}
-      <TRPCProvider>
-        {/* SafeAreaProvider */}
-        <SafeAreaProvider>
-          {/* light/dark mode */}
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <GestureHandlerRootView style={{ flex: 1 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
-              <TabBarProvider>
-                <Stack>
-                  <Stack.Screen
-                    name="(splash)"
-                    options={{ headerShown: false, animation: "fade" }}
+    <>
+      <SupabaseProvider>
+        {/* API System */}
+        <TRPCProvider>
+          {/* SafeAreaProvider */}
+          <SafeAreaProvider>
+            {/* light/dark mode */}
+            <ThemeProvider
+              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            >
+              <GestureHandlerRootView style={{ flex: 1 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
+                <TabBarProvider>
+                  <Stack>
+                    <Stack.Screen
+                      name="(splash)"
+                      options={{ headerShown: false, animation: "fade" }}
 
-                  />
-                  <Stack.Screen
-                    name="(protected)"
-                    options={{ headerShown: false, animation: "fade" }}
-                  />
-                  <Stack.Screen
-                    name="(onboarding)"
-                    options={{ headerShown: false, animation: "fade" }}
-                  />
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false, animation: "fade" }}
-                  />
-                </Stack>
-              </TabBarProvider>
-            </GestureHandlerRootView>
+                    />
+                    <Stack.Screen
+                      name="(protected)"
+                      options={{ headerShown: false, animation: "fade" }}
+                    />
+                    <Stack.Screen
+                      name="(onboarding)"
+                      options={{ headerShown: false, animation: "fade" }}
+                    />
+                    <Stack.Screen
+                      name="(auth)"
+                      options={{ headerShown: false, animation: "fade" }}
+                    />
+                  </Stack>
+                </TabBarProvider>
+              </GestureHandlerRootView>
 
-            {/* Update Modal - Outside GestureHandler for proper z-index */}
-            <UpdateModal
-              visible={updateInfo.isAvailable}
-              updateInfo={updateInfo}
-              onUpdatePress={downloadAndRestart}
-              onDismiss={dismissUpdate}
-              onCancel={dismissUpdate}
-            />
-          </ThemeProvider>
-        </SafeAreaProvider>
-      </TRPCProvider>
-    </SupabaseProvider>
+              {/* Update Modal - Outside GestureHandler for proper z-index */}
+              <UpdateModal
+                visible={updateInfo.isAvailable}
+                updateInfo={updateInfo}
+                onUpdatePress={downloadAndRestart}
+                onDismiss={dismissUpdate}
+                onCancel={dismissUpdate}
+              />
+            </ThemeProvider>
+          </SafeAreaProvider>
+        </TRPCProvider>
+      </SupabaseProvider>
+
+      {/* Custom Loading Screen - Independent of provider state */}
+      <LoadingScreen isVisible={showCustomSplash} />
+    </>
   );
 }
