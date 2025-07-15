@@ -16,7 +16,7 @@ export default function IconStepFlow(
   const router = useRouter();
   const [icon, setIcon] = useState<string>();
   const nameInputRef = useRef<TextInput>(null);
-  const params = useLocalSearchParams<{ name: string, firstAccount: string }>();
+  const params = useLocalSearchParams<{ name: string, firstAccount: string, isBudgeting?: string }>();
 
   // Reset state when screen comes into focus
   useFocusEffect(
@@ -41,7 +41,7 @@ export default function IconStepFlow(
         name: params.name,
         icon: icon,
         firstAccount: params.firstAccount,
-
+        ...(params.isBudgeting && { isBudgeting: params.isBudgeting }),
       },
     });
   };

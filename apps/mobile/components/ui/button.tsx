@@ -183,13 +183,12 @@ const Button = React.forwardRef<
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} className="transition-all duration-200">
         {leftIconElement && <View className="mr-2">{leftIconElement}</View>}
         {isLoading ? (
-          // @ts-expect-error - LottieView is not typed
           <LottieView
             source={require('@/assets/lottie/loading.json')}
             autoPlay
             ref={animation}
             loop
-            style={{ width: getIconSize(), height: getIconSize() }}
+            style={{ width: 32, height: 32 }}
           />
         ) : children}
         {rightIconElement && <View className="ml-2">{rightIconElement}</View>}

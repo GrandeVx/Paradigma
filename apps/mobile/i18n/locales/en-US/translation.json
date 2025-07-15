@@ -348,6 +348,11 @@
       "title": "INITIAL VALUE",
       "prompt": "Set the starting balance for"
     },
+    "target": {
+      "title": "SAVINGS GOAL",
+      "prompt": "Set your target for",
+      "validation": "Target must be at least {{initial}}"
+    },
     "summary": {
       "title": "NEW ACCOUNT",
       "defaultAccount": "Default account",

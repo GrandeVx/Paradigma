@@ -8,6 +8,7 @@ import { Decimal } from 'decimal.js';
 import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
+import { TFunction } from 'i18next';
 
 
 // Types based on actual API response
@@ -54,7 +55,7 @@ type InstallmentTransaction = {
 // };
 
 // Get frequency text
-const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: any) => {
+const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: TFunction) => {
   const interval = frequencyInterval || 1;
 
   switch (frequencyType) {
@@ -72,7 +73,7 @@ const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: a
 };
 
 // Get days until next execution
-const getDaysUntilNext = (nextDate?: Date | string, t: any) => {
+const getDaysUntilNext = (t: TFunction, nextDate?: Date | string) => {
   if (!nextDate) return null;
 
   const next = new Date(nextDate);
@@ -133,7 +134,7 @@ const formatProgressDate = (date: Date) => {
 };
 
 // Safe format date for progress components (handles null/undefined)
-const formatProgressDateSafe = (nextDate?: Date | string | null, t: any) => {
+const formatProgressDateSafe = (t: TFunction, nextDate?: Date | string | null) => {
   if (!nextDate) return t('installments.status.notAvailable');
 
   const date = new Date(nextDate);
@@ -154,7 +155,7 @@ const CheckIconsGrid = ({
   nextDueDate?: Date | string | null;
   frequencyType: string;
   frequencyInterval: number;
-  t: any;
+  t: TFunction;
 }) => {
   // Calculate future dates if we have nextDueDate
   const futureDates = nextDueDate
@@ -215,7 +216,7 @@ const CheckIconsGrid = ({
   );
 };
 
-const DotsGrid = ({ current, total, nextDueDate, t }: { current: number; total: number; nextDueDate?: Date | string | null; t: any }) => {
+const DotsGrid = ({ current, total, nextDueDate, t }: { current: number; total: number; nextDueDate?: Date | string | null; t: TFunction }) => {
   const items = Array.from({ length: total }, (_, i) => i + 1);
 
   return (
@@ -239,7 +240,7 @@ const DotsGrid = ({ current, total, nextDueDate, t }: { current: number; total: 
           </View>
           <View style={styles.progressItem}>
             <SvgIcon name="calendar" size={16} color="#6B7280" />
-            <Text style={styles.progressText}>{formatProgressDateSafe(nextDueDate, t)}</Text>
+            <Text style={styles.progressText}>{formatProgressDateSafe(t, nextDueDate)}</Text>
           </View>
         </View>
       </View>
@@ -247,7 +248,7 @@ const DotsGrid = ({ current, total, nextDueDate, t }: { current: number; total: 
   );
 };
 
-const ProgressBar = ({ current, total, nextDueDate, t }: { current: number; total: number; nextDueDate?: Date | string | null; t: any }) => {
+const ProgressBar = ({ current, total, nextDueDate, t }: { current: number; total: number; nextDueDate?: Date | string | null; t: TFunction }) => {
   const percentage = Math.round((current / total) * 100);
   const progressWidth = (current / total) * 188; // 188px total width
 
@@ -271,7 +272,7 @@ const ProgressBar = ({ current, total, nextDueDate, t }: { current: number; tota
         </View>
         <View style={styles.progressItem}>
           <SvgIcon name="calendar" size={16} color="#6B7280" />
-          <Text style={styles.progressText}>{formatProgressDateSafe(nextDueDate, t)}</Text>
+          <Text style={styles.progressText}>{formatProgressDateSafe(t, nextDueDate)}</Text>
         </View>
       </View>
     </View>
@@ -307,7 +308,7 @@ export default function InstallmentsScreen() {
     // Calculate installment amount by dividing total amount by number of occurrences
     const installmentAmountNum = total > 0 ? totalAmount / total : totalAmount;
 
-    const isUpcoming = getDaysUntilNext(installment.nextDueDate || undefined, t);
+    const isUpcoming = getDaysUntilNext(t, installment.nextDueDate as Date | string);
     const accountName = installment.moneyAccount?.name || t('installments.status.account');
     const categoryName = installment.subCategory ?
       `${installment.subCategory.icon} ${installment.subCategory.name}` :

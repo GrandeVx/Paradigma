@@ -20,21 +20,27 @@ export default function SummaryScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const params = useLocalSearchParams<{ name: string, icon: string, color: string, value: string, firstAccount: string }>();
+  const params = useLocalSearchParams<{ name: string, icon: string, color: string, value: string, firstAccount: string, isBudgeting?: string, target?: string }>();
 
   // Reset state when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       // Reset form settings to prevent old data from persisting
       setDefaultAccount(false);
-      setSavingsAccount(false);
-      setSavingTarget("750,00");
+      // If in goal mode, automatically enable savings account and set target
+      if (params.isBudgeting === 'true' && params.target) {
+        setSavingsAccount(true);
+        setSavingTarget(parseFloat(params.target).toFixed(2).replace('.', ','));
+      } else {
+        setSavingsAccount(false);
+        setSavingTarget("750,00");
+      }
       setIsLoading(false);
       setError(null);
       return () => {
         // Cleanup if necessary
       };
-    }, [])
+    }, [params.isBudgeting, params.target])
   );
 
   const queryClient = api.useContext();
@@ -44,8 +50,12 @@ export default function SummaryScreen() {
     onSuccess: async () => {
       // Only invalidate account list, no need for other queries
       await queryClient.account.listWithBalances.invalidate();
-      // Navigate to home after successful account creation
-      router.replace("/(protected)/(accounts)");
+      // Navigate based on whether this is a goal account or regular account
+      if (params.isBudgeting === 'true') {
+        router.replace("/(protected)/(tabs)/home");
+      } else {
+        router.replace("/(protected)/(accounts)");
+      }
     },
     onError: (error) => {
       setError(error.message);

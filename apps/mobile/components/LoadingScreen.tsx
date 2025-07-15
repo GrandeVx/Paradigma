@@ -93,7 +93,7 @@ export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible }) => {
 
       // Set up interval for repeated animations (only if needed)
       const interval = setInterval(animateSymbols, 7000);
-      setAnimationInterval(interval);
+      setAnimationInterval(interval as unknown as NodeJS.Timeout);
     }
 
     // Cleanup on unmount
@@ -191,7 +191,8 @@ export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible }) => {
           <Animated.View style={[styles.logoContainer, logoStyle]}>
             <Image
               source={require('@/assets/images/logo.png')}
-              style={styles.logoImage}
+              className="w-full z-10"
+              //style={styles.logoImage}
               resizeMode="contain"
             />
           </Animated.View>
@@ -238,12 +239,12 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   logoContainer: {
+    width: "100%",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
   },
   logoImage: {
-    width: 200,
     height: 100,
   },
   currencySymbol: {

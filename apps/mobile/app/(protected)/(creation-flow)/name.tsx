@@ -14,7 +14,7 @@ export default function NameStepFlow(
   const router = useRouter();
   const [name, setName] = useState("");
   const nameInputRef = useRef<TextInput>(null);
-  const params = useLocalSearchParams<{ firstAccount: string }>();
+  const params = useLocalSearchParams<{ firstAccount: string, isBudgeting?: string }>();
 
   // Reset state when screen comes into focus
   useFocusEffect(
@@ -36,6 +36,7 @@ export default function NameStepFlow(
       params: {
         name: name,
         firstAccount: params.firstAccount,
+        ...(params.isBudgeting && { isBudgeting: params.isBudgeting }),
       },
     });
   };

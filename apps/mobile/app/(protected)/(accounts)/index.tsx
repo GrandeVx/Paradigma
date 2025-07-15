@@ -71,7 +71,7 @@ const AccountCard: React.FC<{
   if (account.isGoalAccount && account.targetAmount && account.progress !== undefined) {
     const remaining = account.targetAmount - account.balance;
     const { integer: targetInteger, decimal: targetDecimal } = formatDisplayCurrency(account.targetAmount);
-    const remainingFormatted = formatCurrency(remaining);
+    const remainingFormatted = formatCurrency(remaining, { showSign: false });
 
     return (
       <Pressable

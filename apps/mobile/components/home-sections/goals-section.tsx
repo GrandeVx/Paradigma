@@ -107,10 +107,10 @@ const AnimatedGoalCard: React.FC<{
   formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
   getCurrencySymbol: () => string;
 }> = ({ goal, index, onPress, formatCurrency, getCurrencySymbol }) => {
-  const formattedBalance = formatCurrency(goal.balance);
+  const formattedBalance = formatCurrency(goal.balance, { showSign: false });
   const remaining = goal.targetAmount - goal.balance;
-  const formattedTarget = formatCurrency(goal.targetAmount);
-  const formattedRemaining = formatCurrency(remaining);
+  const formattedTarget = formatCurrency(goal.targetAmount, { showSign: false });
+  const formattedRemaining = formatCurrency(remaining, { showSign: false });
 
   const progressWidth = useSharedValue(0);
   const cardScale = useSharedValue(1);
@@ -383,7 +383,10 @@ export const GoalsSection: React.FC = () => {
 
             <Pressable
               className="bg-blue-500 px-6 py-3 rounded-full"
-              onPress={() => router.push('/(protected)/(creation-flow)/name')}
+              onPress={() => router.push({
+                pathname: '/(protected)/(creation-flow)/name',
+                params: { isBudgeting: 'true' }
+              })}
             >
               <Text className="text-white font-semibold">Inizia ora</Text>
             </Pressable>
@@ -417,9 +420,9 @@ export const GoalsSection: React.FC = () => {
     <Animated.View style={contentStyle} className="flex-1">
       <FlashList
         data={goalAccounts}
-        className="flex-1 px-2 pt-2"
+        className="flex-1 pt-2 "
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: 16 }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}

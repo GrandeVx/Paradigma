@@ -18,7 +18,7 @@ export default function ColorStepFlow(
   const router = useRouter();
   const [color, setColor] = useState<string>();
   const nameInputRef = useRef<TextInput>(null);
-  const params = useLocalSearchParams<{ name: string, icon: string, firstAccount: string }>();
+  const params = useLocalSearchParams<{ name: string, icon: string, firstAccount: string, isBudgeting?: string }>();
 
   // Reset state when screen comes into focus
   useFocusEffect(
@@ -44,6 +44,7 @@ export default function ColorStepFlow(
         icon: params.icon,
         color: color,
         firstAccount: params.firstAccount,
+        ...(params.isBudgeting && { isBudgeting: params.isBudgeting }),
       },
     });
   };

@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { Decimal } from 'decimal.js';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
+import { TFunction } from 'i18next';
 
 
 // Types based on API response
@@ -57,7 +58,7 @@ const formatCurrency = (amount: number | Decimal) => {
 };
 
 // Get frequency text
-const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: any) => {
+const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: TFunction) => {
   const interval = frequencyInterval || 1;
 
   switch (frequencyType) {
@@ -75,7 +76,7 @@ const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: a
 };
 
 // Get category display with emoji
-const getCategoryDisplay = (subCategory?: SubCategory | null, t: any) => {
+const getCategoryDisplay = (subCategory: SubCategory | null, t: TFunction) => {
   if (!subCategory) return t('recurring.category.other');
   return `${subCategory.icon} ${subCategory.name}`;
 };
@@ -242,7 +243,7 @@ export default function RecurringTransactionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 16,
   },
   loadingContainer: {
     flex: 1,

@@ -372,6 +372,11 @@
       "title": "VALORE INIZIALE",
       "prompt": "Imposta il saldo di partenza per"
     },
+    "target": {
+      "title": "OBIETTIVO DI RISPARMIO",
+      "prompt": "Imposta il tuo obiettivo per",
+      "validation": "L'obiettivo deve essere almeno {{initial}}"
+    },
     "summary": {
       "title": "NUOVO CONTO",
       "defaultAccount": "Conto predefinito",
