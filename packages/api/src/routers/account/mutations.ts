@@ -193,15 +193,25 @@ export const mutations = {
         });
       }
       
-      // Delete account
-      await ctx.db.moneyAccount.delete({
-        where: {
-          id: input.accountId,
-        },
-        // Precise invalidation for accounts and related transactions
-        uncache: {
-          uncacheKeys: getAccountInvalidationKeys(ctx.db, userId, input.accountId)
-        }
+      // Use transaction to ensure atomicity when deleting account with recurring rules
+      await ctx.db.$transaction(async (tx) => {
+        // Delete all recurring transaction rules associated with this account
+        await tx.recurringTransactionRule.deleteMany({
+          where: {
+            moneyAccountId: input.accountId,
+          },
+        });
+        
+        // Delete the account
+        await tx.moneyAccount.delete({
+          where: {
+            id: input.accountId,
+          },
+          // Precise invalidation for accounts and related transactions
+          uncache: {
+            uncacheKeys: getAccountInvalidationKeys(ctx.db, userId, input.accountId)
+          }
+        });
       });
       
       return { success: true };
