@@ -4,6 +4,7 @@ import { CompleteMacroCategory, relatedMacroCategorySchema, CompleteTransaction,
 export const subCategorySchema = z.object({
   id: z.string(),
   macroCategoryId: z.string(),
+  key: z.string(),
   name: z.string(),
   icon: z.string(),
 })

@@ -230,6 +230,7 @@ export const queries = {
       const categoryMap = new Map<string, {
         id: string;
         name: string;
+        key: string | null;
         color: string;
         icon: string;
         type: 'INCOME' | 'EXPENSE';
@@ -254,6 +255,7 @@ export const queries = {
           categoryMap.set(macroCategory.id, {
             id: macroCategory.id,
             name: macroCategory.name,
+            key: macroCategory.key,
             color: macroCategory.color,
             icon: macroCategory.icon,
             type: macroCategory.type,
@@ -267,6 +269,7 @@ export const queries = {
       const categories = Array.from(categoryMap.values()).map(category => ({
         id: category.id,
         name: category.name,
+        key: category.key,
         amount: category.amount,
         percentage: totalAmount > 0 ? Number(((category.amount / totalAmount) * 100).toFixed(1)) : 0,
         color: category.color,
@@ -419,6 +422,7 @@ export const queries = {
       const subCategoryMap = new Map<string, {
         id: string;
         name: string;
+        key: string | null;
         icon: string;
         amount: number;
         transactionCount: number;
@@ -441,6 +445,7 @@ export const queries = {
           subCategoryMap.set(subCategory.id, {
             id: subCategory.id,
             name: subCategory.name,
+            key: subCategory.key,
             icon: subCategory.icon,
             amount: amount,
             transactionCount: 1,
@@ -452,6 +457,7 @@ export const queries = {
       const subCategories = Array.from(subCategoryMap.values()).map(subCategory => ({
         id: subCategory.id,
         name: subCategory.name,
+        key: subCategory.key,
         amount: subCategory.amount,
         percentage: totalAmount > 0 ? Number(((subCategory.amount / totalAmount) * 100).toFixed(1)) : 0,
         icon: subCategory.icon,

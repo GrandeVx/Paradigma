@@ -4,6 +4,7 @@ import { CompleteSubCategory, relatedSubCategorySchema, CompleteBudget, relatedB
 
 export const macroCategorySchema = z.object({
   id: z.string(),
+  key: z.string(),
   name: z.string(),
   type: z.nativeEnum(CategoryType),
   color: z.string(),

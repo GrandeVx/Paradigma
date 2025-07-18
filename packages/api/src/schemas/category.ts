@@ -9,6 +9,7 @@ export const listCategoriesSchema = z.object({
 export const subCategoryOutput = z.object({
   id: z.string(),
   name: z.string(),
+  key: z.string().nullable(),
   icon: z.string(),
   macroCategoryId: z.string(),
   color: z.string(),
@@ -17,6 +18,7 @@ export const subCategoryOutput = z.object({
 export const macroCategoryOutput = z.object({
   id: z.string(),
   name: z.string(),
+  key: z.string().nullable(),
   type: z.enum(["INCOME", "EXPENSE"]),
   color: z.string(),
   subCategories: z.array(subCategoryOutput),
