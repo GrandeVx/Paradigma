@@ -152,7 +152,8 @@ enum CategoryType {
 
 model MacroCategory {
   id    String       @id @default(cuid())
-  name  String       @unique
+  key   String       @unique // Nuovo campo per chiave internazionale
+  name  String       @unique // Mantenuto per compatibilità durante migrazione
   type  CategoryType
   color String
   icon  String       @default("💰")
@@ -166,14 +167,16 @@ model MacroCategory {
 model SubCategory {
   id              String @id @default(cuid())
   macroCategoryId String
-  name            String
+  key             String // Nuovo campo per chiave internazionale
+  name            String // Mantenuto per compatibilità durante migrazione
   icon            String
 
   macroCategory  MacroCategory              @relation(fields: [macroCategoryId], references: [id])
   transactions   Transaction[]
   recurringRules RecurringTransactionRule[]
 
-  @@unique([macroCategoryId, name])
+  @@unique([macroCategoryId, key]) // Chiave unica per macro categoria
+  @@unique([macroCategoryId, name]) // Mantenuto per compatibilità durante migrazione
   @@map("sub_categories")
 }
 
