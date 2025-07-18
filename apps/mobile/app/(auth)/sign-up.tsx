@@ -16,6 +16,7 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetBackdropProps } from "@gor
 import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
 import { notificationUtils } from "@/lib/mmkv-storage";
 import * as Notifications from 'expo-notifications';
+import { useTabBar } from "@/context/TabBarContext";
 
 
 
@@ -41,11 +42,17 @@ export default function AuthIndex() {
     }
   );
 
+  // Tab bar context
+  const { showTabBar } = useTabBar();
+
   // Notification bottom sheet setup
   const snapPointsNotifications = useMemo(() => ["85%"], []);
   const bottomSheetNotificationsRef = useRef<BottomSheet>(null);
   const handleOpenNotificationsBottomSheet = () => bottomSheetNotificationsRef.current?.expand();
-  const handleCloseNotificationsBottomSheet = () => bottomSheetNotificationsRef.current?.close();
+  const handleCloseNotificationsBottomSheet = () => {
+    showTabBar('notifications-bottom-sheet');
+    bottomSheetNotificationsRef.current?.close();
+  };
 
   // API mutation for profile updates
   const { mutate: updateProfile } = api.user.updateProfile.useMutation();
@@ -161,6 +168,7 @@ export default function AuthIndex() {
   // Handle notifications save complete
   const handleNotificationsSaveComplete = () => {
     console.log("[🚥 OAuth] Notifications modal completed, proceeding with OAuth completion");
+    showTabBar('notifications-bottom-sheet');
     forceRouting(); // Tell provider to allow routing
     completeOAuthFlow();
   };

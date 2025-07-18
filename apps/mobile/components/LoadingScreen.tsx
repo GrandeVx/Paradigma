@@ -190,7 +190,7 @@ export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible }) => {
           {/* Logo in the center */}
           <Animated.View style={[styles.logoContainer, logoStyle]}>
             <Image
-              source={require('@/assets/images/logo.png')}
+              source={require('@/assets/images/logo_light.png')}
               className="w-full z-10"
               //style={styles.logoImage}
               resizeMode="contain"

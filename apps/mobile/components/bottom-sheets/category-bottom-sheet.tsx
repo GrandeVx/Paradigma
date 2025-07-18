@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text'; // Assuming Skeleton is a loading i
 
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { SvgIcon } from '../ui/svg-icon';
 
 // Ensure TransactionType is defined or imported if it's a shared type
 // For now, defining it locally based on its usage in the original file.
@@ -62,7 +63,17 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
         backgroundColor: "#FFFFFF" // Consider theme variables
       }}
     >
-      <View className="w-full h-full pt-4 px-4">
+      <View className="w-full h-full pt-4 px-6">
+
+        <View className="flex-row justify-between items-center w-full pb-4 ">
+          <View className="">
+            <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
+              Categoria
+            </Text>
+          </View>
+          <SvgIcon name="close" size={12} color="black" onPress={handleClosePress} />
+        </View>
+
 
         <View className="mb-4">
           {isCategoriesLoading ? (

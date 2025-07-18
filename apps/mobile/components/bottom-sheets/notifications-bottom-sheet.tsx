@@ -186,7 +186,7 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
       const now = new Date();
       const nextNotification = new Date();
       nextNotification.setHours(hours, minutes, 0, 0);
-      
+
       // If the time has already passed today, schedule for tomorrow
       if (nextNotification <= now) {
         nextNotification.setDate(nextNotification.getDate() + 1);
@@ -328,15 +328,13 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
     >
       <View className="flex-1">
         {/* Header */}
-        <View className="flex-row justify-between items-center px-4 py-2">
-          <View className="flex-1">
-            <Text className="text-black text-center font-medium text-xs uppercase tracking-wider">
+        <View className="flex-row justify-between items-center w-full pb-8 px-4">
+          <View className="">
+            <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
               {t('notifications.title')}
             </Text>
           </View>
-          <Pressable onPress={handleClosePress} className="p-2">
-            <SvgIcon name="close" size={24} color="black" />
-          </Pressable>
+          <SvgIcon name="close" size={12} color="black" onPress={handleClosePress} />
         </View>
 
         <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 120 }}>

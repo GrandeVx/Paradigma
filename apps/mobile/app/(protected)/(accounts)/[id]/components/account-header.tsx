@@ -51,7 +51,6 @@ export const AccountHeader = React.memo<AccountHeaderProps>(({
           className="flex-1 px-4 bg-gray-100 h-16 items-start justify-center rounded-xl"
           onPress={onNamePress}
         >
-          <Text className="text-gray-500 text-xs font-medium mb-1">NOME CONTO</Text>
           <Text className="text-black text-lg font-semibold" numberOfLines={1}>
             {name}
           </Text>
@@ -67,14 +66,14 @@ export const AccountHeader = React.memo<AccountHeaderProps>(({
       </View>
 
       {/* Balance Section */}
-      <Pressable className="bg-gray-50 rounded-xl p-4" onPress={onBalancePress}>
-        <Text className="text-gray-500 text-xs font-medium mb-2">BILANCIO ATTUALE</Text>
-        <View className="flex-row items-baseline gap-1">
+      <Pressable className="bg-gray-50 rounded-xl p-4 flex flex-row items-center justify-between" onPress={onBalancePress}>
+        <Text className="text-gray-500 font-medium" style={{ fontFamily: 'DM Sans', fontSize: 16}} >Bilancio</Text>
+        <View className="flex-row items-baseline">
           <Text className="text-gray-400 text-lg font-normal">{getCurrencySymbol()}</Text>
-          <Text className="text-black text-3xl font-medium" style={{ fontFamily: 'Apfel Grotezk' }}>
+          <Text className="text-black font-medium" style={{ fontFamily: 'Apfel Grotezk', fontSize: 20 }}>
             {formatCurrency.integer}
           </Text>
-          <Text className="text-gray-400 text-xl font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>
+          <Text className="text-black font-normal" style={{ fontFamily: 'Apfel Grotezk', fontSize: 20 }}>
             ,{formatCurrency.decimal}
           </Text>
         </View>

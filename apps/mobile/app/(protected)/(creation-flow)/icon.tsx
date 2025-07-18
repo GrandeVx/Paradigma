@@ -73,8 +73,8 @@ export default function IconStepFlow(
                         }`}>
                         <SvgIcon
                           name={item as IconName}
-                          width={24}
-                          height={24}
+                          width={32}
+                          height={32}
                           color={icon === item.toString() ? "#3B82F6" : "#9CA3AF"}
                         />
                       </View>

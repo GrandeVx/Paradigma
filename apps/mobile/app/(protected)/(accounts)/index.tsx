@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { View, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { SvgIcon } from '@/components/ui/svg-icon';
@@ -12,6 +12,9 @@ import { Decimal } from 'decimal.js';
 import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
 import { FlashList } from '@shopify/flash-list';
+import { BlurView } from 'expo-blur';
+import { uiUtils } from '@/lib/mmkv-storage';
+import { cn } from '@/lib/utils';
 
 // Extended interface for MoneyAccount with goal fields
 interface MoneyAccountWithGoal {
@@ -157,6 +160,9 @@ export default function AccountsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
 
+  // Blur state for balance privacy - persisted in MMKV
+  const [isBalanceBlurred, setIsBalanceBlurred] = useState(() => uiUtils.getBalanceBlurred());
+
   // Currency hook
   const { formatCurrency, getCurrencySymbol } = useCurrency();
 
@@ -254,6 +260,14 @@ export default function AccountsScreen() {
     alert(t('accounts.comingSoon'));
   }, [t]);
 
+  const toggleBalanceBlur = useCallback(() => {
+    setIsBalanceBlurred(prev => {
+      const newValue = !prev;
+      uiUtils.setBalanceBlurred(newValue);
+      return newValue;
+    });
+  }, []);
+
   const rightActions = useMemo(() => [
     {
       icon: <FontAwesome5 name="plus" size={16} color="black" />,
@@ -272,26 +286,42 @@ export default function AccountsScreen() {
 
         {/* Top Section with Balance */}
         <View className="pb-10 items-center justify-center px-6">
-          <View className="flex-row items-baseline justify-center w-full max-w-sm">
-            <Text className="text-gray-400 text-3xl font-normal">{currencySymbol}</Text>
-            <View className="flex-row items-baseline flex-shrink">
-              <Text
-                className="text-black font-medium flex-shrink-0"
-                style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 64 }}
-                numberOfLines={1}
-                adjustsFontSizeToFit={true}
-                minimumFontScale={0.7}
-              >
-                {isLoading ? '...' : integer}
-              </Text>
-              <Text
-                className="text-gray-400 font-normal flex-shrink-0"
-                style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}
-                numberOfLines={1}
-              >
-                {isLoading ? '' : `,${decimal}`}
-              </Text>
-            </View>
+          <View className="flex-row items-baseline justify-center w-full max-w-sm transition-all duration-300">
+            <Text className="text-gray-400" style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 32 }}>{currencySymbol}</Text>
+            <Pressable onPress={toggleBalanceBlur} className="relative">
+              <View className={cn("flex-row items-baseline flex-shrink", isBalanceBlurred ? "px-4" : "px-2")}>
+                <Text
+                  className="text-black font-medium flex-shrink-0"
+                  style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 64 }}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit={true}
+                  minimumFontScale={0.7}
+                >
+                  {isLoading ? '...' : integer}
+                </Text>
+                <Text
+                  className="text-gray-400 font-normal flex-shrink-0"
+                  style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}
+                  numberOfLines={1}
+                >
+                  {isLoading ? '' : `,${decimal}`}
+                </Text>
+              </View>
+              {isBalanceBlurred && (
+                <BlurView
+                  intensity={30}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    borderRadius: 8,
+                    width: '100%',
+                  }}
+                />
+              )}
+            </Pressable>
           </View>
 
           {/* Budget Forecast Button */}
@@ -300,7 +330,19 @@ export default function AccountsScreen() {
             onPress={handleBudgetForecastPress}
           >
             <Text className="text-white text-sm font-semibold">{t('accounts.budgetForecast')}</Text>
-            <Text className="text-green-500 text-sm font-semibold">+2.5%</Text>
+            <View className="flex-row items-center relative">
+              <Text className="text-green-500 text-sm font-semibold">+2.5%</Text>
+              <BlurView
+                intensity={7}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                }}
+              />
+            </View>
           </Pressable>
         </View>
 

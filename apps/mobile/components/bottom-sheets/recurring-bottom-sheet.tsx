@@ -95,11 +95,13 @@ export const RecurringBottomSheet: React.FC<RecurringBottomSheetProps> = ({
       }}
     >
       <View className="w-full h-full pt-1 px-4 flex flex-col">
-        <View className="flex flex-row justify-between items-center mb-5 pb-4 mx-2">
-          <Text className="text-lg font-normal">RATE</Text>
-          <Pressable onPress={handleClosePress}>
-            <SvgIcon name="close" size={16} color="black" />
-          </Pressable>
+        <View className="flex-row justify-between items-center w-full pb-8 ">
+          <View className="">
+            <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
+              Rate
+            </Text>
+          </View>
+          <SvgIcon name="close" size={12} color="black" onPress={handleClosePress} />
         </View>
 
         {/* Number of Installments Section */}

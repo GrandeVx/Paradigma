@@ -11,6 +11,7 @@ import { useTabBar } from '@/context/TabBarContext';
 import { api } from '@/lib/api';
 import { budgetUtils } from '@/lib/mmkv-storage';
 import { cn } from '@/lib/utils';
+import { SvgIcon } from '../ui/svg-icon';
 
 
 interface BudgetBottomSheetProps {
@@ -172,13 +173,13 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
     >
       <View className="flex-1">
         {/* Header */}
-        <View className="flex-row justify-between items-center px-4 py-2 w-full ">
+        <View className="flex-row justify-between items-center px-6 w-full pb-4 ">
           <View className="">
             <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
               IL TUO PIANO MENSILE
             </Text>
           </View>
-          <Text onPress={handleClosePress} className="text-black text-4xl">×</Text>
+          <SvgIcon name="close" size={12} color="black" onPress={handleClosePress} />
         </View>
 
         {isLoadingBudgets || !expenseCategories ? (

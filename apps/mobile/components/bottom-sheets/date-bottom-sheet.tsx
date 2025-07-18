@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable } from 'react-native';
+import { View } from 'react-native';
 import BottomSheet, { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import DatePicker from 'react-native-modern-datepicker';
 import { Text } from '@/components/ui/text';
@@ -69,14 +69,17 @@ export const DateBottomSheet: React.FC<DateBottomSheetProps> = (props) => {
         backgroundColor: "#FFFFFF"
       }}
     >
-      <View className="w-full pt-4 px-4">
-        <View className="flex flex-row justify-between items-center border-b border-gray-300 mb-5 pb-4">
-          <Text className="text-2xl font-normal">Seleziona Data</Text>
-          <Pressable onPress={handleClosePress}>
-            <SvgIcon name="close" size={24} color="black" />
-          </Pressable>
+      <View className="flex-row justify-between items-center px-6 w-full pb-4 ">
+        <View className="">
+          <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
+            Seleziona Data
+          </Text>
         </View>
+        <SvgIcon name="close" size={12} color="black" onPress={handleClosePress} />
       </View>
+
+
+
 
       <DatePicker
         key={formattedDate}

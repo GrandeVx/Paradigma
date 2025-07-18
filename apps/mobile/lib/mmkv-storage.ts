@@ -758,4 +758,34 @@ export const biometricUtils = {
     const timeoutMs = 5 * 60 * 1000; // 5 minutes
     return (now - lastAuthTime) > timeoutMs;
   }
+}
+
+// UI preferences utilities
+export const uiUtils = {
+  // Get balance blur state
+  getBalanceBlurred: (): boolean => {
+    try {
+      return mmkvStorage.getBoolean('balance-blurred') || false
+    } catch {
+      return false
+    }
+  },
+  
+  // Set balance blur state
+  setBalanceBlurred: (blurred: boolean): void => {
+    try {
+      mmkvStorage.set('balance-blurred', blurred)
+    } catch (error) {
+      console.error('Failed to set balance blur state:', error)
+    }
+  },
+  
+  // Clear all UI preferences
+  clearUIPreferences: (): void => {
+    try {
+      mmkvStorage.delete('balance-blurred')
+    } catch (error) {
+      console.error('Failed to clear UI preferences:', error)
+    }
+  }
 } 

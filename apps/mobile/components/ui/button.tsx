@@ -188,7 +188,7 @@ const Button = React.forwardRef<
             autoPlay
             ref={animation}
             loop
-            style={{ width: 32, height: 32 }}
+            style={{ width: 120, height: 120 }}
           />
         ) : children}
         {rightIconElement && <View className="ml-2">{rightIconElement}</View>}
