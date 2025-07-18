@@ -66,6 +66,11 @@ export const updateRecurringRuleSchema = z.object({
   isInstallment: z.boolean().optional(),
   isActive: z.boolean().optional(),
   
+  // Occurrence tracking
+  occurrencesGenerated: z.number().int().min(0).optional(),
+  isFirstOccurrenceGenerated: z.boolean().optional(),
+  nextDueDate: z.date().optional(),
+  
   // Notes
   notes: z.string().nullable().optional(),
 });

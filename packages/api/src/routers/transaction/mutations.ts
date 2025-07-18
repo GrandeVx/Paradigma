@@ -76,7 +76,9 @@ export const mutations = {
             date: dateUTC,
             description: input.description,
             subCategoryId: input.subCategoryId || null,
-            notes: input.notes || null,  
+            notes: input.notes || null,
+            recurringRuleId: input.recurringRuleId || null,
+            isRecurringInstance: !!input.recurringRuleId,
           },
           // Invalidate relevant caches after creating a transaction
           uncache: {
@@ -160,6 +162,8 @@ export const mutations = {
             description: input.description,
             subCategoryId: input.subCategoryId || null,
             notes: input.notes || null,
+            recurringRuleId: input.recurringRuleId || null,
+            isRecurringInstance: !!input.recurringRuleId,
           },
           // Invalidate relevant caches after creating a transaction
           uncache: {
@@ -253,6 +257,8 @@ export const mutations = {
               description: input.description || `Transfer to ${toAccount.name}`,
               transferId: transferId,
               notes: input.notes || null,
+              recurringRuleId: input.recurringRuleId || null,
+              isRecurringInstance: !!input.recurringRuleId,
             },
           }),
           // Positive transaction (money in) for destination account
@@ -265,6 +271,8 @@ export const mutations = {
               description: input.description || `Transfer from ${fromAccount.name}`,
               transferId: transferId,
               notes: input.notes || null,
+              recurringRuleId: input.recurringRuleId || null,
+              isRecurringInstance: !!input.recurringRuleId,
             },
           }),
         ]);

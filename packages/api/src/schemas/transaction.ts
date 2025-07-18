@@ -7,6 +7,7 @@ const baseTransactionSchema = z.object({
   date: z.date(),
   subCategoryId: z.string().optional(),
   notes: z.string().optional(),
+  recurringRuleId: z.string().optional(), // Link to recurring rule for installments
 });
 
 // Schema for creating expense transactions
@@ -27,6 +28,7 @@ export const createTransferSchema = z.object({
   date: z.date(),
   description: z.string().min(1),
   notes: z.string().optional(),
+  recurringRuleId: z.string().optional(), // Link to recurring rule for installments
 });
 
 // Schema for pagination and filtering transactions

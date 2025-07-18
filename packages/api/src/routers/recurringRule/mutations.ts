@@ -97,12 +97,13 @@ export const mutations = {
       });
       
       // Check if the first occurrence starts today or in the past (in UTC)
+      // Skip auto-creation for installments as they are handled by the UI
       const todayUTC = new Date();
       todayUTC.setUTCHours(0, 0, 0, 0);
       const startDateNormalizedUTC = new Date(startDateUTC);
       startDateNormalizedUTC.setUTCHours(0, 0, 0, 0);
       
-      if (startDateNormalizedUTC <= todayUTC) {
+      if (startDateNormalizedUTC <= todayUTC && !input.isInstallment) {
         // Calculate the signed amount based on type
         const signedAmount = input.type === "EXPENSE" 
           ? -Math.abs(input.amount) 
@@ -113,9 +114,7 @@ export const mutations = {
           data: {
             userId,
             moneyAccountId: input.accountId,
-            description: input.isInstallment && input.totalOccurrences 
-              ? `${input.description} (1/${input.totalOccurrences})` 
-              : input.description,
+            description: input.description,
             amount: signedAmount,
             date: startDateUTC,
             subCategoryId: input.subCategoryId || null,
@@ -210,6 +209,9 @@ export const mutations = {
       if (input.dayOfMonth !== undefined) updateData.dayOfMonth = input.dayOfMonth;
       if (input.endDate !== undefined) updateData.endDate = input.endDate;
       if (input.totalOccurrences !== undefined) updateData.totalOccurrences = input.totalOccurrences;
+      if (input.occurrencesGenerated !== undefined) updateData.occurrencesGenerated = input.occurrencesGenerated;
+      if (input.isFirstOccurrenceGenerated !== undefined) updateData.isFirstOccurrenceGenerated = input.isFirstOccurrenceGenerated;
+      if (input.nextDueDate !== undefined) updateData.nextDueDate = input.nextDueDate;
       if (input.notes !== undefined) updateData.notes = input.notes;
       
       // If frequency settings changed, recalculate next due date
