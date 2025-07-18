@@ -81,6 +81,7 @@ export default function SummaryScreen() {
       const transactionMonth = data.date.getMonth() + 1;
       const transactionYear = data.date.getFullYear();
 
+      // Comprehensive invalidation for expense transactions
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
@@ -113,6 +114,23 @@ export default function SummaryScreen() {
             currentYear: transactionYear,
           });
         }
+      }
+
+      // Invalidate home section queries to refresh summary data
+      await InvalidationUtils.invalidateHomeSectionQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+
+      // Wait for critical queries to refetch before navigation to ensure data is ready
+      try {
+        await queryClient.transaction.getMonthlySpending.refetch({
+          month: transactionMonth,
+          year: transactionYear,
+        });
+        await queryClient.account.listWithBalances.refetch();
+      } catch (error) {
+        console.warn('Failed to refetch queries before navigation, proceeding anyway:', error);
       }
 
       router.replace("/(protected)/(home)");
@@ -125,6 +143,7 @@ export default function SummaryScreen() {
       const transactionMonth = data.date.getMonth() + 1;
       const transactionYear = data.date.getFullYear();
 
+      // Comprehensive invalidation for income transactions
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
@@ -159,6 +178,23 @@ export default function SummaryScreen() {
         }
       }
 
+      // Invalidate home section queries to refresh summary data
+      await InvalidationUtils.invalidateHomeSectionQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+
+      // Wait for critical queries to refetch before navigation to ensure data is ready
+      try {
+        await queryClient.transaction.getMonthlySpending.refetch({
+          month: transactionMonth,
+          year: transactionYear,
+        });
+        await queryClient.account.listWithBalances.refetch();
+      } catch (error) {
+        console.warn('Failed to refetch queries before navigation, proceeding anyway:', error);
+      }
+
       router.replace("/(protected)/(home)");
     }
   });
@@ -169,6 +205,7 @@ export default function SummaryScreen() {
       const transactionMonth = data.outflowTransaction.date.getMonth() + 1;
       const transactionYear = data.outflowTransaction.date.getFullYear();
 
+      // Comprehensive invalidation for transfer transactions
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
@@ -186,6 +223,23 @@ export default function SummaryScreen() {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
       });
+
+      // Invalidate home section queries to refresh summary data
+      await InvalidationUtils.invalidateHomeSectionQueries(queryClient, {
+        currentMonth: transactionMonth,
+        currentYear: transactionYear,
+      });
+
+      // Wait for critical queries to refetch before navigation to ensure data is ready
+      try {
+        await queryClient.transaction.getMonthlySpending.refetch({
+          month: transactionMonth,
+          year: transactionYear,
+        });
+        await queryClient.account.listWithBalances.refetch();
+      } catch (error) {
+        console.warn('Failed to refetch queries before navigation, proceeding anyway:', error);
+      }
 
       router.replace("/(protected)/(home)");
     }
@@ -231,6 +285,21 @@ export default function SummaryScreen() {
 
         // Also invalidate budgets broadly
         await InvalidationUtils.invalidateBudgetQueries(queryClient);
+      }
+
+      // Wait for critical queries to refetch before navigation to ensure data is ready
+      try {
+        if (lastTransactionDate) {
+          const transactionMonth = lastTransactionDate.getMonth() + 1;
+          const transactionYear = lastTransactionDate.getFullYear();
+          await queryClient.transaction.getMonthlySpending.refetch({
+            month: transactionMonth,
+            year: transactionYear,
+          });
+        }
+        await queryClient.account.listWithBalances.refetch();
+      } catch (error) {
+        console.warn('Failed to refetch queries before navigation, proceeding anyway:', error);
       }
 
       router.replace("/(protected)/(home)");

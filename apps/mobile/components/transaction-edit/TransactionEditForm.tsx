@@ -22,6 +22,7 @@ import { api } from "@/lib/api";
 import { IconName } from "@/components/ui/icons";
 import { useTranslation } from 'react-i18next';
 import { InvalidationUtils } from '@/lib/invalidation-utils';
+import { useLocalizedCategories } from '@/hooks/useLocalizedCategories';
 
 type TransactionType = 'income' | 'expense' | 'transfer';
 
@@ -422,9 +423,18 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
   };
 
   const getCategoryName = () => {
+    const { translations } = useLocalizedCategories();
+    
     if (selectedCategoryId) {
       const subCategory = categories?.flatMap(cat => cat.subCategories).find(sc => sc.id === selectedCategoryId);
-      return subCategory ? `${subCategory.icon} ${subCategory.name}` : t('transaction.placeholders.selectCategory');
+      if (subCategory) {
+        // Get localized name using the key or fall back to the original name
+        const localizedName = subCategory.key && translations.sub[subCategory.key] 
+          ? translations.sub[subCategory.key] 
+          : subCategory.name;
+        return `${subCategory.icon} ${localizedName}`;
+      }
+      return t('transaction.placeholders.selectCategory');
     }
     return t('transaction.placeholders.selectCategory');
   };

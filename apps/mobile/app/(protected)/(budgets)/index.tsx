@@ -28,6 +28,7 @@ import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { budgetUtils } from '@/lib/mmkv-storage';
+import { useLocalizedCategories } from '@/hooks/useLocalizedCategories';
 import { router } from 'expo-router';
 import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
@@ -125,6 +126,13 @@ const BudgetItem = React.memo<{
   formatCurrency
 }) => {
   const { t } = useTranslation();
+  const { translations } = useLocalizedCategories();
+  
+  // Get localized category name
+  const localizedName = category.key && translations.macro[category.key] 
+    ? translations.macro[category.key] 
+    : category.name;
+  
   // Memoize calculations to avoid recalculation on every render
   const calculations = useMemo(() => {
     const budgetAmount = Number(budget.allocatedAmount);
@@ -206,7 +214,7 @@ const BudgetItem = React.memo<{
               className="font-semibold uppercase"
               style={{ color: category.color, fontSize: 14 }}
             >
-              {category.name}
+              {localizedName}
             </Text>
           </View>
         </View>

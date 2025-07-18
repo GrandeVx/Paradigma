@@ -21,6 +21,7 @@ import { chartsUtils } from '@/lib/mmkv-storage';
 import { useCurrency } from '@/hooks/use-currency';
 import { useMonth } from '@/context/month-context';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedCategories } from '@/hooks/useLocalizedCategories';
 
 // Loading skeleton for charts section
 const ChartsLoadingSkeleton = ({ categoriesCount = 4 }: { categoriesCount?: number }) => {
@@ -209,6 +210,13 @@ const SubCategoryItem: React.FC<{
   subCategory: SubCategoryBreakdown;
   formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
 }> = ({ subCategory, formatCurrency }) => {
+  const { translations } = useLocalizedCategories();
+  
+  // Get localized name for subcategory
+  const localizedName = subCategory.key && translations.sub[subCategory.key] 
+    ? translations.sub[subCategory.key] 
+    : subCategory.name;
+  
   return (
     <View className="flex-row items-center justify-between py-2 pl-6 pr-4">
       {/* Sub-category info */}
@@ -217,7 +225,7 @@ const SubCategoryItem: React.FC<{
           className="font-normal text-gray-600"
           style={{ fontFamily: 'DM Sans', fontSize: 14 }}
         >
-          {subCategory.icon} {subCategory.name}
+          {subCategory.icon} {localizedName}
         </Text>
       </View>
 
@@ -253,6 +261,7 @@ const AnimatedCategoryLegendItem: React.FC<{
   formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
 }> = ({ category, index, isExpanded, subCategories, isLoadingSubCategories, onToggleExpand, onCategoryPress, formatCurrency }) => {
   const { t } = useTranslation();
+  const { translations } = useLocalizedCategories();
   const itemScale = useSharedValue(1);
 
   const handlePressIn = () => {
@@ -266,6 +275,11 @@ const AnimatedCategoryLegendItem: React.FC<{
   const itemStyle = useAnimatedStyle(() => ({
     transform: [{ scale: itemScale.value }],
   }));
+
+  // Get localized name for category
+  const localizedName = category.key && translations.macro[category.key] 
+    ? translations.macro[category.key] 
+    : category.name;
 
   return (
     <Animated.View
@@ -303,7 +317,7 @@ const AnimatedCategoryLegendItem: React.FC<{
                 color: category.color
               }}
             >
-              {category.name}
+              {localizedName}
             </Text>
           </View>
         </TouchableOpacity>

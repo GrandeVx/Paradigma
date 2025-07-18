@@ -7,6 +7,12 @@
     },
     "android": {
       "package": "com.grandevx.balance"
+    },
+    "ios": {
+      "bundleIdentifier": "com.grandevx.balance",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     }
   }
 }

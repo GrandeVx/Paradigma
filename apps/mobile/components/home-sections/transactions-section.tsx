@@ -22,6 +22,7 @@ import { useCurrency } from '@/hooks/use-currency';
 import { useMonth } from '@/context/month-context';
 import { useTranslation } from 'react-i18next';
 import { FlashList } from '@shopify/flash-list';
+import { useLocalizedCategories } from '@/hooks/useLocalizedCategories';
 
 interface TransactionGroup {
   date: string;
@@ -602,6 +603,9 @@ export const TransactionsSection: React.FC = () => {
     return `${dayNames[date.getDay()]}, ${date.getDate()} ${monthNames[date.getMonth()]}`;
   }, [t]);
 
+  // Get localization hook
+  const { translations } = useLocalizedCategories();
+
   // Process and group transactions by day, then convert to FlatList format
   const { summary, flatListData } = useMemo(() => {
     if (!transactions) {
@@ -676,12 +680,16 @@ export const TransactionsSection: React.FC = () => {
         date: dateObj, // Use the safely converted date object
         type: amount > 0 ? 'income' : 'expense',
         category: transaction.subCategory?.macroCategory ? {
-          name: transaction.subCategory.macroCategory.name,
+          name: transaction.subCategory.macroCategory.key && translations.macro[transaction.subCategory.macroCategory.key] 
+            ? translations.macro[transaction.subCategory.macroCategory.key] 
+            : transaction.subCategory.macroCategory.name,
           icon: transaction.subCategory.macroCategory.icon,
           color: transaction.subCategory.macroCategory.color,
         } : undefined,
         subCategory: transaction.subCategory ? {
-          name: transaction.subCategory.name,
+          name: transaction.subCategory.key && translations.sub[transaction.subCategory.key] 
+            ? translations.sub[transaction.subCategory.key] 
+            : transaction.subCategory.name,
           icon: transaction.subCategory.icon,
         } : undefined,
       };
@@ -703,7 +711,7 @@ export const TransactionsSection: React.FC = () => {
       summary: { income, expenses, remaining },
       flatListData
     };
-  }, [transactions, formatDayName]);
+  }, [transactions, formatDayName, translations]);
 
   // Memoized month change handler with animation
   const handleMonthChangeWithAnimation = useCallback((month: number, year: number) => {

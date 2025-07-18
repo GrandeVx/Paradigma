@@ -6,6 +6,7 @@ import { Text } from '@/components/ui/text'; // Assuming Skeleton is a loading i
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { SvgIcon } from '../ui/svg-icon';
+import { useLocalizedCategories } from '@/hooks/useLocalizedCategories';
 
 // Ensure TransactionType is defined or imported if it's a shared type
 // For now, defining it locally based on its usage in the original file.
@@ -34,11 +35,19 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
     type: type === "income" ? "INCOME" : "EXPENSE"
   });
 
+  const { localizeCategoriesWithSubs, translations } = useLocalizedCategories();
+
   const HandleHexColorOpacity = (color: string) => {
     const rgb = color.match(/\w\w/g)?.map(hex => parseInt(hex, 16));
     if (!rgb) return color;
     return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.1)`;
   }
+
+  // Get localized categories
+  const localizedCategories = categories ? localizeCategoriesWithSubs(categories) : [];
+
+  // Minimal debug logging to check if key field is now populated
+  console.log('🔍 First category key check:', categories?.[0]?.key || 'undefined');
 
   return (
     <BottomSheet
@@ -81,7 +90,7 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
               <Text>Caricamento categorie...</Text>
             </View>
           ) : (
-            categories && categories.length > 0 ? (
+            localizedCategories && localizedCategories.length > 0 ? (
               <ScrollView
                 showsHorizontalScrollIndicator={false}
                 showsVerticalScrollIndicator={false}
@@ -89,7 +98,7 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
                   paddingBottom: 20,
                 }}
               >
-                {categories?.map((category) => (
+                {localizedCategories?.map((category) => (
                   <View key={category.id} className="flex flex-col items-center justify-center gap-2 mb-4">
                     {/* Main Category Display */}
                     <View
@@ -99,12 +108,12 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
                       <Text className="text-white text-sm font-medium">
                         {category.icon}
                       </Text>
-                      <Text className="text-black text-lg font-semibold" style={{ fontFamily: 'DM Sans', color: category.color }}>{category.name}</Text>
+                      <Text className="text-black text-lg font-semibold" style={{ fontFamily: 'DM Sans', color: category.color }}>{category.localizedName}</Text>
                     </View>
                     {/* Subcategories Display */}
                     <View className="flex flex-row flex-wrap w-full justify-center pt-2 gap-y-3 gap-x-2 px-2">
                       {
-                        category.subCategories.map((subCategory) => (
+                        category.subCategories?.map((subCategory) => (
                           <Pressable
                             onPress={() => {
                               setSelectedCategoryId(subCategory.id);
@@ -116,7 +125,7 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
                               selectedCategoryId === subCategory.id ? "bg-gray-100" : "bg-white"
                             )}
                           >
-                            <Text className="text-black text-sm font-medium text-center">{subCategory.icon} {subCategory.name}</Text>
+                            <Text className="text-black text-sm font-medium text-center">{subCategory.icon} {subCategory.localizedName}</Text>
                           </Pressable>
                         ))
                       }

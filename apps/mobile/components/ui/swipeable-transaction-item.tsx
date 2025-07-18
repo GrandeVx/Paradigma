@@ -16,6 +16,7 @@ import { SvgIcon } from '@/components/ui/svg-icon';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useCurrency } from '@/hooks/use-currency';
+import { useLocalizedSubCategory } from '@/hooks/useLocalizedCategories';
 
 const ACTION_WIDTH = 75;
 const SWIPE_THRESHOLD = 60;
@@ -71,6 +72,9 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
   const isIncome = transaction.type === 'income';
   const categoryColor = transaction.category?.color || '#6B7280';
   const categoryEmoji = transaction.subCategory?.icon || '💰';
+  
+  // Get localized subcategory name
+  const localizedSubCategory = useLocalizedSubCategory(transaction.subCategory);
 
   const handleEdit = () => {
     // Reset position first
@@ -267,9 +271,9 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
                 <Text className="text-sm text-gray-900 font-medium" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
                   {transaction.description}
                 </Text>
-                {transaction.subCategory && (
+                {localizedSubCategory && (
                   <Text className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: 'DM Sans', fontSize: 12 }}>
-                    {transaction.subCategory.name}
+                    {localizedSubCategory.localizedName}
                   </Text>
                 )}
               </View>
