@@ -21,11 +21,59 @@ export const queries = {
       
       const rules = await ctx.db.recurringTransactionRule.findMany({
         where,
-        include: {
-          moneyAccount: true,
+        select: {
+          id: true,
+          userId: true,
+          description: true,
+          amount: true,
+          totalAmount: true, // Explicitly include totalAmount field
+          type: true,
+          subCategoryId: true,
+          startDate: true,
+          frequencyType: true,
+          frequencyInterval: true,
+          dayOfWeek: true,
+          dayOfMonth: true,
+          nextDueDate: true,
+          endDate: true,
+          totalOccurrences: true,
+          occurrencesGenerated: true,
+          isInstallment: true,
+          lastProcessedAt: true,
+          processingKey: true,
+          isFirstOccurrenceGenerated: true,
+          transactionGroupId: true,
+          externalSystemId: true,
+          isActive: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
+          moneyAccountId: true,
+          moneyAccount: {
+            select: {
+              id: true,
+              name: true,
+              iconName: true,
+              color: true,
+              default: true,
+            }
+          },
           subCategory: {
-            include: {
-              macroCategory: true,
+            select: {
+              id: true,
+              name: true,
+              icon: true,
+              key: true,
+              macroCategory: {
+                select: {
+                  id: true,
+                  name: true,
+                  key: true,
+                  type: true,
+                  color: true,
+                  icon: true,
+                }
+              }
             }
           },
           // TODO: Restore after goal refactor to MoneyAccount
@@ -49,11 +97,59 @@ export const queries = {
           id: input.ruleId,
           userId,
         },
-        include: {
-          moneyAccount: true,
+        select: {
+          id: true,
+          userId: true,
+          description: true,
+          amount: true,
+          totalAmount: true, // Explicitly include totalAmount field
+          type: true,
+          subCategoryId: true,
+          startDate: true,
+          frequencyType: true,
+          frequencyInterval: true,
+          dayOfWeek: true,
+          dayOfMonth: true,
+          nextDueDate: true,
+          endDate: true,
+          totalOccurrences: true,
+          occurrencesGenerated: true,
+          isInstallment: true,
+          lastProcessedAt: true,
+          processingKey: true,
+          isFirstOccurrenceGenerated: true,
+          transactionGroupId: true,
+          externalSystemId: true,
+          isActive: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
+          moneyAccountId: true,
+          moneyAccount: {
+            select: {
+              id: true,
+              name: true,
+              iconName: true,
+              color: true,
+              default: true,
+            }
+          },
           subCategory: {
-            include: {
-              macroCategory: true,
+            select: {
+              id: true,
+              name: true,
+              icon: true,
+              key: true,
+              macroCategory: {
+                select: {
+                  id: true,
+                  name: true,
+                  key: true,
+                  type: true,
+                  color: true,
+                  icon: true,
+                }
+              }
             }
           },
           // TODO: Restore after goal refactor to MoneyAccount

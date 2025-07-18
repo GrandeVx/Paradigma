@@ -250,6 +250,7 @@ model RecurringTransactionRule {
   userId        String
   description   String
   amount        Decimal
+  totalAmount   Decimal? // For installments: original total amount before division
   type          RuleType
   subCategoryId String?
 

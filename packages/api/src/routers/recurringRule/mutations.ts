@@ -71,6 +71,7 @@ export const mutations = {
           moneyAccountId: input.accountId,
           description: input.description,
           amount: input.amount,
+          totalAmount: input.totalAmount || null,
           type: input.type,
           subCategoryId: input.subCategoryId || null,
           
@@ -200,6 +201,7 @@ export const mutations = {
       if (input.accountId !== undefined) updateData.moneyAccountId = input.accountId;
       if (input.description !== undefined) updateData.description = input.description;
       if (input.amount !== undefined) updateData.amount = input.amount;
+      if (input.totalAmount !== undefined) updateData.totalAmount = input.totalAmount;
       if (input.type !== undefined) updateData.type = input.type;
       if (input.subCategoryId !== undefined) updateData.subCategoryId = input.subCategoryId;
       if (input.frequencyType !== undefined) updateData.frequencyType = input.frequencyType;

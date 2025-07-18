@@ -22,6 +22,7 @@ export const recurringTransactionRuleSchema = z.object({
   userId: z.string(),
   description: z.string(),
   amount: z.number(),
+  totalAmount: z.number().nullish(),
   type: z.nativeEnum(RuleType),
   subCategoryId: z.string().nullish(),
   startDate: z.date(),

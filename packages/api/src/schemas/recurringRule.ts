@@ -16,6 +16,7 @@ export const createRecurringRuleSchema = z.object({
   accountId: z.string(),
   description: z.string().min(1),
   amount: z.number().positive(),
+  totalAmount: z.number().positive().optional(), // For installments: original total amount
   currency: z.string().default("EUR"),
   type: z.enum(["INCOME", "EXPENSE"]),
   subCategoryId: z.string().optional(),
@@ -45,6 +46,7 @@ export const updateRecurringRuleSchema = z.object({
   // Optional fields to update
   description: z.string().min(1).optional(),
   amount: z.number().positive().optional(),
+  totalAmount: z.number().positive().optional(), // For installments: original total amount
   accountId: z.string().optional(),
   type: z.enum(["INCOME", "EXPENSE"]),
   subCategoryId: z.string().nullable().optional(),
