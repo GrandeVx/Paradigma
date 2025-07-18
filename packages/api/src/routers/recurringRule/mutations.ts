@@ -221,14 +221,39 @@ export const mutations = {
         input.dayOfWeek !== undefined ||
         input.dayOfMonth !== undefined
       ) {
-        const lastOccurrenceDate = existingRule.nextDueDate;
-        const nextDueDate = calculateNextOccurrenceDate(
-          lastOccurrenceDate,
-          input.frequencyType || existingRule.frequencyType,
-          input.frequencyInterval || existingRule.frequencyInterval,
-          input.dayOfMonth !== undefined ? input.dayOfMonth : existingRule.dayOfMonth,
-          input.dayOfWeek !== undefined ? input.dayOfWeek : existingRule.dayOfWeek
-        );
+        // For installments, calculate from start date + occurrences generated
+        // For regular recurring rules, use the current nextDueDate
+        let baseDate: Date;
+        
+        let nextDueDate: Date;
+        
+        if (existingRule.isInstallment && input.occurrencesGenerated !== undefined) {
+          // For installments, calculate from startDate + occurrences generated
+          baseDate = new Date(existingRule.startDate);
+          const occurrences = input.occurrencesGenerated;
+          
+          // Calculate the next due date: start date + occurrences * interval
+          for (let i = 0; i < occurrences; i++) {
+            baseDate = calculateNextOccurrenceDate(
+              baseDate,
+              input.frequencyType || existingRule.frequencyType,
+              input.frequencyInterval || existingRule.frequencyInterval,
+              input.dayOfMonth !== undefined ? input.dayOfMonth : existingRule.dayOfMonth,
+              input.dayOfWeek !== undefined ? input.dayOfWeek : existingRule.dayOfWeek
+            );
+          }
+          nextDueDate = baseDate;
+        } else {
+          // For regular recurring rules, use the current nextDueDate as base
+          baseDate = existingRule.nextDueDate;
+          nextDueDate = calculateNextOccurrenceDate(
+            baseDate,
+            input.frequencyType || existingRule.frequencyType,
+            input.frequencyInterval || existingRule.frequencyInterval,
+            input.dayOfMonth !== undefined ? input.dayOfMonth : existingRule.dayOfMonth,
+            input.dayOfWeek !== undefined ? input.dayOfWeek : existingRule.dayOfWeek
+          );
+        }
         updateData.nextDueDate = nextDueDate;
       }
       
