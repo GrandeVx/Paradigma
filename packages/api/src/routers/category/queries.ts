@@ -7,16 +7,30 @@ export const queries = {
     .input(listCategoriesSchema)
     .query(async ({ ctx, input }) => {
       // Create custom cache key for category list
-      const cacheKey = ctx.db.getKey({ 
+      const cacheKey = ctx.db.getKey({
         params: formatCacheKeyParams(
           CacheKeys.category.list(input.type)
         )
       });
-      
+
       // Fetch all macro categories with their subcategories
       const macroCategories = await ctx.db.macroCategory.findMany({
-        include: {
-          subCategories: true,
+        select: {
+          id: true,
+          key: true,
+          name: true,
+          type: true,
+          color: true,
+          icon: true,
+          subCategories: {
+            select: {
+              id: true,
+              key: true,
+              name: true,
+              icon: true,
+              macroCategoryId: true,
+            }
+          }
         },
         where: input.type ? {
           type: input.type,
@@ -24,12 +38,12 @@ export const queries = {
         orderBy: {
           name: "asc",
         },
-        cache: { 
+        cache: {
           ttl: CacheTTL.categories,
-          key: cacheKey 
+          key: cacheKey
         }
       });
-      
+
       return macroCategories;
     }),
 }; 
