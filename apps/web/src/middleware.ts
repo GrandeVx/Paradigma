@@ -92,7 +92,7 @@ export async function middleware(req: NextRequest) {
 
   // Check if the request is for a public route
   const isPublicRoute =
-    ["/login", "/sign-up", "/forgot-password", "/sign-in"].some((route) =>
+    ["/login", "/sign-up", "/forgot-password", "/sign-in", "/terms", "privacy-policy"].some((route) =>
       pathname.endsWith(route),
     ) || isMarketingRoute(pathname);
 
