@@ -59,7 +59,11 @@ export const BudgetBottomSheet: React.FC<BudgetBottomSheetProps> = ({
   });
 
   // Fetch categories (only expense categories for budget allocation)
-  const { data: allCategories } = api.category.list.useQuery({});
+  const { data: allCategories } = api.category.list.useQuery({}, {
+    staleTime: 0, // Always fetch fresh data for colors
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus to avoid too many requests
+  });
 
   // Extract only expense categories for budget allocation
   const expenseCategories = allCategories?.filter(cat => cat.type === 'EXPENSE');

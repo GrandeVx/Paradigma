@@ -134,14 +134,16 @@ export default function RecurringEditScreen() {
 
   const deleteMutation = api.recurringRule.delete.useMutation({
     onSuccess: async () => {
-      console.log('🗑️ [DeleteMutation] Recurring deleted, invalidating cache...');
+      console.log('🗑️ [DeleteMutation] Recurring deleted, navigating away...');
       
+      // Navigate away first to avoid query refetch errors
+      router.back();
+      
+      // Then invalidate cache to update other pages
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, { clearCache: true });
       await InvalidationUtils.invalidateChartsQueries(queryClient);
       await InvalidationUtils.invalidateBudgetQueries(queryClient);
       await InvalidationUtils.invalidateRecurringRuleQueries(queryClient);
-      
-      router.back();
     }
   });
 

@@ -56,6 +56,16 @@ export const cacheUtils = {
   // Clear all cache
   clearCache: () => mmkvStorage.clearAll(),
   
+  // Clear specific React Query cache
+  clearReactQueryCache: () => {
+    try {
+      mmkvStorage.delete('react-query-cache')
+      console.log('🗑️ [CacheUtils] React Query cache cleared')
+    } catch (error) {
+      console.error('Failed to clear React Query cache:', error)
+    }
+  },
+  
   // Smart cleanup to keep cache under limits
   performSmartCleanup: () => {
     try {
@@ -592,7 +602,54 @@ export const goalsUtils = {
       console.error('Failed to clear goals cache:', error);
     }
   }
-} 
+}
+
+// Category cache utilities for managing category-specific cache
+export const categoryUtils = {
+  // Clear all category-related cache (React Query + local cache)
+  clearCategoryCache: (): void => {
+    try {
+      // Clear React Query cache
+      cacheUtils.clearReactQueryCache();
+      
+      // Clear any category-specific local cache if it exists
+      const allKeys = mmkvStorage.getAllKeys();
+      const categoryKeys = allKeys.filter(key => key.includes('category'));
+      
+      categoryKeys.forEach(key => {
+        mmkvStorage.delete(key);
+      });
+      
+      console.log('🗑️ [CategoryUtils] All category cache cleared');
+    } catch (error) {
+      console.error('Failed to clear category cache:', error);
+    }
+  },
+  
+  // Clear React Query cache and force reload
+  forceClearCategoryCache: (): void => {
+    try {
+      // Clear React Query persistent cache
+      cacheUtils.clearReactQueryCache();
+      
+      // Also clear any MMKV keys that might contain category data
+      const allKeys = mmkvStorage.getAllKeys();
+      const relevantKeys = allKeys.filter(key => 
+        key.includes('category') || 
+        key.includes('react-query') ||
+        key.includes('query-cache')
+      );
+      
+      relevantKeys.forEach(key => {
+        mmkvStorage.delete(key);
+      });
+      
+      console.log('🗑️ [CategoryUtils] Force clear completed - all category and query cache cleared');
+    } catch (error) {
+      console.error('Failed to force clear category cache:', error);
+    }
+  }
+}
 
 // Notification preferences types
 interface NotificationPreferences {

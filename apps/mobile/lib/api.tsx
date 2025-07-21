@@ -10,7 +10,7 @@ import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persist
 import { MMKV } from "react-native-mmkv"
 
 import { authClient } from "./auth-client";
-import { useAutoQuerySync } from "./cache-hooks";
+import { useAutoQuerySync, useCacheVersioning } from "./cache-hooks";
 import { Persister, PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 
 const transformer = superjson;
@@ -183,8 +183,9 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Cache provider component to handle MMKV sync
+// Cache provider component to handle MMKV sync and versioning
 function CacheProvider({ children }: { children: React.ReactNode }) {
+  useCacheVersioning(); // Automatically check and clear cache on version mismatch
   useAutoQuerySync();
   return <>{children}</>;
 }

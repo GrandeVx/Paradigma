@@ -72,7 +72,7 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
   const isIncome = transaction.type === 'income';
   const categoryColor = transaction.category?.color || '#6B7280';
   const categoryEmoji = transaction.subCategory?.icon || '💰';
-  
+
   // Get localized subcategory name
   const localizedSubCategory = useLocalizedSubCategory(transaction.subCategory);
 
@@ -82,9 +82,9 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
     actionsOpacity.value = withTiming(0);
 
     // Navigate to edit based on context
-    const basePath = context === 'accounts' ? '/(protected)/(accounts)' : 
-                     context === 'budgets' ? '/(protected)/(budgets)' : 
-                     '/(protected)/(home)';
+    const basePath = context === 'accounts' ? '/(protected)/(accounts)' :
+      context === 'budgets' ? '/(protected)/(budgets)' :
+        '/(protected)/(home)';
     router.push(`${basePath}/transaction-edit/${transaction.id}`);
   };
 

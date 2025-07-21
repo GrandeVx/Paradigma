@@ -20,6 +20,7 @@ import { cacheUtils, budgetUtils, transactionUtils, goalsUtils, notificationUtil
 import { useBiometricAuth } from "@/hooks/use-biometric-auth";
 import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
 
+
 const LANGUAGES = [
   { code: "en-US", flag: "🇺🇸", name: "English" },
   { code: "it-IT", flag: "🇮🇹", name: "Italiano" },
@@ -69,6 +70,7 @@ export default function ProfileScreen() {
   const { signOut, user } = useSupabase();
   const { data: userInfo } = api.user.getUserInfo.useQuery();
   const { isSupported, isEnabled, enableBiometric, disableBiometric } = useBiometricAuth();
+
   const { mutate: deleteAccount, isLoading: isDeletingAccount } = api.user.deleteAccount.useMutation({
     onSuccess: async (data) => {
       console.log('✅ Account deleted successfully:', data.deletedData);
@@ -219,6 +221,8 @@ export default function ProfileScreen() {
       await enableBiometric();
     }
   };
+
+
 
   const currentLanguage = LANGUAGES.find(
     (lang) => lang.code === i18nInstance.language
@@ -399,20 +403,21 @@ export default function ProfileScreen() {
             <CategoryItem
               label={t('profile.requestFeatures')}
               hasArrow={true}
-              onPress={() => WebBrowser.openBrowserAsync("https://www.google.com")}
+              onPress={() => WebBrowser.openBrowserAsync("https://balance.userjot.com/")}
             />
 
             <CategoryItem
               label={t('profile.support')}
               hasArrow={true}
-              onPress={() => WebBrowser.openBrowserAsync("https://www.google.com")}
+              onPress={() => WebBrowser.openBrowserAsync("mailto:info@metrica.dev")}
             />
 
             <CategoryItem
               label={t('profile.helpCenter')}
               hasArrow={true}
-              onPress={() => WebBrowser.openBrowserAsync("https://www.google.com")}
+              onPress={() => WebBrowser.openBrowserAsync("https://trybalance.eu/privacy-policy")}
             />
+
           </Section>
 
           {/* AGGIORNAMENTI */}

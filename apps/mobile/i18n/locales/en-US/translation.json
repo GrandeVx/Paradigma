@@ -118,7 +118,7 @@
     },
     "support": {
       "title": "Support",
-      "helpCenter": "Help Center",
+      "helpCenter": "Privacy & Policy",
       "contactUs": "Contact Us"
     },
     "signOut": {
@@ -308,7 +308,7 @@
     "installments": "Installments",
     "requestFeatures": "Request & Vote new features",
     "support": "Support",
-    "helpCenter": "Help Center",
+    "helpCenter": "Privacy & Policy",
     "signOut": "Sign Out",
     "deleteAccount": "Delete Account",
     "deletingAccount": "Deleting account...",

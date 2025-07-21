@@ -68,6 +68,9 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
   });
   const { data: moneyAccounts } = api.account.listWithBalances.useQuery({});
 
+  // Get translations at component level to avoid hooks rule violations
+  const { translations } = useLocalizedCategories();
+
   const updateMutation = api.transaction.update.useMutation({
     onSuccess: async (updatedTransaction) => {
       console.log('✏️ [UpdateMutation] Transaction updated, invalidating cache...');
@@ -178,14 +181,16 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
   const deleteMutation = api.transaction.delete.useMutation({
     onSuccess: async () => {
-      console.log('🗑️ [DeleteMutation] Transaction deleted, invalidating cache...');
+      console.log('🗑️ [DeleteMutation] Transaction deleted, navigating away...');
+      
+      // Navigate away first to avoid query refetch errors
+      router.back();
       
       if (!transaction) {
         console.warn('⚠️ [DeleteMutation] Original transaction not available, using broad invalidation');
         await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, { clearCache: true });
         await InvalidationUtils.invalidateChartsQueries(queryClient);
         await InvalidationUtils.invalidateBudgetQueries(queryClient);
-        router.back();
         return;
       }
 
@@ -195,6 +200,7 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
       console.log(`🗑️ [DeleteMutation] Invalidating cache for transaction date: ${transactionMonth}/${transactionYear}`);
 
+      // Then invalidate cache to update other pages
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
         currentMonth: transactionMonth,
         currentYear: transactionYear,
@@ -224,8 +230,6 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
           });
         }
       }
-      
-      router.back();
     }
   });
 
@@ -423,8 +427,6 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
   };
 
   const getCategoryName = () => {
-    const { translations } = useLocalizedCategories();
-    
     if (selectedCategoryId) {
       const subCategory = categories?.flatMap(cat => cat.subCategories).find(sc => sc.id === selectedCategoryId);
       if (subCategory) {

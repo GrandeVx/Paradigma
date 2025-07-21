@@ -76,7 +76,7 @@ export function ManualUpdateChecker({ className }: ManualUpdateCheckerProps) {
           {t('update.manual.title', 'Aggiornamenti app')}
         </Text>
         <Text className={cn(
-          'text-sm leading-relaxed',
+          'text-xs leading-relaxed',
           isDark ? 'text-gray-300' : 'text-gray-600'
         )}>
           {t('update.manual.description', 'Controlla manualmente se sono disponibili aggiornamenti dell\'app. Gli aggiornamenti vengono solitamente controllati automaticamente all\'avvio.')}

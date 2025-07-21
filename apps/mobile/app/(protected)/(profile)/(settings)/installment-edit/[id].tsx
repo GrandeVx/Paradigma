@@ -134,14 +134,16 @@ export default function InstallmentEditScreen() {
 
   const deleteMutation = api.recurringRule.delete.useMutation({
     onSuccess: async () => {
-      console.log('🗑️ [DeleteMutation] Installment deleted, invalidating cache...');
+      console.log('🗑️ [DeleteMutation] Installment deleted, navigating away...');
 
+      // Navigate away first to avoid query refetch errors
+      router.back();
+
+      // Then invalidate cache to update other pages
       await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, { clearCache: true });
       await InvalidationUtils.invalidateChartsQueries(queryClient);
       await InvalidationUtils.invalidateBudgetQueries(queryClient);
       await InvalidationUtils.invalidateRecurringRuleQueries(queryClient);
-
-      router.back();
     }
   });
 
@@ -198,7 +200,7 @@ export default function InstallmentEditScreen() {
   const installmentInfo = useMemo(() => {
     if (!installment) return null;
 
-    const originalTotalAmount = Math.abs(Number(installment.amount));
+    const originalTotalAmount = Math.abs(Number(installment.totalAmount));
     const totalOccurrences = totalInstallments || 0;
     const paidOccurrences = installment.occurrencesGenerated || 0;
     const remainingOccurrences = totalOccurrences - paidOccurrences;
@@ -315,7 +317,7 @@ export default function InstallmentEditScreen() {
         throw new Error("Seleziona una categoria");
       }
 
-      const originalAmount = Math.abs(Number(installment?.amount));
+      const originalAmount = Math.abs(Number(installment?.totalAmount));
       if (originalAmount <= 0) {
         throw new Error("L'importo deve essere maggiore di zero");
       }
@@ -348,7 +350,8 @@ export default function InstallmentEditScreen() {
         totalOccurrences: totalInstallments,
         isInstallment: true,
         endDate: null,
-        notes: note || null
+        notes: note || null,
+        occurrencesGenerated: installment?.occurrencesGenerated || 0
       });
 
       // Success feedback
@@ -458,7 +461,7 @@ export default function InstallmentEditScreen() {
     return 'pig-money' as IconName;
   };
 
-  const currentAmount = installment ? Math.abs(Number(installment.amount)) : 0;
+  const currentAmount = installment ? Math.abs(Number(installment.totalAmount)) : 0;
   const formattedTotalAmount = currentAmount.toLocaleString('it-IT', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,

@@ -16,6 +16,7 @@ type InstallmentTransaction = {
   id: string;
   description: string;
   amount: number | string | Decimal;
+  totalAmount?: number | string | Decimal | null; // For installments: original total amount
   type: 'INCOME' | 'EXPENSE';
   frequencyType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
   frequencyInterval: number;
@@ -99,7 +100,9 @@ const calculateFutureDates = (
   const baseDate = new Date(startDate);
 
   // Generate dates for remaining occurrences
-  for (let i = currentOccurrence; i < totalOccurrences; i++) {
+  // Use 0-based indexing for date calculation from the nextDueDate
+  const remainingOccurrences = totalOccurrences - currentOccurrence;
+  for (let i = 0; i < remainingOccurrences; i++) {
     const futureDate = new Date(baseDate);
 
     switch (frequencyType) {
@@ -303,10 +306,17 @@ export default function InstallmentsScreen() {
   const renderInstallmentCard = (installment: InstallmentTransaction) => {
     const current = installment.occurrencesGenerated || 0;
     const total = installment.totalOccurrences || 0;
-    const totalAmount = typeof installment.amount === 'string' ? parseFloat(installment.amount) :
+    
+    // Use totalAmount if available (for installments), otherwise use amount
+    const totalAmount = installment.totalAmount ? 
+      (typeof installment.totalAmount === 'string' ? parseFloat(installment.totalAmount) :
+       installment.totalAmount instanceof Decimal ? installment.totalAmount.toNumber() : installment.totalAmount) :
+      (typeof installment.amount === 'string' ? parseFloat(installment.amount) :
+       installment.amount instanceof Decimal ? installment.amount.toNumber() : installment.amount);
+    
+    // For installments, amount is already the per-installment amount
+    const installmentAmountNum = typeof installment.amount === 'string' ? parseFloat(installment.amount) :
       installment.amount instanceof Decimal ? installment.amount.toNumber() : installment.amount;
-    // Calculate installment amount by dividing total amount by number of occurrences
-    const installmentAmountNum = total > 0 ? totalAmount / total : totalAmount;
 
     const isUpcoming = getDaysUntilNext(t, installment.nextDueDate as Date | string);
     const accountName = installment.moneyAccount?.name || t('installments.status.account');

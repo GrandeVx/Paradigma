@@ -1,5 +1,5 @@
 import React, { useState, useRef, RefObject, useMemo } from "react";
-import { View, Image } from "react-native";
+import { View, Image, Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 
@@ -13,6 +13,7 @@ import { NotificationsBottomSheet } from "@/components/bottom-sheets/notificatio
 import { notificationUtils } from "@/lib/mmkv-storage";
 import * as Notifications from 'expo-notifications';
 import { useTabBar } from "@/context/TabBarContext";
+import * as WebBrowser from 'expo-web-browser';
 
 
 
@@ -271,7 +272,7 @@ export default function SignUp() {
           </View>
           <View className="flex-row gap-2 flex-1 justify-center items-center mt-4  mx-1">
             <Text className="text-gray-500 text-sm font-sans font-normal text-center">
-              {t('auth.terms.prefix')} <Text className="text-primary-700 underline text-sm font-sans font-normal">{t('auth.terms.termsAndConditions')}</Text> {t('auth.terms.middle')} <Text className="text-primary-700 underline text-sm font-sans font-normal">{t('auth.terms.privacyPolicy')}</Text>
+              {t('auth.terms.prefix')} <Pressable onPress={() => WebBrowser.openBrowserAsync("https://trybalance.eu/terms")} className="text-primary-700 underline text-sm font-sans font-normal">{t('auth.terms.termsAndConditions')}</Pressable> {t('auth.terms.middle')} <Pressable onPress={() => WebBrowser.openBrowserAsync("https://trybalance.eu/privacy-policy")} className="text-primary-700 underline text-sm font-sans font-normal">{t('auth.terms.privacyPolicy')}</Pressable>
             </Text>
           </View>
         </View>

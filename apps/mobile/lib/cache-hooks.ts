@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { mmkvStorage, cacheUtils } from './mmkv-storage';
+import { mmkvStorage, cacheUtils, categoryUtils } from './mmkv-storage';
+
+// Current cache version - increment when API schema changes
+const CACHE_VERSION = '1.1.3';
+const CACHE_VERSION_KEY = 'cache-version';
 
 // Custom hook for manual cache management
 export const useMMKVCache = () => {
@@ -58,7 +62,7 @@ export const useQueryCacheSync = (queryKey: string[]) => {
     // Try to restore data from MMKV on mount
     const cacheKey = queryKey.join('.');
     const cachedData = getCachedData(cacheKey);
-    
+
     if (cachedData) {
       queryClient.setQueryData(queryKey, cachedData);
       console.log(`🔄 [Cache] Restored query ${cacheKey} from MMKV`);
@@ -99,4 +103,95 @@ export const useAutoQuerySync = () => {
 
     return unsubscribe;
   }, [setCachedData, queryClient]);
+};
+
+// Cache versioning and automatic cleanup
+export const useCacheVersioning = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const checkCacheVersion = () => {
+      try {
+        const storedVersion = mmkvStorage.getString(CACHE_VERSION_KEY);
+
+        if (storedVersion !== CACHE_VERSION) {
+          console.log(`🔄 [Cache] Version mismatch: ${storedVersion} → ${CACHE_VERSION}`);
+          console.log('🗑️ [Cache] Clearing all cache due to version change');
+
+          // Clear all cache
+          mmkvStorage.clearAll();
+          queryClient.clear();
+
+          // Set new version
+          mmkvStorage.set(CACHE_VERSION_KEY, CACHE_VERSION);
+
+          console.log('✅ [Cache] Cache cleared and version updated');
+        } else {
+          console.log(`✅ [Cache] Version check passed: ${CACHE_VERSION}`);
+        }
+      } catch (error) {
+        console.error('❌ [Cache] Error checking cache version:', error);
+        // On error, clear cache to be safe
+        mmkvStorage.clearAll();
+        queryClient.clear();
+        mmkvStorage.set(CACHE_VERSION_KEY, CACHE_VERSION);
+      }
+    };
+
+    checkCacheVersion();
+  }, [queryClient]);
+};
+
+// Enhanced cache management utilities
+export const useCacheManagement = () => {
+  const queryClient = useQueryClient();
+
+  const clearAllCache = () => {
+    console.log('🗑️ [Cache] Clearing all cache...');
+    mmkvStorage.clearAll();
+    queryClient.clear();
+    mmkvStorage.set(CACHE_VERSION_KEY, CACHE_VERSION);
+    console.log('✅ [Cache] All cache cleared');
+  };
+
+  const clearCategoryCache = () => {
+    console.log('🗑️ [Cache] Clearing category cache...');
+    categoryUtils.forceClearCategoryCache();
+    queryClient.invalidateQueries({ queryKey: ['category'] });
+    console.log('✅ [Cache] Category cache cleared');
+  };
+
+  const clearSpecificCache = (cacheKey: string) => {
+    console.log(`🗑️ [Cache] Clearing cache for: ${cacheKey}`);
+    mmkvStorage.delete(cacheKey);
+    queryClient.invalidateQueries({ queryKey: [cacheKey] });
+    console.log(`✅ [Cache] Cache cleared for: ${cacheKey}`);
+  };
+
+  const getCacheInfo = () => {
+    const stats = cacheUtils.getCacheStats();
+    const version = mmkvStorage.getString(CACHE_VERSION_KEY);
+
+    return {
+      version,
+      expectedVersion: CACHE_VERSION,
+      isVersionMismatch: version !== CACHE_VERSION,
+      ...stats,
+    };
+  };
+
+  const resetCacheVersion = () => {
+    console.log('🔄 [Cache] Resetting cache version...');
+    mmkvStorage.set(CACHE_VERSION_KEY, CACHE_VERSION);
+    console.log('✅ [Cache] Cache version reset');
+  };
+
+  return {
+    clearAllCache,
+    clearCategoryCache,
+    clearSpecificCache,
+    getCacheInfo,
+    resetCacheVersion,
+    currentVersion: CACHE_VERSION,
+  };
 }; 

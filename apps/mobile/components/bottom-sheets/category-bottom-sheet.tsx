@@ -33,6 +33,10 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
 }) => {
   const { data: categories, isLoading: isCategoriesLoading } = api.category.list.useQuery({
     type: type === "income" ? "INCOME" : "EXPENSE"
+  }, {
+    staleTime: 0, // Always fetch fresh data for colors
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus to avoid too many requests
   });
 
   const { localizeCategoriesWithSubs, translations } = useLocalizedCategories();
@@ -40,14 +44,11 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
   const HandleHexColorOpacity = (color: string) => {
     const rgb = color.match(/\w\w/g)?.map(hex => parseInt(hex, 16));
     if (!rgb) return color;
-    return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.1)`;
+    return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.5)`;
   }
 
   // Get localized categories
   const localizedCategories = categories ? localizeCategoriesWithSubs(categories) : [];
-
-  // Minimal debug logging to check if key field is now populated
-  console.log('🔍 First category key check:', categories?.[0]?.key || 'undefined');
 
   return (
     <BottomSheet

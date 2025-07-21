@@ -250,6 +250,7 @@ const styles = StyleSheet.create({
   currencySymbol: {
     position: "absolute",
     fontSize: 146,
+    zIndex: 30,
     fontWeight: "700",
     color: "#359AF8", // Blue color for symbols
     fontFamily: "System", // Will fallback to system font

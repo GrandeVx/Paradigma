@@ -305,6 +305,19 @@ export default function SummaryScreen() {
       router.replace("/(protected)/(home)");
     }
   });
+  
+  const updateRecurringRuleMutation = api.recurringRule.update.useMutation({
+    onSuccess: async () => {
+      console.log('🔄 [UpdateRecurringRuleMutation] Recurring rule updated, invalidating cache...');
+      await InvalidationUtils.invalidateRecurringRuleQueries(queryClient, {
+        clearCache: true,
+      });
+    },
+    onError: (error) => {
+      console.error('❌ [UpdateRecurringRuleMutation] Error updating recurring rule:', error);
+    },
+  });
+  
   const convertFrequencyMutation = api.recurringRule.convertFrequency.useMutation();
 
   /*
@@ -436,78 +449,82 @@ export default function SummaryScreen() {
             frequencyDays
           });
 
-          // First, create the immediate transaction for the first installment
           const singleInstallmentAmount = parseFloat(amount) / numInstallments;
 
           // Store the transaction date for recurring rule invalidation
           setLastTransactionDate(selectedDate);
 
-          switch (transactionType) {
-            case 'expense':
-              await expenseMutation.mutateAsync({
-                accountId: selectedAccountId,
-                description: `${description} (1/${numInstallments})`,
-                amount: singleInstallmentAmount,
-                date: selectedDate,
-                subCategoryId: selectedCategoryId || undefined,
-                notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments })
-              });
-              break;
-
-            case 'income':
-              await incomeMutation.mutateAsync({
-                accountId: selectedAccountId,
-                description: `${description} (1/${numInstallments})`,
-                amount: singleInstallmentAmount,
-                date: selectedDate,
-                subCategoryId: selectedCategoryId || undefined,
-                notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments })
-              });
-              break;
-
-            case 'transfer':
-              if (!selectedTransferAccountId) {
-                throw new Error(t("transaction.errors.selectTransferAccountError"));
-              }
-              await transferMutation.mutateAsync({
-                fromAccountId: selectedAccountId,
-                toAccountId: selectedTransferAccountId,
-                amount: singleInstallmentAmount,
-                date: selectedDate,
-                description: `${description} (1/${numInstallments})`,
-                notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments })
-              });
-              break;
-
-            default:
-              throw new Error(t("transaction.errors.unsupportedTransactionType"));
-          }
-
-          // Then create the recurring rule for the remaining installments (if more than 1)
-          if (numInstallments > 1) {
-            // Calculate next occurrence date
-            const nextOccurrenceDate = new Date(selectedDate);
-            nextOccurrenceDate.setDate(nextOccurrenceDate.getDate() + frequencyDays);
-
-            // Skip recurring rules for transfers as they require special handling
-            if (transactionType !== 'transfer') {
-              await recurringRuleMutation.mutateAsync({
-                accountId: selectedAccountId,
-                description: `${description} (${t("transaction.descriptions.remainingInstallments")})`,
-                amount: singleInstallmentAmount,
-                type: transactionType === "income" ? "INCOME" : "EXPENSE",
-                subCategoryId: selectedCategoryId || undefined,
-                startDate: nextOccurrenceDate,
-                frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
-                frequencyInterval,
-                isInstallment: true,
-                totalOccurrences: numInstallments - 1, // Minus the first one we already created
-                notes: note ? `${note} - ${t("transaction.descriptions.remainingInstallments")}` : t("transaction.descriptions.remainingInstallmentsNote", { count: numInstallments - 1 })
-              });
-            } else {
-              // For transfers, we show a warning that only the first installment was created
-              console.warn('Le rate automatiche per i trasferimenti non sono ancora supportate. È stata creata solo la prima rata.');
+          // Skip recurring rules for transfers as they require special handling
+          if (transactionType === 'transfer') {
+            // For transfers, create only the first installment
+            if (!selectedTransferAccountId) {
+              throw new Error(t("transaction.errors.selectTransferAccountError"));
             }
+            await transferMutation.mutateAsync({
+              fromAccountId: selectedAccountId,
+              toAccountId: selectedTransferAccountId,
+              amount: singleInstallmentAmount,
+              date: selectedDate,
+              description: `${description} (1/${numInstallments})`,
+              notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments })
+            });
+            console.warn('Le rate automatiche per i trasferimenti non sono ancora supportate. È stata creata solo la prima rata.');
+          } else {
+            // For income and expense transactions, create the recurring rule FIRST
+            // Create the recurring rule
+            const recurringRule = await recurringRuleMutation.mutateAsync({
+              accountId: selectedAccountId,
+              description: `${description} (${t("transaction.descriptions.installmentSeries")})`,
+              amount: singleInstallmentAmount,
+              totalAmount: parseFloat(amount), // Store the original total amount
+              type: transactionType === "income" ? "INCOME" : "EXPENSE",
+              subCategoryId: selectedCategoryId || undefined,
+              startDate: selectedDate, // Start date is the first installment date
+              frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
+              frequencyInterval,
+              isInstallment: true,
+              totalOccurrences: numInstallments, // Full number of installments
+              notes: note ? `${note} - ${t("transaction.descriptions.installmentSeries")}` : t("transaction.descriptions.installmentSeriesNote", { count: numInstallments })
+            });
+
+            // Now create the first transaction linked to the recurring rule
+            switch (transactionType) {
+              case 'expense':
+                await expenseMutation.mutateAsync({
+                  accountId: selectedAccountId,
+                  description: `${description} (1/${numInstallments})`,
+                  amount: singleInstallmentAmount,
+                  date: selectedDate,
+                  subCategoryId: selectedCategoryId || undefined,
+                  notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments }),
+                  recurringRuleId: recurringRule.id
+                });
+                break;
+
+              case 'income':
+                await incomeMutation.mutateAsync({
+                  accountId: selectedAccountId,
+                  description: `${description} (1/${numInstallments})`,
+                  amount: singleInstallmentAmount,
+                  date: selectedDate,
+                  subCategoryId: selectedCategoryId || undefined,
+                  notes: note ? `${note} - ${t("transaction.descriptions.firstInstallmentNote")}` : t("transaction.descriptions.firstInstallment", { count: numInstallments }),
+                  recurringRuleId: recurringRule.id
+                });
+                break;
+
+              default:
+                throw new Error(t("transaction.errors.unsupportedTransactionType"));
+            }
+
+            // Update the recurring rule to reflect that the first occurrence was generated
+            await updateRecurringRuleMutation.mutateAsync({
+              ruleId: recurringRule.id,
+              type: transactionType === "income" ? "INCOME" : "EXPENSE",
+              frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
+              occurrencesGenerated: 1,
+              isFirstOccurrenceGenerated: true
+            });
           }
 
         } catch (apiError) {
