@@ -4,7 +4,7 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import TabBar from "@/components/TabBar";
 import { theme } from "@/lib/constants";
 import { useTabPrefetching } from "@/hooks/use-tab-prefetching";
-
+import { useTranslation } from "react-i18next";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { View, Text } from "react-native";
 import { useProfileIcon } from "@/hooks/use-profile-icon";
@@ -20,7 +20,7 @@ function TabBarIcon(props: {
 export default function TabLayout() {
   const { icon, isIconReady } = useProfileIcon();
   const segments = useSegments();
-
+  const { t } = useTranslation();
   // Get current tab for prefetching
   const currentTab = segments[1] || "(home)"; // segments[1] contains the tab name
 
@@ -47,7 +47,7 @@ export default function TabLayout() {
         initialParams={{}}
         options={{
           // This title is used to set the title of the bottom tab
-          title: "Home",
+          title: t("tab-bar.home"),
           tabBarIcon: ({ color }) => <SvgIcon name="chart-vertical" color={color} />,
         }}
       />
@@ -57,7 +57,7 @@ export default function TabLayout() {
         initialParams={{}}
         options={{
           // This title is used to set the title of the bottom tab
-          title: "Budgets",
+          title: t("tab-bar.budgets"),
           tabBarIcon: ({ color }) => <SvgIcon name="target" color={color} />,
         }}
       />
@@ -83,7 +83,7 @@ export default function TabLayout() {
         initialParams={{}}
         options={{
           // This title is used to set the title of the bottom tab
-          title: "Accounts",
+          title: t("tab-bar.accounts"),
           tabBarIcon: ({ color }) => <SvgIcon name="wallet" size={30} color={color} />,
         }}
       />
@@ -94,7 +94,7 @@ export default function TabLayout() {
         initialParams={{}}
         options={{
           // This title is used to set the title of the bottom tab
-          title: "Profile",
+          title: t("tab-bar.profile"),
           tabBarIcon: ({ color }) =>
             isIconReady ? (
               <Text style={{ fontSize: 24, marginBottom: -3 }}>{icon}</Text>
