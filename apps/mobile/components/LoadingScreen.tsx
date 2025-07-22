@@ -1,14 +1,23 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, StyleSheet, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "@/components/ui/text";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing, runOnJS } from "react-native-reanimated";
 
-// Standalone Loading Screen Component with timer-based control
-interface LoadingScreenProps {
-  isVisible: boolean;
+interface NetworkState {
+  isConnected: boolean;
+  isLoading: boolean;
+  isReconnecting: boolean;
+  hasInitialConnection: boolean;
 }
 
-export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible }) => {
+// Loading Screen Component with network-aware messaging
+interface LoadingScreenProps {
+  isVisible: boolean;
+  networkState?: NetworkState;
+}
+
+export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible, networkState }) => {
   // Animation values for currency symbols
   const dollarOpacity = useSharedValue(0);
   const euroOpacity = useSharedValue(0);
@@ -24,6 +33,29 @@ export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible }) => {
   const [shouldRender, setShouldRender] = useState(true);
   const [hasStartedAnimation, setHasStartedAnimation] = useState(false);
   const [animationInterval, setAnimationInterval] = useState<NodeJS.Timeout | null>(null);
+
+  // Determine status message based on network state
+  const getStatusMessage = () => {
+    if (!networkState) {
+      return "Caricamento...";
+    }
+
+    if (networkState.isLoading && !networkState.hasInitialConnection) {
+      return "Inizializzazione...";
+    }
+
+    if (networkState.isReconnecting) {
+      return "Riconnessione in corso...";
+    }
+
+    if (!networkState.isConnected && networkState.hasInitialConnection) {
+      return "Nessuna connessione internet";
+    }
+
+    return "Caricamento...";
+  };
+
+  const statusMessage = getStatusMessage();
 
   // Smooth easing configuration
   const easeInOut = Easing.bezier(0.4, 0, 0.2, 1);
@@ -210,6 +242,13 @@ export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible }) => {
           <Animated.Text style={[styles.currencySymbol, styles.yenSymbol, yenStyle]}>
             ¥
           </Animated.Text>
+
+          {/* Status Message */}
+          <View style={styles.statusContainer}>
+            <Text style={styles.statusText}>
+              {statusMessage}
+            </Text>
+          </View>
         </View>
       </SafeAreaView>
     </Animated.View>
@@ -271,5 +310,22 @@ const styles = StyleSheet.create({
   yenSymbol: {
     bottom: "20%",
     right: "20%",
+  },
+  statusContainer: {
+    position: "absolute",
+    bottom: "10%",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 40,
+  },
+  statusText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+    opacity: 0.9,
+    letterSpacing: 0.5,
   },
 });

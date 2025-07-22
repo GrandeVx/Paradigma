@@ -210,7 +210,7 @@ export default function CategoryTransactionsView({ categoryId, context = 'home' 
                     onPress={() => navigateMonth('prev')}
                     className="w-10 h-10 items-center justify-center"
                   >
-                    <SvgIcon name="left" size={20} color="#000" />
+                    <SvgIcon name="left" size={14} color="#000" />
                   </Pressable>
 
                   <Text className="text-black text-sm font-normal leading-5">
@@ -221,7 +221,7 @@ export default function CategoryTransactionsView({ categoryId, context = 'home' 
                     onPress={() => navigateMonth('next')}
                     className="w-10 h-10 items-center justify-center"
                   >
-                    <SvgIcon name="right" size={20} color="#000" />
+                    <SvgIcon name="right" size={14} color="#000" />
                   </Pressable>
                 </View>
 
@@ -249,7 +249,7 @@ export default function CategoryTransactionsView({ categoryId, context = 'home' 
                   />
                 </View>
 
-                <View className="flex-row justify-between px-6">
+                <View className="flex-row justify-between px-6 pt-4">
                   <View className="items-center">
                     <Text className="text-gray-400 text-sm font-medium leading-5">Budget</Text>
                     <Text className="text-gray-700 text-base font-medium leading-5">

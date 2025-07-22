@@ -44,7 +44,7 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
   const HandleHexColorOpacity = (color: string) => {
     const rgb = color.match(/\w\w/g)?.map(hex => parseInt(hex, 16));
     if (!rgb) return color;
-    return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.5)`;
+    return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.1)`;
   }
 
   // Get localized categories
@@ -96,7 +96,7 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
                 showsHorizontalScrollIndicator={false}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
-                  paddingBottom: 20,
+                  paddingBottom: 40,
                 }}
               >
                 {localizedCategories?.map((category) => (
@@ -104,12 +104,12 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
                     {/* Main Category Display */}
                     <View
                       style={{ backgroundColor: HandleHexColorOpacity(category.color) || '#CCCCCC', }}
-                      className="w-fit h-10 mt-4 px-4 py-2 rounded-full flex flex-row gap-4 items-center justify-center"
+                      className="w-fit h-10 rounded-full flex flex-row gap-2 items-center justify-center px-4"
                     >
-                      <Text className="text-white text-sm font-medium">
+                      <Text className="text-white text-base font-medium">
                         {category.icon}
                       </Text>
-                      <Text className="text-black text-lg font-semibold" style={{ fontFamily: 'DM Sans', color: category.color }}>{category.localizedName}</Text>
+                      <Text className="text-black text-base font-semibold uppercase" style={{ fontFamily: 'DM Sans', color: category.color, fontWeight: 'bold' }}>{category.localizedName}</Text>
                     </View>
                     {/* Subcategories Display */}
                     <View className="flex flex-row flex-wrap w-full justify-center pt-2 gap-y-3 gap-x-2 px-2">

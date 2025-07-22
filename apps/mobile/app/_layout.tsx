@@ -31,6 +31,7 @@ import { useExpoUpdates } from "@/hooks/use-expo-updates";
 import { UpdateModal } from "@/components/ui/update-modal";
 import { useNotificationBadgeSimple } from "@/hooks/use-notification-badge-simple";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { NetworkProvider, useNetworkState } from "@/context/NetworkProvider";
 
 import * as Notifications from 'expo-notifications';
 
@@ -94,29 +95,17 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return <AppWithNetworkAwareLayout />;
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-
-  // Timer-based splash screen control - independent of authentication
-  const [showCustomSplash, setShowCustomSplash] = useState(true);
 
   // Integrazione Expo Updates
   const { updateInfo, downloadAndRestart, dismissUpdate } = useExpoUpdates();
 
   // Clear notification badge when app becomes active
   useNotificationBadgeSimple();
-
-  // Hide custom splash after fixed duration
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowCustomSplash(false);
-    }, 2000); // Show for 4 seconds to allow animation to complete
-
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <>
@@ -131,25 +120,7 @@ function RootLayoutNav() {
             >
               <GestureHandlerRootView style={{ flex: 1 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
                 <TabBarProvider>
-                  <Stack>
-                    <Stack.Screen
-                      name="(splash)"
-                      options={{ headerShown: false, animation: "fade" }}
-
-                    />
-                    <Stack.Screen
-                      name="(protected)"
-                      options={{ headerShown: false, animation: "fade" }}
-                    />
-                    <Stack.Screen
-                      name="(onboarding)"
-                      options={{ headerShown: false, animation: "fade" }}
-                    />
-                    <Stack.Screen
-                      name="(auth)"
-                      options={{ headerShown: false, animation: "fade" }}
-                    />
-                  </Stack>
+                  <AppWithNetworkState />
                 </TabBarProvider>
               </GestureHandlerRootView>
 
@@ -165,9 +136,78 @@ function RootLayoutNav() {
           </SafeAreaProvider>
         </TRPCProvider>
       </SupabaseProvider>
-
-      {/* Custom Loading Screen - Independent of provider state */}
-      <LoadingScreen isVisible={showCustomSplash} />
     </>
+  );
+}
+
+function AppWithNetworkState() {
+  const { isConnected, isLoading, hasInitialConnection, isReconnecting } = useNetworkState();
+  const [appIsReady, setAppIsReady] = useState(false);
+  const [minLoadTimeCompleted, setMinLoadTimeCompleted] = useState(false);
+
+  // Ensure app shows loading screen for at least 2 seconds for smooth UX
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinLoadTimeCompleted(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Track when app initialization is complete
+  useEffect(() => {
+    // App is ready when we have initial connection status (regardless of connected/disconnected)
+    if (!isLoading && hasInitialConnection) {
+      setAppIsReady(true);
+    }
+  }, [isLoading, hasInitialConnection]);
+
+  // Show loading screen if:
+  // 1. App is not ready (still initializing)
+  // 2. Minimum load time hasn't completed 
+  // 3. No internet connection available
+  // 4. Currently reconnecting
+  const shouldShowLoading = !appIsReady || !minLoadTimeCompleted || !isConnected || isReconnecting;
+
+  return (
+    <>
+      <Stack>
+        <Stack.Screen
+          name="(splash)"
+          options={{ headerShown: false, animation: "fade" }}
+        />
+        <Stack.Screen
+          name="(protected)"
+          options={{ headerShown: false, animation: "fade" }}
+        />
+        <Stack.Screen
+          name="(onboarding)"
+          options={{ headerShown: false, animation: "fade" }}
+        />
+        <Stack.Screen
+          name="(auth)"
+          options={{ headerShown: false, animation: "fade" }}
+        />
+      </Stack>
+      
+      {/* Network-aware Loading Screen */}
+      <LoadingScreen 
+        isVisible={shouldShowLoading}
+        networkState={{
+          isConnected,
+          isLoading,
+          isReconnecting,
+          hasInitialConnection
+        }}
+      />
+    </>
+  );
+}
+
+function AppWithNetworkAwareLayout() {
+  return (
+    <NetworkProvider>
+      <RootLayoutNav />
+    </NetworkProvider>
   );
 }
