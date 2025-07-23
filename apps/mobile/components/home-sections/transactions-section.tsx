@@ -661,12 +661,16 @@ export const TransactionsSection: React.FC = () => {
         dateObj = new Date();
       }
 
-      const date = dateObj.toISOString().split('T')[0];
+      // Create date string directly without UTC conversion to avoid timezone issues
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const date = `${year}-${month}-${day}`;
 
       if (!acc[date]) {
         acc[date] = {
           date,
-          dayName: formatDayName(dateObj),
+          dayName: '', // Will be set after grouping is complete
           transactions: [],
           dailyTotal: 0,
         };
@@ -699,6 +703,13 @@ export const TransactionsSection: React.FC = () => {
 
       return acc;
     }, {} as Record<string, TransactionGroup>);
+
+    // After grouping is complete, set the dayName for each group based on the group's date key
+    // This ensures consistent labeling regardless of transaction insertion order
+    Object.values(grouped).forEach(group => {
+      const groupDate = new Date(group.date + 'T00:00:00');
+      group.dayName = formatDayName(groupDate);
+    });
 
     // Convert to array and sort by date (newest first)
     const groupedArray = Object.values(grouped).sort((a, b) =>

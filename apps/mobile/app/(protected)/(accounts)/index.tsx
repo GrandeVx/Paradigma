@@ -15,6 +15,7 @@ import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { uiUtils } from '@/lib/mmkv-storage';
 import { cn } from '@/lib/utils';
+import { Appearance } from 'react-native';
 
 // Extended interface for MoneyAccount with goal fields
 interface MoneyAccountWithGoal {
@@ -289,7 +290,7 @@ export default function AccountsScreen() {
           <View className="flex-row items-baseline justify-center w-full max-w-sm transition-all duration-300">
             <Text className="text-gray-400" style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 32 }}>{currencySymbol}</Text>
             <Pressable onPress={toggleBalanceBlur} className="relative">
-              <View className={cn("flex-row items-baseline flex-shrink", isBalanceBlurred ? "px-4" : "px-2")}>
+              <View className={cn("flex-row items-baseline flex-shrink bg-white dark:bg-white", isBalanceBlurred ? "px-4" : "px-2")}>
                 <Text
                   className="text-black font-medium flex-shrink-0"
                   style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 64 }}
@@ -319,6 +320,8 @@ export default function AccountsScreen() {
                     borderRadius: 8,
                     width: '100%',
                   }}
+                  tint={"light"}
+                  experimentalBlurMethod="dimezisBlurView"
                 />
               )}
             </Pressable>
