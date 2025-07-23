@@ -15,7 +15,6 @@ import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { uiUtils } from '@/lib/mmkv-storage';
 import { cn } from '@/lib/utils';
-import { Appearance } from 'react-native';
 
 // Extended interface for MoneyAccount with goal fields
 interface MoneyAccountWithGoal {
