@@ -3,6 +3,9 @@ import { StyleSheet, View, Pressable, Text, Animated } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useTabBar } from "@/context/TabBarContext";
 import { useRouter } from "expo-router";
+import * as Haptics from 'expo-haptics';
+
+
 
 // Memoized TabBar component for better performance
 const TabBar = React.memo<BottomTabBarProps>(({
@@ -57,6 +60,7 @@ const TabBar = React.memo<BottomTabBarProps>(({
 
             // Regular function instead of useCallback (hooks can't be called in loops)
             const onPress = async () => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               const event = navigation.emit({
                 type: "tabPress",
                 target: route.key,

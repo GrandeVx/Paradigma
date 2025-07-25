@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,7 @@ export default function EditAccountBalance() {
   const [accountColor, setAccountColor] = useState('#409FF8');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasInitialized = useRef(false);
 
   const utils = api.useUtils();
 
@@ -77,16 +78,17 @@ export default function EditAccountBalance() {
 
   // Find account balance from the accounts list
   useEffect(() => {
-    if (balanceData && id) {
+    if (balanceData && id && !hasInitialized.current) {
       const accountWithBalance = balanceData.find(item => item.account.id === id);
       if (accountWithBalance) {
         const balance = Number(accountWithBalance.balance);
         setCurrentBalance(balance);
-        setAmount(balance.toString());
+        setAmount(balance.toFixed(2).toString());
         // If balance has decimals, activate decimal mode
         if (balance.toString().includes('.')) {
           setIsDecimalActive(true);
         }
+        hasInitialized.current = true;
       }
     }
   }, [balanceData, id]);
@@ -103,10 +105,15 @@ export default function EditAccountBalance() {
   }, [amount]);
 
   const handleNumberPress = (number: string) => {
-    if (amount === '0') {
+    if (amount === '0' && number !== '0') {
       setAmount(number);
+    } else if (amount.includes('.')) {
+      const parts = amount.split('.');
+      if (parts[1].length < 2) {
+        setAmount(amount + number);
+      }
     } else {
-      setAmount((prev) => prev + number);
+      setAmount(amount === '0' ? number : amount + number);
     }
   };
 
@@ -119,15 +126,26 @@ export default function EditAccountBalance() {
       }
     } else {
       setAmount('0');
+      setIsDecimalActive(false);
     }
   };
 
   const handleCommaPress = () => {
-    if (!amount.includes('.')) {
+    if (!amount.includes('.') && !isDecimalActive) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setAmount((prev) => prev + '.');
+      setAmount(amount + '.');
       setIsDecimalActive(true);
     }
+  };
+
+  // Format amount for display with proper decimal handling
+  const formatDisplayAmount = (value: string) => {
+    const num = parseFloat(value) || 0;
+    const parts = num.toFixed(2).split('.');
+    return {
+      integer: parseInt(parts[0]).toLocaleString('it-IT'),
+      decimal: parts[1]
+    };
   };
 
   const handleSave = () => {
@@ -171,11 +189,8 @@ export default function EditAccountBalance() {
     }
   };
 
-  // Format amount with currency symbol
-  const formattedAmount = `${parseFloat(amount).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  // Get formatted display values
+  const displayAmount = formatDisplayAmount(amount);
 
   if (isLoadingAccount || isLoadingBalance) {
     return (
@@ -202,14 +217,14 @@ export default function EditAccountBalance() {
           <View className="flex flex-row items-center gap-2 justify-center">
             <Text className="text-gray-300 text-4xl font-bold" style={{ fontFamily: 'Apfel Grotezk Mittel' }}>€</Text>
             <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
-              <Text className={`text-4xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black'}`} style={{ fontFamily: 'Apfel Grotezk Mittel' }}>
-                {formattedAmount.split('.')[0]}
+              <Text className={`text-4xl font-bold ${displayAmount.integer === '0' ? 'text-gray-400' : 'text-black'}`} style={{ fontFamily: 'Apfel Grotezk Mittel' }}>
+                {displayAmount.integer}
               </Text>
-              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (displayAmount.integer === '0' && displayAmount.decimal === '00' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
                 ,
               </Text>
-              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
-                {formattedAmount.split('.')[1]}
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (displayAmount.integer === '0' && displayAmount.decimal === '00' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
+                {displayAmount.decimal}
               </Text>
             </View>
           </View>

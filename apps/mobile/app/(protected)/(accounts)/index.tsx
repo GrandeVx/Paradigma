@@ -336,6 +336,7 @@ export default function AccountsScreen() {
               <Text className="text-green-500 text-sm font-semibold">+2.5%</Text>
               <BlurView
                 intensity={7}
+                tint={"dark"}
                 style={{
                   position: 'absolute',
                   top: 0,

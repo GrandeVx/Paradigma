@@ -101,6 +101,11 @@ export default function ValueScreen() {
     }
   };
 
+  const handleTransactionTypePress = (type: TransactionType) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setTransactionType(type);
+  };
+
   return (
     <HeaderContainer
       variant="secondary"
@@ -131,7 +136,7 @@ export default function ValueScreen() {
           <View className="w-full flex-row justify-center items-center gap-3 px-4 pt-6">
             <Pressable
               className={`rounded-full px-3 py-1.5 ${transactionType === 'income' ? 'bg-success-500' : 'bg-transparent'}`}
-              onPress={() => setTransactionType('income')}
+              onPress={() => handleTransactionTypePress('income')}
             >
               <Text className={`font-medium text-sm ${transactionType === 'income' ? 'text-white' : 'text-gray-700'}`}>
                 {t('transaction.types.income')}
@@ -140,7 +145,7 @@ export default function ValueScreen() {
 
             <Pressable
               className={`rounded-full px-3 py-1.5 ${transactionType === 'expense' ? 'bg-error-500' : 'bg-transparent'}`}
-              onPress={() => setTransactionType('expense')}
+              onPress={() => handleTransactionTypePress('expense')}
             >
               <Text className={`font-medium text-sm ${transactionType === 'expense' ? 'text-white' : 'text-gray-700'}`}>
                 {t('transaction.types.expense')}
@@ -149,7 +154,7 @@ export default function ValueScreen() {
 
             <Pressable
               className={`rounded-full px-3 py-1.5 ${transactionType === 'transfer' ? 'bg-gray-400' : 'bg-transparent'}`}
-              onPress={() => setTransactionType('transfer')}
+              onPress={() => handleTransactionTypePress('transfer')}
             >
               <Text className={`font-medium text-sm ${transactionType === 'transfer' ? 'text-white' : 'text-gray-700'}`}>
                 {t('transaction.types.transfer')}
