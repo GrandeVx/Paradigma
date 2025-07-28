@@ -2,7 +2,6 @@ import { View, TouchableOpacity, RefreshControl, Pressable } from 'react-native'
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import Animated, {
   FadeIn,
-  FadeInDown,
   FadeOutUp,
   Layout,
   useSharedValue,
@@ -256,7 +255,7 @@ const SummaryContainer: React.FC<{
           <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.income')}
           </Text>
-          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
+          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 16 }}>
             {formatCurrency(income, { showSign: false })}
           </Text>
         </View>
@@ -265,7 +264,7 @@ const SummaryContainer: React.FC<{
           <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.expenses')}
           </Text>
-          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
+          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 16 }}>
             {formatCurrency(expenses, { showSign: false })}
           </Text>
         </View>
@@ -274,7 +273,7 @@ const SummaryContainer: React.FC<{
           <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.remaining')}
           </Text>
-          <Text className="text-base font-medium text-black" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
+          <Text className="text-base font-medium text-black" style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 16 }}>
             {formatCurrency(remaining, { showSign: remaining < 0 })}
           </Text>
         </View>
@@ -334,7 +333,7 @@ const FlatListHeaderComponent: React.FC<{
         </Text>
         <Text
           className={`font-medium ${isPositive ? 'text-gray-400' : 'text-gray-400'}`}
-          style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}
+          style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 16, fontWeight: '800' }}
         >
           {formatCurrency(item.dailyTotal, { showSign: false })}
         </Text>
