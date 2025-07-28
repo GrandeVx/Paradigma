@@ -13,7 +13,14 @@
       "bundleIdentifier": "com.grandevx.balance",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "appleTeamId": "CA5W3WY58U",
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "com.grandevx.balance.widget"
+        ]
+      },
+      "jsEngine": "hermes"
     },
     "notification": {
       "icon": "./assets/images/icon.png",
@@ -22,12 +29,6 @@
       "androidMode": "default",
       "androidCollapsedTitle": "Balance - Aggiorna i tuoi conti"
     },
-    "fonts": [
-      {
-        "name": "ApfelGrotezk",
-        "asset": "./public/fonts/ApfelGrotezk.ttf"
-      }
-    ],
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -38,7 +39,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.grandevx.balance"
+      "package": "com.grandevx.balance",
+      "jsEngine": "hermes"
     },
     "web": {
       "bundler": "metro",
@@ -66,6 +68,12 @@
             "minSdkVersion": 26,
             "newArchEnabled": true
           }
+        }
+      ],
+      [
+        "@bacons/apple-targets",
+        {
+          "appleTeamId": "CA5W3WY58U"
         }
       ],
       "expo-secure-store",

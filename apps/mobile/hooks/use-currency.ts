@@ -110,15 +110,17 @@ export const useCurrency = () => {
 
     let result = '';
 
+    // Add symbol if requested
+    if (showSymbol) {
+      result += `${currency.symbol} `;
+    }
+
     // Add sign if requested
     if (showSign) {
       result += isNegative ? '- ' : '+ ';
     }
 
-    // Add symbol if requested
-    if (showSymbol) {
-      result += `${currency.symbol} `;
-    }
+
 
     result += formatted;
 

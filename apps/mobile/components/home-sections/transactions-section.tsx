@@ -100,7 +100,7 @@ const TransactionLoadingSkeleton = ({ dailyGroupsCount = 3 }: { dailyGroupsCount
     >
       {/* Summary Card Skeleton */}
       <Animated.View
-        entering={FadeInDown.duration(500)}
+        entering={FadeIn.duration(300).withInitialValues({ opacity: 0, transform: [{ translateY: 10 }] })}
         className="bg-gray-50 rounded-3xl p-4 mb-4"
       >
         {/* Month selector skeleton */}
@@ -125,7 +125,7 @@ const TransactionLoadingSkeleton = ({ dailyGroupsCount = 3 }: { dailyGroupsCount
       {skeletonGroups.map((groupIndex) => (
         <Animated.View
           key={groupIndex}
-          entering={FadeInDown.delay(groupIndex * 150 + 200).duration(500)}
+          entering={FadeIn.delay(groupIndex * 50 + 100).duration(300).withInitialValues({ opacity: 0, transform: [{ translateY: 10 }] })}
           className="border-b border-gray-200 pb-1 mb-1"
         >
           {/* Day header skeleton */}
@@ -138,7 +138,7 @@ const TransactionLoadingSkeleton = ({ dailyGroupsCount = 3 }: { dailyGroupsCount
           {Array.from({ length: Math.floor(Math.random() * 3) + 2 }, (_, itemIndex) => (
             <Animated.View
               key={itemIndex}
-              entering={FadeInDown.delay(groupIndex * 150 + itemIndex * 75 + 300).duration(400)}
+              entering={FadeIn.delay(groupIndex * 50 + itemIndex * 20 + 150).duration(300).withInitialValues({ opacity: 0, transform: [{ translateY: 8 }] })}
               className="flex-row items-center py-2 gap-3"
             >
               {/* Category icon skeleton */}
@@ -168,7 +168,7 @@ const TransactionLoadingSkeleton = ({ dailyGroupsCount = 3 }: { dailyGroupsCount
 
       {/* Show more skeleton groups to fill the screen */}
       <Animated.View
-        entering={FadeInDown.delay(skeletonGroups.length * 150 + 400).duration(300)}
+        entering={FadeIn.delay(skeletonGroups.length * 50 + 200).duration(300).withInitialValues({ opacity: 0 })}
         className="pt-4"
       >
         <Animated.View style={shimmerStyle} className="bg-gray-200 rounded h-3 w-32 mx-auto" />
@@ -256,7 +256,7 @@ const SummaryContainer: React.FC<{
           <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.income')}
           </Text>
-          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
             {formatCurrency(income, { showSign: false })}
           </Text>
         </View>
@@ -265,7 +265,7 @@ const SummaryContainer: React.FC<{
           <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.expenses')}
           </Text>
-          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+          <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
             {formatCurrency(expenses, { showSign: false })}
           </Text>
         </View>
@@ -274,8 +274,8 @@ const SummaryContainer: React.FC<{
           <Text className=" font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.remaining')}
           </Text>
-          <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
-            {formatCurrency(remaining, { showSign: false })}
+          <Text className="text-base font-medium text-black" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
+            {formatCurrency(remaining, { showSign: remaining < 0 })}
           </Text>
         </View>
       </View>
@@ -323,9 +323,9 @@ const FlatListHeaderComponent: React.FC<{
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(item.groupIndex * 100).duration(500).springify()}
-      exiting={FadeOutUp.duration(300)}
-      layout={Layout.springify().damping(15).stiffness(100)}
+      entering={FadeIn.delay(item.groupIndex * 50).duration(300).withInitialValues({ opacity: 0, transform: [{ translateY: 15 }] })}
+      exiting={FadeOutUp.duration(200)}
+      layout={Layout.duration(200)}
       className="mb-1"
     >
       <View className="flex-row justify-between items-center py-1">
@@ -334,7 +334,7 @@ const FlatListHeaderComponent: React.FC<{
         </Text>
         <Text
           className={`font-medium ${isPositive ? 'text-gray-400' : 'text-gray-400'}`}
-          style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
+          style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}
         >
           {formatCurrency(item.dailyTotal, { showSign: false })}
         </Text>
@@ -350,9 +350,9 @@ const FlatListTransactionComponent: React.FC<{
 }> = ({ item, onDelete }) => {
   return (
     <Animated.View
-      entering={FadeInDown.delay(item.groupIndex * 100 + item.transactionIndex * 50).duration(400).springify()}
-      exiting={FadeOutUp.duration(300)}
-      layout={Layout.springify().damping(15).stiffness(100)}
+      entering={FadeIn.delay(item.groupIndex * 50 + item.transactionIndex * 20).duration(300).withInitialValues({ opacity: 0, transform: [{ translateY: 10 }] })}
+      exiting={FadeOutUp.duration(200)}
+      layout={Layout.duration(200)}
       className={item.isLast ? "border-b border-gray-200 pb-1" : ""}
     >
       <SwipeableTransactionItem
@@ -452,8 +452,8 @@ export const TransactionsSection: React.FC = () => {
     if (!isLoading) {
       contentOpacity.value = withTiming(1, { duration: 600 });
       summaryScale.value = withSpring(1, {
-        damping: 15,
-        stiffness: 100,
+        damping: 20,
+        stiffness: 80,
       });
     }
   }, [isLoading, contentOpacity, summaryScale]);
@@ -684,15 +684,15 @@ export const TransactionsSection: React.FC = () => {
         date: dateObj, // Use the safely converted date object
         type: amount > 0 ? 'income' : 'expense',
         category: transaction.subCategory?.macroCategory ? {
-          name: transaction.subCategory.macroCategory.key && translations.macro[transaction.subCategory.macroCategory.key] 
-            ? translations.macro[transaction.subCategory.macroCategory.key] 
+          name: transaction.subCategory.macroCategory.key && translations.macro[transaction.subCategory.macroCategory.key]
+            ? translations.macro[transaction.subCategory.macroCategory.key]
             : transaction.subCategory.macroCategory.name,
           icon: transaction.subCategory.macroCategory.icon,
           color: transaction.subCategory.macroCategory.color,
         } : undefined,
         subCategory: transaction.subCategory ? {
-          name: transaction.subCategory.key && translations.sub[transaction.subCategory.key] 
-            ? translations.sub[transaction.subCategory.key] 
+          name: transaction.subCategory.key && translations.sub[transaction.subCategory.key]
+            ? translations.sub[transaction.subCategory.key]
             : transaction.subCategory.name,
           icon: transaction.subCategory.icon,
         } : undefined,
@@ -830,7 +830,7 @@ export const TransactionsSection: React.FC = () => {
                 zIndex: 1
               }}
             >
-              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>🏠</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'ApfelGrotezk', fontSize: 32 }}>🏠</Text>
             </View>
             <View
               className="rounded-xl p-4"
@@ -844,7 +844,7 @@ export const TransactionsSection: React.FC = () => {
                 zIndex: 3
               }}
             >
-              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>☕</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'ApfelGrotezk', fontSize: 32 }}>☕</Text>
             </View>
             <View
               className="absolute right-12 rounded-xl p-4"
@@ -859,7 +859,7 @@ export const TransactionsSection: React.FC = () => {
                 zIndex: 2
               }}
             >
-              <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>👕</Text>
+              <Text className="text-3xl" style={{ fontFamily: 'ApfelGrotezk', fontSize: 32 }}>👕</Text>
             </View>
           </View>
 

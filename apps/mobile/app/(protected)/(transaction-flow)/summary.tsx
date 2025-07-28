@@ -24,14 +24,16 @@ import { IconName } from "@/components/ui/icons";
 import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
 import { InvalidationUtils } from '@/lib/invalidation-utils';
+import { useAsyncInvalidation } from '@/hooks/use-async-invalidation';
 // Removed StackActions import - using normal router navigation instead
 
 type TransactionType = 'income' | 'expense' | 'transfer';
 
 // Default recurrence option (never repeat)
+// Note: label will be set dynamically with translation in the component
 const defaultRecurrenceOption: RecurrenceOption = {
   id: 'none',
-  label: 'Mai',
+  label: '', // Will be set with t('transaction.recurrence.never')
   value: 0,
   days: 0,
   type: 'none'
@@ -43,6 +45,7 @@ export default function SummaryScreen() {
   const params = useLocalSearchParams<{ amount: string, type: TransactionType }>();
   const queryClient = api.useContext();
   const { getCurrencySymbol } = useCurrency();
+  const { scheduleTransactionInvalidations, scheduleRecurringInvalidations } = useAsyncInvalidation();
 
   const amount = params.amount || '0';
   const transactionType = params.type as TransactionType || 'expense';
@@ -57,7 +60,10 @@ export default function SummaryScreen() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Replace recurringDate with recurrenceOption
-  const [recurrenceOption, setRecurrenceOption] = useState<RecurrenceOption>(defaultRecurrenceOption);
+  const [recurrenceOption, setRecurrenceOption] = useState<RecurrenceOption>({
+    ...defaultRecurrenceOption,
+    label: t('transaction.recurrence.never')
+  });
 
   const [isRecurring, setIsRecurring] = useState(false);
   const [numInstallments, setNumInstallments] = useState(3);
@@ -76,242 +82,97 @@ export default function SummaryScreen() {
     * Mutations
   */
   const expenseMutation = api.transaction.createExpense.useMutation({
-    onSuccess: async (data) => {
-      console.log('💸 [ExpenseMutation] Transaction created, invalidating cache...');
-      const transactionMonth = data.date.getMonth() + 1;
-      const transactionYear = data.date.getFullYear();
-
-      // Comprehensive invalidation for expense transactions
-      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-        clearCache: true,
-      });
-
-      // Also invalidate charts for the transaction month
-      await InvalidationUtils.invalidateChartsQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Invalidate budget-related queries for real-time budget updates
-      await InvalidationUtils.invalidateBudgetQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Invalidate category-specific queries if we have subCategoryId
-      if (data.subCategoryId) {
-        // Find the macro category ID from the subcategory
-        const category = categories?.find(cat =>
-          cat.subCategories.some(sub => sub.id === data.subCategoryId)
-        );
-
-        if (category) {
-          await InvalidationUtils.invalidateCategoryQueries(queryClient, {
-            categoryId: category.id,
-            currentMonth: transactionMonth,
-            currentYear: transactionYear,
-          });
-        }
-      }
-
-      // Invalidate home section queries to refresh summary data
-      await InvalidationUtils.invalidateHomeSectionQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Wait for critical queries to refetch before navigation to ensure data is ready
-      try {
-        await queryClient.transaction.getMonthlySpending.refetch({
-          month: transactionMonth,
-          year: transactionYear,
-        });
-        await queryClient.account.listWithBalances.refetch();
-      } catch (error) {
-        console.warn('Failed to refetch queries before navigation, proceeding anyway:', error);
-      }
-
-      router.replace("/(protected)/(home)");
+    onSuccess: (data) => {
+      handleTransactionSuccess(data, 'expense', selectedCategoryId, selectedAccountId);
     }
   });
 
   const incomeMutation = api.transaction.createIncome.useMutation({
-    onSuccess: async (data) => {
-      console.log('💰 [IncomeMutation] Transaction created, invalidating cache...');
-      const transactionMonth = data.date.getMonth() + 1;
-      const transactionYear = data.date.getFullYear();
-
-      // Comprehensive invalidation for income transactions
-      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-        clearCache: true,
-      });
-
-      // Also invalidate charts for the transaction month
-      await InvalidationUtils.invalidateChartsQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Invalidate budget-related queries for real-time budget updates
-      await InvalidationUtils.invalidateBudgetQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Invalidate category-specific queries if we have subCategoryId
-      if (data.subCategoryId) {
-        // Find the macro category ID from the subcategory
-        const category = categories?.find(cat =>
-          cat.subCategories.some(sub => sub.id === data.subCategoryId)
-        );
-
-        if (category) {
-          await InvalidationUtils.invalidateCategoryQueries(queryClient, {
-            categoryId: category.id,
-            currentMonth: transactionMonth,
-            currentYear: transactionYear,
-          });
-        }
-      }
-
-      // Invalidate home section queries to refresh summary data
-      await InvalidationUtils.invalidateHomeSectionQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Wait for critical queries to refetch before navigation to ensure data is ready
-      try {
-        await queryClient.transaction.getMonthlySpending.refetch({
-          month: transactionMonth,
-          year: transactionYear,
-        });
-        await queryClient.account.listWithBalances.refetch();
-      } catch (error) {
-        console.warn('Failed to refetch queries before navigation, proceeding anyway:', error);
-      }
-
-      router.replace("/(protected)/(home)");
+    onSuccess: (data) => {
+      handleTransactionSuccess(data, 'income', selectedCategoryId, selectedAccountId);
     }
   });
 
   const transferMutation = api.transaction.createTransfer.useMutation({
-    onSuccess: async (data) => {
-      console.log('🔄 [TransferMutation] Transfer created, invalidating cache...');
-      const transactionMonth = data.outflowTransaction.date.getMonth() + 1;
-      const transactionYear = data.outflowTransaction.date.getFullYear();
-
-      // Comprehensive invalidation for transfer transactions
-      await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-        clearCache: true,
-      });
-
-      // Also invalidate charts for the transaction month
-      await InvalidationUtils.invalidateChartsQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Invalidate budget-related queries for real-time budget updates
-      await InvalidationUtils.invalidateBudgetQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Invalidate home section queries to refresh summary data
-      await InvalidationUtils.invalidateHomeSectionQueries(queryClient, {
-        currentMonth: transactionMonth,
-        currentYear: transactionYear,
-      });
-
-      // Wait for critical queries to refetch before navigation to ensure data is ready
-      try {
-        await queryClient.transaction.getMonthlySpending.refetch({
-          month: transactionMonth,
-          year: transactionYear,
-        });
-        await queryClient.account.listWithBalances.refetch();
-      } catch (error) {
-        console.warn('Failed to refetch queries before navigation, proceeding anyway:', error);
-      }
-
-      router.replace("/(protected)/(home)");
+    onSuccess: (data) => {
+      handleTransactionSuccess(data, 'transfer', null, selectedAccountId);
     }
   });
 
   // Store the transaction date for recurring rule invalidation
   const [lastTransactionDate, setLastTransactionDate] = useState<Date | null>(null);
 
+  /**
+   * Unified transaction success handler for immediate navigation and background invalidation
+   */
+  const handleTransactionSuccess = (
+    data: any,
+    transactionType: 'expense' | 'income' | 'transfer',
+    selectedCategoryId?: string | null,
+    selectedAccountId?: string | null
+  ) => {
+    console.log(`✅ [TransactionSuccess] ${transactionType} created, navigating immediately`);
+    
+    // Extract transaction date based on transaction type
+    const transactionDate = transactionType === 'transfer' 
+      ? data.outflowTransaction.date 
+      : data.date;
+    
+    const transactionMonth = transactionDate.getMonth() + 1;
+    const transactionYear = transactionDate.getFullYear();
+
+    // 🚀 IMMEDIATE NAVIGATION - User sees instant feedback
+    router.replace("/(protected)/(home)");
+
+    // 📋 BACKGROUND INVALIDATION - Happens asynchronously
+    console.log(`📋 [TransactionSuccess] Scheduling background invalidations for ${transactionType}`);
+    
+    scheduleTransactionInvalidations({
+      currentMonth: transactionMonth,
+      currentYear: transactionYear,
+      categoryId: selectedCategoryId || undefined,
+      accountId: selectedAccountId || undefined,
+      transactionType: transactionType,
+    });
+
+    // Success haptic feedback
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
   const recurringRuleMutation = api.recurringRule.create.useMutation({
-    onSuccess: async () => {
-      console.log('🔁 [RecurringRuleMutation] Recurring rule created, invalidating cache...');
-
-      // Invalidate recurring rule queries first
-      await InvalidationUtils.invalidateRecurringRuleQueries(queryClient);
-
-      // If we have the last transaction date, use it for targeted invalidation
+    onSuccess: () => {
+      console.log('🔁 [RecurringRuleMutation] Recurring rule created, navigating immediately');
+      
+      // 🚀 IMMEDIATE NAVIGATION
+      router.replace("/(protected)/(home)");
+      
+      // 📋 BACKGROUND INVALIDATION for recurring rules
+      scheduleRecurringInvalidations();
+      
+      // If we have transaction date info, also schedule transaction invalidations
       if (lastTransactionDate) {
         const transactionMonth = lastTransactionDate.getMonth() + 1;
         const transactionYear = lastTransactionDate.getFullYear();
-
-        await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
+        
+        scheduleTransactionInvalidations({
           currentMonth: transactionMonth,
           currentYear: transactionYear,
-          clearCache: true,
+          categoryId: selectedCategoryId || undefined,
+          accountId: selectedAccountId || undefined,
+          transactionType: transactionType,
         });
-
-        // Also invalidate charts for the transaction month
-        await InvalidationUtils.invalidateChartsQueries(queryClient, {
-          currentMonth: transactionMonth,
-          currentYear: transactionYear,
-        });
-
-        // Invalidate budget-related queries for real-time budget updates
-        await InvalidationUtils.invalidateBudgetQueries(queryClient, {
-          currentMonth: transactionMonth,
-          currentYear: transactionYear,
-        });
-      } else {
-        // Fallback: broad invalidation
-        await InvalidationUtils.invalidateTransactionRelatedQueries(queryClient, {
-          clearCache: true,
-        });
-
-        // Also invalidate budgets broadly
-        await InvalidationUtils.invalidateBudgetQueries(queryClient);
       }
 
-      // Wait for critical queries to refetch before navigation to ensure data is ready
-      try {
-        if (lastTransactionDate) {
-          const transactionMonth = lastTransactionDate.getMonth() + 1;
-          const transactionYear = lastTransactionDate.getFullYear();
-          await queryClient.transaction.getMonthlySpending.refetch({
-            month: transactionMonth,
-            year: transactionYear,
-          });
-        }
-        await queryClient.account.listWithBalances.refetch();
-      } catch (error) {
-        console.warn('Failed to refetch queries before navigation, proceeding anyway:', error);
-      }
-
-      router.replace("/(protected)/(home)");
+      // Success haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   });
   
   const updateRecurringRuleMutation = api.recurringRule.update.useMutation({
-    onSuccess: async () => {
-      console.log('🔄 [UpdateRecurringRuleMutation] Recurring rule updated, invalidating cache...');
-      await InvalidationUtils.invalidateRecurringRuleQueries(queryClient, {
-        clearCache: true,
-      });
+    onSuccess: () => {
+      console.log('🔄 [UpdateRecurringRuleMutation] Recurring rule updated');
+      // Schedule background invalidation for recurring rules
+      scheduleRecurringInvalidations();
     },
     onError: (error) => {
       console.error('❌ [UpdateRecurringRuleMutation] Error updating recurring rule:', error);
@@ -632,7 +493,7 @@ export default function SummaryScreen() {
             accountId: selectedAccountId,
             description,
             amount: parseFloat(amount),
-            currency: "EUR",
+            currency: getCurrencySymbol() || "EUR",
             type: transactionType === "income" ? "INCOME" : "EXPENSE",
             subCategoryId: selectedCategoryId || undefined,
             startDate: selectedDate, // Use selected date as start date
@@ -647,13 +508,8 @@ export default function SummaryScreen() {
         }
       }
 
-      // Success feedback
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-
-
       // Navigation happens in the onSuccess handlers of the mutations
-      // No need to navigate here as it would create a duplicate navigation
+      // Success feedback and navigation handled by mutation handlers
     } catch (err) {
       // Error feedback
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

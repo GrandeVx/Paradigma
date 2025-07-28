@@ -122,7 +122,7 @@ const FlatListHeaderComponent: React.FC<{
         </Text>
         <Text
           className={`font-medium ${isPositive ? 'text-gray-400' : 'text-gray-400'}`}
-          style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
+          style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}
         >
           {formatCurrency(item.dailyTotal, { showSign: true })}
         </Text>
@@ -466,7 +466,7 @@ export default function AccountTransactionsScreen() {
             <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
               {t('home.transactions.income')}
             </Text>
-            <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+            <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
               {formatCurrency(income)}
             </Text>
           </View>
@@ -475,7 +475,7 @@ export default function AccountTransactionsScreen() {
             <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
               {t('home.transactions.expenses')}
             </Text>
-            <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+            <Text className="text-base font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
               {formatCurrency(expenses)}
             </Text>
           </View>
@@ -484,7 +484,7 @@ export default function AccountTransactionsScreen() {
             <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
               {t('home.transactions.remaining')}
             </Text>
-            <Text className="text-base font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+            <Text className="text-base font-medium text-black" style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}>
               {formatCurrency(remaining)}
             </Text>
           </View>
@@ -547,7 +547,7 @@ export default function AccountTransactionsScreen() {
             zIndex: 1
           }}
         >
-          <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>🏠</Text>
+          <Text className="text-3xl" style={{ fontFamily: 'ApfelGrotezk', fontSize: 32 }}>🏠</Text>
         </View>
         <View
           className="rounded-xl p-4"
@@ -561,7 +561,7 @@ export default function AccountTransactionsScreen() {
             zIndex: 3
           }}
         >
-          <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>💳</Text>
+          <Text className="text-3xl" style={{ fontFamily: 'ApfelGrotezk', fontSize: 32 }}>💳</Text>
         </View>
         <View
           className="absolute right-12 rounded-xl p-4"
@@ -576,7 +576,7 @@ export default function AccountTransactionsScreen() {
             zIndex: 2
           }}
         >
-          <Text className="text-3xl" style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}>📊</Text>
+          <Text className="text-3xl" style={{ fontFamily: 'ApfelGrotezk', fontSize: 32 }}>📊</Text>
         </View>
       </View>
 

@@ -70,10 +70,10 @@ export const AccountHeader = React.memo<AccountHeaderProps>(({
         <Text className="text-gray-500 font-medium" style={{ fontFamily: 'DM Sans', fontSize: 16}} >Bilancio</Text>
         <View className="flex-row items-baseline">
           <Text className="text-gray-400 text-lg font-normal">{getCurrencySymbol()}</Text>
-          <Text className="text-black font-medium" style={{ fontFamily: 'Apfel Grotezk', fontSize: 20 }}>
+          <Text className="text-black font-medium" style={{ fontFamily: 'ApfelGrotezk', fontSize: 20 }}>
             {formatCurrency.integer}
           </Text>
-          <Text className="text-black font-normal" style={{ fontFamily: 'Apfel Grotezk', fontSize: 20 }}>
+          <Text className="text-black font-normal" style={{ fontFamily: 'ApfelGrotezk', fontSize: 20 }}>
             ,{formatCurrency.decimal}
           </Text>
         </View>

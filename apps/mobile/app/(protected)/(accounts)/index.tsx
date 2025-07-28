@@ -91,8 +91,8 @@ const AccountCard: React.FC<{
             <View className="flex-row items-baseline gap-2">
               <Text className="text-white text-base font-normal">{currencySymbol}</Text>
               <View className="flex-row items-baseline">
-                <Text className="text-white text-2xl font-medium" style={{ fontFamily: 'Apfel Grotezk' }}>{integer}</Text>
-                <Text className="text-white text-base font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>,{decimal}</Text>
+                <Text className="text-white text-2xl font-medium" style={{ fontFamily: 'ApfelGrotezk' }}>{integer}</Text>
+                <Text className="text-white text-base font-normal" style={{ fontFamily: 'ApfelGrotezk' }}>,{decimal}</Text>
               </View>
             </View>
           </View>
@@ -133,11 +133,11 @@ const AccountCard: React.FC<{
           <Text className="text-white font-semibold text-base">{account.name}</Text>
         </View>
 
-        <View className="flex-row items-baseline gap-2">
-          <Text className="text-white text-base font-normal">{currencySymbol}</Text>
+        <View className="flex-row items-baseline gap-1">
+          <Text className="text-white text-base font-normal" style={{ fontFamily: 'ApfelGrotezkMittel', fontWeight: '500' }}>{currencySymbol}</Text>
           <View className="flex-row items-baseline">
-            <Text className="text-white text-2xl font-medium">{integer}</Text>
-            <Text className="text-white text-base font-normal">,{decimal}</Text>
+            <Text className="text-white text-2xl font-medium" style={{ fontFamily: 'ApfelGrotezkMittel', fontWeight: '500' }}>{integer}</Text>
+            <Text className="text-white text-base font-normal" style={{ fontFamily: 'ApfelGrotezkMittel', fontWeight: '500' }}>,{decimal}</Text>
           </View>
         </View>
       </View>
@@ -287,12 +287,12 @@ export default function AccountsScreen() {
         {/* Top Section with Balance */}
         <View className="pb-10 items-center justify-center px-6">
           <View className="flex-row items-baseline justify-center w-full max-w-sm transition-all duration-300">
-            <Text className="text-gray-400" style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 32 }}>{currencySymbol}</Text>
+            <Text className="text-gray-400" style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 32 }}>{currencySymbol}</Text>
             <Pressable onPress={toggleBalanceBlur} className="relative">
               <View className={cn("flex-row items-baseline flex-shrink bg-white dark:bg-white", isBalanceBlurred ? "px-4" : "px-2")}>
                 <Text
                   className="text-black font-medium flex-shrink-0"
-                  style={{ fontFamily: 'Apfel Grotezk Mittel', fontSize: 64 }}
+                  style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 64 }}
                   numberOfLines={1}
                   adjustsFontSizeToFit={true}
                   minimumFontScale={0.7}
@@ -301,7 +301,7 @@ export default function AccountsScreen() {
                 </Text>
                 <Text
                   className="text-gray-400 font-normal flex-shrink-0"
-                  style={{ fontFamily: 'Apfel Grotezk', fontSize: 32 }}
+                  style={{ fontFamily: 'ApfelGrotezk', fontSize: 32 }}
                   numberOfLines={1}
                 >
                   {isLoading ? '' : `,${decimal}`}

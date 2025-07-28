@@ -128,7 +128,7 @@ export default function ValueScreen() {
               <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
                 ,
               </Text>
-              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
+              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[1] === '00' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
                 {formattedAmount.split('.')[1]}
               </Text>
             </View>

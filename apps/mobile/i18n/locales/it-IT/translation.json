@@ -302,6 +302,11 @@
     "ok": "OK",
     "actions": {
       "save": "Salva"
+    },
+    "currency": {
+      "EUR": "EUR",
+      "USD": "USD",
+      "GBP": "GBP"
     }
   },
   "budgets": {
@@ -387,6 +392,14 @@
       "goalDescription": "Obiettivo di risparmio per il conto {{name}}"
     }
   },
+  "network": {
+    "loading": "Caricamento...",
+    "initializing": "Inizializzazione...",
+    "reconnecting": "Riconnessione in corso...",
+    "noConnection": "Nessuna connessione internet",
+    "checkFailed": "Controllo rete fallito",
+    "maxRetriesReached": "Numero massimo di tentativi raggiunto, passaggio a controlli periodici"
+  },
   "transaction": {
     "new": {
       "title": "NUOVA TRANSAZIONE"
@@ -432,7 +445,8 @@
       "every180Days": "ogni 180 giorni"
     },
     "recurrence": {
-      "never": "Mai"
+      "never": "Mai",
+      "mai": "Mai"
     },
     "descriptions": {
       "expense": "Spesa",

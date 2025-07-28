@@ -265,97 +265,123 @@ export class InvalidationUtils {
   }
 
   /**
-   * Aggressively invalidates all chart-related queries with specific parameters.
-   * Use this when transactions are deleted to ensure charts update correctly.
+   * Optimized chart queries invalidation.
+   * Only invalidates current month by default to improve performance.
+   * Adjacent months are invalidated only when specifically requested.
    */
   static async invalidateChartsQueries(
     utils: ReturnType<typeof api.useContext>,
     options?: {
       currentMonth?: number;
       currentYear?: number;
+      includeAdjacentMonths?: boolean; // New option to control adjacent month invalidation
     }
   ) {
-    console.log('📊 [InvalidationUtils] Aggressively invalidating all chart queries...');
+    console.log('📊 [InvalidationUtils] Optimized chart queries invalidation...');
     
     try {
-      // Invalidate all transaction queries without month filters (broad)
-      await utils.transaction.invalidate();
-      
-      // If we have specific month/year, invalidate those queries specifically
       if (options?.currentMonth && options?.currentYear) {
-        const { currentMonth, currentYear } = options;
+        const { currentMonth, currentYear, includeAdjacentMonths = false } = options;
         
         console.log(`📊 [InvalidationUtils] Invalidating specific month queries: ${currentMonth}/${currentYear}`);
         
-        // Invalidate exact queries used by ChartsSection
-        await utils.transaction.getMonthlySummary.invalidate({
-          month: currentMonth,
-          year: currentYear,
-        });
+        // Invalidate current month queries
+        const currentMonthPromises = [
+          utils.transaction.getMonthlySummary.invalidate({
+            month: currentMonth,
+            year: currentYear,
+          }),
+          utils.transaction.getCategoryBreakdown.invalidate({
+            month: currentMonth,
+            year: currentYear,
+            type: 'expense',
+          }),
+          utils.transaction.getCategoryBreakdown.invalidate({
+            month: currentMonth,
+            year: currentYear,
+            type: 'income',
+          }),
+          utils.transaction.getDailySpending.invalidate({
+            month: currentMonth,
+            year: currentYear,
+          }),
+        ];
+
+        // Execute current month invalidations in parallel
+        await Promise.all(currentMonthPromises);
         
-        await utils.transaction.getCategoryBreakdown.invalidate({
-          month: currentMonth,
-          year: currentYear,
-          type: 'expense',
-        });
-        
-        await utils.transaction.getCategoryBreakdown.invalidate({
-          month: currentMonth,
-          year: currentYear,
-          type: 'income',
-        });
-        
-        await utils.transaction.getDailySpending.invalidate({
-          month: currentMonth,
-          year: currentYear,
-        });
-        
-        // Also invalidate adjacent months that might be cached
-        const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-        const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-        const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-        const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-        
-        // Previous month
-        await utils.transaction.getMonthlySummary.invalidate({
-          month: prevMonth,
-          year: prevYear,
-        });
-        await utils.transaction.getCategoryBreakdown.invalidate({
-          month: prevMonth,
-          year: prevYear,
-          type: 'expense',
-        });
-        await utils.transaction.getDailySpending.invalidate({
-          month: prevMonth,
-          year: prevYear,
-        });
-        
-        // Next month
-        await utils.transaction.getMonthlySummary.invalidate({
-          month: nextMonth,
-          year: nextYear,
-        });
-        await utils.transaction.getCategoryBreakdown.invalidate({
-          month: nextMonth,
-          year: nextYear,
-          type: 'expense',
-        });
-        await utils.transaction.getDailySpending.invalidate({
-          month: nextMonth,
-          year: nextYear,
-        });
+        // Only invalidate adjacent months if explicitly requested (for background processing)
+        if (includeAdjacentMonths) {
+          console.log('📊 [InvalidationUtils] Including adjacent months in invalidation...');
+          
+          const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+          const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+          const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+          const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+          
+          // Invalidate adjacent months in parallel
+          const adjacentMonthPromises = [
+            // Previous month
+            utils.transaction.getMonthlySummary.invalidate({ month: prevMonth, year: prevYear }),
+            utils.transaction.getCategoryBreakdown.invalidate({ month: prevMonth, year: prevYear, type: 'expense' }),
+            utils.transaction.getDailySpending.invalidate({ month: prevMonth, year: prevYear }),
+            
+            // Next month
+            utils.transaction.getMonthlySummary.invalidate({ month: nextMonth, year: nextYear }),
+            utils.transaction.getCategoryBreakdown.invalidate({ month: nextMonth, year: nextYear, type: 'expense' }),
+            utils.transaction.getDailySpending.invalidate({ month: nextMonth, year: nextYear }),
+          ];
+
+          await Promise.all(adjacentMonthPromises);
+        }
       } else {
-        // Fallback: Force refetch of critical chart queries without parameters
-        await utils.transaction.getMonthlySummary.invalidate();
-        await utils.transaction.getCategoryBreakdown.invalidate();
-        await utils.transaction.getSubCategoryBreakdown.invalidate();
-        await utils.transaction.getDailySpending.invalidate();
+        // Fallback: Only invalidate critical chart queries without broad transaction invalidation
+        const fallbackPromises = [
+          utils.transaction.getMonthlySummary.invalidate(),
+          utils.transaction.getCategoryBreakdown.invalidate(),
+          utils.transaction.getDailySpending.invalidate(),
+        ];
+
+        await Promise.all(fallbackPromises);
       }
       
       console.log('✅ [InvalidationUtils] Chart queries invalidated successfully');
     } catch (error) {
       console.error('❌ [InvalidationUtils] Error invalidating chart queries:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lightweight chart invalidation for immediate UI updates.
+   * Only invalidates current month essential queries.
+   */
+  static async invalidateChartsQueriesLight(
+    utils: ReturnType<typeof api.useContext>,
+    options: {
+      currentMonth: number;
+      currentYear: number;
+    }
+  ) {
+    console.log(`📊 [InvalidationUtils] Light chart invalidation: ${options.currentMonth}/${options.currentYear}`);
+    
+    try {
+      // Only invalidate essential chart queries for current month
+      const promises = [
+        utils.transaction.getMonthlySummary.invalidate({
+          month: options.currentMonth,
+          year: options.currentYear,
+        }),
+        utils.transaction.getDailySpending.invalidate({
+          month: options.currentMonth,
+          year: options.currentYear,
+        }),
+      ];
+
+      await Promise.all(promises);
+      console.log('✅ [InvalidationUtils] Light chart invalidation completed');
+    } catch (error) {
+      console.error('❌ [InvalidationUtils] Error in light chart invalidation:', error);
       throw error;
     }
   }

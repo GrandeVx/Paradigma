@@ -663,7 +663,7 @@ export default function BudgetScreen() {
                           )}
                         </Text>
                         <Text className="text-black font-normal" style={{ fontSize: 32 }}>
-                          ,{(budgetSummary.totalBudget - budgetSummary.totalSpent > 0 ? budgetSummary.totalBudget - budgetSummary.totalSpent : 0 % 1).toFixed(0).substring(2)}
+                          ,{(budgetSummary.totalBudget - budgetSummary.totalSpent > 0 ? budgetSummary.totalBudget - budgetSummary.totalSpent : 0 % 1).toFixed(2).substring(3)}
                         </Text>
                       </View>
                       <Text className="text-gray-500 text-center" style={{ fontSize: 14 }}>

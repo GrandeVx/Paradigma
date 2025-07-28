@@ -3,6 +3,7 @@ import { View, StyleSheet, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/ui/text";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing, runOnJS } from "react-native-reanimated";
+import { useTranslation } from 'react-i18next';
 
 interface NetworkState {
   isConnected: boolean;
@@ -18,6 +19,7 @@ interface LoadingScreenProps {
 }
 
 export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible, networkState }) => {
+  const { t } = useTranslation();
   // Animation values for currency symbols
   const dollarOpacity = useSharedValue(0);
   const euroOpacity = useSharedValue(0);
@@ -37,22 +39,22 @@ export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible, networ
   // Determine status message based on network state
   const getStatusMessage = () => {
     if (!networkState) {
-      return "Caricamento...";
+      return t('network.loading');
     }
 
     if (networkState.isLoading && !networkState.hasInitialConnection) {
-      return "Inizializzazione...";
+      return t('network.initializing');
     }
 
     if (networkState.isReconnecting) {
-      return "Riconnessione in corso...";
+      return t('network.reconnecting');
     }
 
     if (!networkState.isConnected && networkState.hasInitialConnection) {
-      return "Nessuna connessione internet";
+      return t('network.noConnection');
     }
 
-    return "Caricamento...";
+    return t('network.loading');
   };
 
   const statusMessage = getStatusMessage();

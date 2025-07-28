@@ -198,7 +198,7 @@ const SummaryContainer: React.FC<{
             {t('home.transactions.remaining')}
           </Text>
           <Text className="font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
-            {formatCurrency(remaining, { showSign: false })}
+            {formatCurrency(remaining, { showSign: remaining < 0 })}
           </Text>
         </View>
       </View>
@@ -211,12 +211,12 @@ const SubCategoryItem: React.FC<{
   formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
 }> = ({ subCategory, formatCurrency }) => {
   const { translations } = useLocalizedCategories();
-  
+
   // Get localized name for subcategory
-  const localizedName = subCategory.key && translations.sub[subCategory.key] 
-    ? translations.sub[subCategory.key] 
+  const localizedName = subCategory.key && translations.sub[subCategory.key]
+    ? translations.sub[subCategory.key]
     : subCategory.name;
-  
+
   return (
     <View className="flex-row items-center justify-between py-2 pl-6 pr-4">
       {/* Sub-category info */}
@@ -277,8 +277,8 @@ const AnimatedCategoryLegendItem: React.FC<{
   }));
 
   // Get localized name for category
-  const localizedName = category.key && translations.macro[category.key] 
-    ? translations.macro[category.key] 
+  const localizedName = category.key && translations.macro[category.key]
+    ? translations.macro[category.key]
     : category.name;
 
   return (

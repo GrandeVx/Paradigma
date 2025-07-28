@@ -8,13 +8,15 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "build-widget": "expo prebuild --template node_modules/@bacons/apple-targets/prebuild-blank.tgz --clean"
   },
   "jest": {
     "preset": "jest-expo"
   },
   "dependencies": {
     "@backpackapp-io/react-native-toast": "^0.13.0",
+    "@bacons/apple-targets": "^3.0.2",
     "@better-auth/expo": "^1.2.5",
     "@expo/vector-icons": "^14.1.0",
     "@gorhom/bottom-sheet": "^4",
@@ -22,8 +24,8 @@
     "@paradigma/api": "workspace:*",
     "@paradigma/auth": "workspace:*",
     "@paradigma/db": "workspace:*",
-    "@paradigma/styles": "workspace:*",
     "@paradigma/shared": "workspace:*",
+    "@paradigma/styles": "workspace:*",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-google-signin/google-signin": "^15.0.0",
     "@react-navigation/native": "^7.0.14",

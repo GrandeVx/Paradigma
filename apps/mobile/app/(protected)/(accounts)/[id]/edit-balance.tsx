@@ -215,9 +215,9 @@ export default function EditAccountBalance() {
           </View>
 
           <View className="flex flex-row items-center gap-2 justify-center">
-            <Text className="text-gray-300 text-4xl font-bold" style={{ fontFamily: 'Apfel Grotezk Mittel' }}>€</Text>
+            <Text className="text-gray-300 text-4xl font-bold" style={{ fontFamily: 'ApfelGrotezkMittel' }}>€</Text>
             <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
-              <Text className={`text-4xl font-bold ${displayAmount.integer === '0' ? 'text-gray-400' : 'text-black'}`} style={{ fontFamily: 'Apfel Grotezk Mittel' }}>
+              <Text className={`text-4xl font-bold ${displayAmount.integer === '0' ? 'text-gray-400' : 'text-black'}`} style={{ fontFamily: 'ApfelGrotezkMittel' }}>
                 {displayAmount.integer}
               </Text>
               <Text className={`text-4xl font-bold ${isDecimalActive ? (displayAmount.integer === '0' && displayAmount.decimal === '00' ? 'text-gray-400' : 'text-black') : 'text-gray-300'}`}>
