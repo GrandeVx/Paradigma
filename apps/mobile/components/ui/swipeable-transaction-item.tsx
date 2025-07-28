@@ -18,8 +18,9 @@ import * as Haptics from 'expo-haptics';
 import { useCurrency } from '@/hooks/use-currency';
 import { useLocalizedSubCategory } from '@/hooks/useLocalizedCategories';
 
-const ACTION_WIDTH = 75;
-const SWIPE_THRESHOLD = 60;
+const ACTION_WIDTH = 80;
+const SWIPE_THRESHOLD = 50; // Threshold to show delete background
+const FULL_SWIPE_THRESHOLD = 200; // Threshold to trigger delete confirmation
 // New thresholds for better gesture detection
 const HORIZONTAL_THRESHOLD = 15; // Minimum horizontal movement before capturing gesture
 const VERTICAL_THRESHOLD = 30; // Maximum vertical movement to allow horizontal gesture
@@ -77,10 +78,6 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
   const localizedSubCategory = useLocalizedSubCategory(transaction.subCategory);
 
   const handleEdit = () => {
-    // Reset position first
-    translateX.value = withSpring(0);
-    actionsOpacity.value = withTiming(0);
-
     // Navigate to edit based on context
     const basePath = context === 'accounts' ? '/(protected)/(accounts)' :
       context === 'budgets' ? '/(protected)/(budgets)' :
@@ -168,35 +165,52 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
       if (newTranslateX <= 0) {
         translateX.value = newTranslateX;
 
-        // Show actions when swiped enough
-        const progress = Math.abs(newTranslateX) / (ACTION_WIDTH * 2);
-        actionsOpacity.value = interpolate(
-          progress,
-          [0, 0.5, 1],
-          [0, 0.7, 1],
-          Extrapolate.CLAMP
-        );
+        // Progressive opacity based on swipe distance
+        const absTranslateX = Math.abs(newTranslateX);
+        
+        if (absTranslateX < SWIPE_THRESHOLD) {
+          // Before threshold - no background
+          actionsOpacity.value = 0;
+        } else if (absTranslateX < FULL_SWIPE_THRESHOLD) {
+          // Between thresholds - progressive opacity
+          const progress = (absTranslateX - SWIPE_THRESHOLD) / (FULL_SWIPE_THRESHOLD - SWIPE_THRESHOLD);
+          actionsOpacity.value = interpolate(
+            progress,
+            [0, 1],
+            [0.3, 1],
+            Extrapolate.CLAMP
+          );
+        } else {
+          // Beyond full swipe - full opacity
+          actionsOpacity.value = 1;
+        }
 
-        // Haptic feedback when reaching threshold
+        // Haptic feedback at different thresholds
         if (Math.abs(newTranslateX) > SWIPE_THRESHOLD && Math.abs(context.startX) <= SWIPE_THRESHOLD) {
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+        }
+        
+        // Stronger feedback when reaching full swipe
+        if (Math.abs(newTranslateX) > FULL_SWIPE_THRESHOLD && Math.abs(context.startX) <= FULL_SWIPE_THRESHOLD) {
+          runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
         }
       }
     },
     onEnd: (_, context) => {
-      // Only snap if this was a horizontal gesture
+      // Only process if this was a horizontal gesture
       if (!context.isHorizontalGesture) {
         return;
       }
 
-      const shouldSnap = Math.abs(translateX.value) > SWIPE_THRESHOLD;
+      const currentTranslateX = Math.abs(translateX.value);
 
-      if (shouldSnap) {
-        // Snap to show actions
-        translateX.value = withSpring(-ACTION_WIDTH * 2);
-        actionsOpacity.value = withTiming(1);
+      if (currentTranslateX >= FULL_SWIPE_THRESHOLD) {
+        // Full swipe detected - trigger delete confirmation
+        translateX.value = withSpring(0);
+        actionsOpacity.value = withTiming(0);
+        runOnJS(handleDelete)();
       } else {
-        // Snap back to closed position
+        // Always snap back to closed position if not fully swiped
         translateX.value = withSpring(0);
         actionsOpacity.value = withTiming(0);
       }
@@ -213,34 +227,34 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
 
   const actionsStyle = useAnimatedStyle(() => ({
     opacity: actionsOpacity.value,
+    width: Math.abs(translateX.value),
   }));
+  
+  const deleteIconScale = useAnimatedStyle(() => {
+    const progress = Math.abs(translateX.value) / FULL_SWIPE_THRESHOLD;
+    return {
+      transform: [{
+        scale: interpolate(
+          progress,
+          [0, 0.5, 1],
+          [0.8, 1, 1.2],
+          Extrapolate.CLAMP
+        )
+      }],
+    };
+  });
 
   return (
     <View className="relative">
-      {/* Action Buttons Background */}
+      {/* Delete Action Background */}
       <Animated.View
         style={[actionsStyle]}
-        className="absolute right-0 top-0 bottom-0 flex-row"
+        className="absolute right-0 top-0 bottom-0 bg-red-500 flex items-center justify-center"
       >
-        {/* Edit Button */}
-        <TouchableOpacity
-          onPress={handleEdit}
-          className="w-[75px] bg-blue-500 items-center justify-center"
-          activeOpacity={0.7}
-        >
-          <SvgIcon name="edit" color="white" size={20} />
-          <Text className="text-white text-xs mt-1 font-medium">Edit</Text>
-        </TouchableOpacity>
-
-        {/* Delete Button */}
-        <TouchableOpacity
-          onPress={handleDelete}
-          className="w-[75px] bg-red-500 items-center justify-center"
-          activeOpacity={0.7}
-        >
-          <SvgIcon name="delete" color="white" size={20} />
-          <Text className="text-white text-xs mt-1 font-medium">Delete</Text>
-        </TouchableOpacity>
+        <Animated.View style={[deleteIconScale]} className="items-center">
+          <SvgIcon name="delete" color="white" size={24} />
+          <Text className="text-white text-xs mt-1 font-medium">Elimina</Text>
+        </Animated.View>
       </Animated.View>
 
       {/* Transaction Item */}
@@ -282,7 +296,7 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
             <Text
               className={`text-right font-medium ${isIncome ? 'text-green-600' : 'text-gray-500'
                 }`}
-              style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
+              style={{ fontFamily: 'ApfelGrotezk', fontSize: 16 }}
             >
               {formatCurrency(transaction.amount, { showSign: isIncome })}
             </Text>
