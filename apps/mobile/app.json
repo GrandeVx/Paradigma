@@ -17,7 +17,7 @@
       "appleTeamId": "CA5W3WY58U",
       "entitlements": {
         "com.apple.security.application-groups": [
-          "com.grandevx.balance.widget"
+          "group.com.grandevx.balance.widget"
         ]
       },
       "jsEngine": "hermes"
