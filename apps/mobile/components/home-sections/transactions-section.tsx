@@ -741,6 +741,11 @@ export const TransactionsSection: React.FC = () => {
   // Memoized FlatList key extractor
   const keyExtractor = useCallback((item: FlatListItem) => item.id, []);
 
+  // Memoized getItemType for better FlashList performance and gesture isolation
+  const getItemType = useCallback((item: FlatListItem) => {
+    return item.type === 'header' ? 'header' : 'transaction';
+  }, []);
+
   // Memoized animated styles
   const contentStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
@@ -883,6 +888,7 @@ export const TransactionsSection: React.FC = () => {
           data={flatListData}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
+          getItemType={getItemType}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 96 }}
           refreshControl={
@@ -894,6 +900,16 @@ export const TransactionsSection: React.FC = () => {
           }
           removeClippedSubviews={true}
           estimatedItemSize={60}
+          drawDistance={200}
+          extraData={`${currentMonth}-${currentYear}`}
+          overrideItemLayout={(layout, item) => {
+            // Provide exact sizes for better recycling and gesture isolation
+            if (item.type === 'header') {
+              layout.size = 35; // Header height
+            } else {
+              layout.size = 60; // Transaction item height
+            }
+          }}
         />
       )}
     </Animated.View>

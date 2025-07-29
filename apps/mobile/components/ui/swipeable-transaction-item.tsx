@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { View, TouchableOpacity, Alert } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -9,6 +9,7 @@ import Animated, {
   interpolate,
   Extrapolate,
   runOnJS,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { Text } from '@/components/ui/text';
@@ -21,9 +22,36 @@ import { useLocalizedSubCategory } from '@/hooks/useLocalizedCategories';
 const ACTION_WIDTH = 80;
 const SWIPE_THRESHOLD = 50; // Threshold to show delete background
 const FULL_SWIPE_THRESHOLD = 200; // Threshold to trigger delete confirmation
-// New thresholds for better gesture detection
-const HORIZONTAL_THRESHOLD = 15; // Minimum horizontal movement before capturing gesture
-const VERTICAL_THRESHOLD = 30; // Maximum vertical movement to allow horizontal gesture
+// Minimized thresholds to reduce scroll conflict to minimum
+const HORIZONTAL_ACTIVE_OFFSET = 3; // activeOffsetX - very small for minimal interference
+const VERTICAL_FAIL_OFFSET = 2; // failOffsetY - very small to fail immediately on vertical gestures
+// Legacy thresholds for gesture logic (if needed)
+const HORIZONTAL_THRESHOLD = 10; 
+const VERTICAL_THRESHOLD = 15;
+
+// Global state to manage active swipe instances - prevents multiple simultaneous swipes
+let activeSwipeInstance: string | null = null;
+const activeSwipeCallbacks = new Map<string, () => void>();
+
+// Debug flag - set to true for gesture debugging
+const DEBUG_GESTURES = __DEV__ && false;
+
+// Global function to reset all other active swipes
+const resetOtherSwipes = (currentId: string) => {
+  if (DEBUG_GESTURES) {
+    console.log(`[SwipeGesture] Resetting other swipes, activating: ${currentId}`);
+  }
+  
+  activeSwipeCallbacks.forEach((resetCallback, id) => {
+    if (id !== currentId) {
+      if (DEBUG_GESTURES) {
+        console.log(`[SwipeGesture] Resetting swipe: ${id}`);
+      }
+      resetCallback();
+    }
+  });
+  activeSwipeInstance = currentId;
+};
 
 interface SwipeableTransactionItemProps {
   transaction: {
@@ -46,7 +74,7 @@ interface SwipeableTransactionItemProps {
   context?: 'home' | 'accounts' | 'budgets';
 }
 
-export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> = React.memo(({
+const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps> = ({
   transaction,
   onDelete,
   context = 'home',
@@ -60,9 +88,48 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
   const scale = useSharedValue(1);
   const actionsOpacity = useSharedValue(0);
 
+  // Reset function to close this swipe instance
+  const resetSwipe = useCallback(() => {
+    'worklet';
+    cancelAnimation(translateX);
+    cancelAnimation(actionsOpacity);
+    translateX.value = withSpring(0, { damping: 20, stiffness: 300 });
+    actionsOpacity.value = withTiming(0, { duration: 200 });
+  }, [translateX, actionsOpacity]);
+
+  // Register/unregister this instance for global coordination
+  useEffect(() => {
+    const instanceId = transaction.id;
+    activeSwipeCallbacks.set(instanceId, resetSwipe);
+    
+    if (DEBUG_GESTURES) {
+      console.log(`[SwipeGesture] Registered instance: ${instanceId}`);
+    }
+    
+    return () => {
+      activeSwipeCallbacks.delete(instanceId);
+      if (activeSwipeInstance === instanceId) {
+        activeSwipeInstance = null;
+      }
+      
+      if (DEBUG_GESTURES) {
+        console.log(`[SwipeGesture] Unregistered instance: ${instanceId}`);
+      }
+    };
+  }, [transaction.id, resetSwipe]);
+
+  // Force reset when transaction ID changes (FlashList recycling)
+  useEffect(() => {
+    resetSwipe();
+  }, [transaction.id, resetSwipe]);
+
   // Cleanup animations to prevent memory leaks - PERFORMANCE OPTIMIZATION
   useEffect(() => {
     return () => {
+      cancelAnimation(translateX);
+      cancelAnimation(opacity);
+      cancelAnimation(scale);
+      cancelAnimation(actionsOpacity);
       translateX.value = 0;
       opacity.value = 1;
       scale.value = 1;
@@ -122,43 +189,21 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
     PanGestureHandlerGestureEvent,
     {
       startX: number;
-      gestureStarted: boolean;
-      isHorizontalGesture: boolean;
+      instanceId: string;
     }
   >({
     onStart: (_, context) => {
       context.startX = translateX.value;
-      context.gestureStarted = false;
-      context.isHorizontalGesture = false;
+      context.instanceId = transaction.id;
+      
+      // Reset other swipes immediately when this gesture starts
+      // The native activeOffsetX/failOffsetY handles direction detection
+      if (activeSwipeInstance !== context.instanceId) {
+        runOnJS(resetOtherSwipes)(context.instanceId);
+      }
     },
     onActive: (event, context) => {
-      // Only start processing after determining gesture direction
-      if (!context.gestureStarted) {
-        const absX = Math.abs(event.translationX);
-        const absY = Math.abs(event.translationY);
-
-        // Wait for sufficient movement to determine direction
-        if (absX > HORIZONTAL_THRESHOLD || absY > VERTICAL_THRESHOLD) {
-          context.gestureStarted = true;
-
-          // Determine if this is primarily a horizontal gesture
-          context.isHorizontalGesture = absX > absY && absX > HORIZONTAL_THRESHOLD;
-
-          // If it's not a horizontal gesture, don't process further
-          if (!context.isHorizontalGesture) {
-            return;
-          }
-        } else {
-          // Not enough movement yet, wait
-          return;
-        }
-      }
-
-      // Only process if this was determined to be a horizontal gesture
-      if (!context.isHorizontalGesture) {
-        return;
-      }
-
+      // Simplified logic - native gesture handler already confirmed this is horizontal
       const newTranslateX = context.startX + event.translationX;
 
       // Only allow swipe to the left (negative values)
@@ -169,10 +214,8 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
         const absTranslateX = Math.abs(newTranslateX);
         
         if (absTranslateX < SWIPE_THRESHOLD) {
-          // Before threshold - no background
           actionsOpacity.value = 0;
         } else if (absTranslateX < FULL_SWIPE_THRESHOLD) {
-          // Between thresholds - progressive opacity
           const progress = (absTranslateX - SWIPE_THRESHOLD) / (FULL_SWIPE_THRESHOLD - SWIPE_THRESHOLD);
           actionsOpacity.value = interpolate(
             progress,
@@ -181,27 +224,21 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
             Extrapolate.CLAMP
           );
         } else {
-          // Beyond full swipe - full opacity
           actionsOpacity.value = 1;
         }
 
         // Haptic feedback at different thresholds
-        if (Math.abs(newTranslateX) > SWIPE_THRESHOLD && Math.abs(context.startX) <= SWIPE_THRESHOLD) {
+        if (absTranslateX > SWIPE_THRESHOLD && Math.abs(context.startX) <= SWIPE_THRESHOLD) {
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
         }
         
-        // Stronger feedback when reaching full swipe
-        if (Math.abs(newTranslateX) > FULL_SWIPE_THRESHOLD && Math.abs(context.startX) <= FULL_SWIPE_THRESHOLD) {
+        if (absTranslateX > FULL_SWIPE_THRESHOLD && Math.abs(context.startX) <= FULL_SWIPE_THRESHOLD) {
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
         }
       }
     },
     onEnd: (_, context) => {
-      // Only process if this was a horizontal gesture
-      if (!context.isHorizontalGesture) {
-        return;
-      }
-
+      // Native gesture handler ensures we only get here for confirmed horizontal gestures
       const currentTranslateX = Math.abs(translateX.value);
 
       if (currentTranslateX >= FULL_SWIPE_THRESHOLD) {
@@ -211,8 +248,13 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
         runOnJS(handleDelete)();
       } else {
         // Always snap back to closed position if not fully swiped
-        translateX.value = withSpring(0);
-        actionsOpacity.value = withTiming(0);
+        translateX.value = withSpring(0, { damping: 20, stiffness: 300 });
+        actionsOpacity.value = withTiming(0, { duration: 200 });
+      }
+
+      // Clear active instance when gesture ends
+      if (activeSwipeInstance === context.instanceId) {
+        activeSwipeInstance = null;
       }
     },
   });
@@ -261,8 +303,8 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
       <PanGestureHandler
         ref={panRef}
         onGestureEvent={gestureHandler}
-        activeOffsetX={[-HORIZONTAL_THRESHOLD, HORIZONTAL_THRESHOLD]}
-        failOffsetY={[-VERTICAL_THRESHOLD, VERTICAL_THRESHOLD]}
+        activeOffsetX={[-HORIZONTAL_ACTIVE_OFFSET, HORIZONTAL_ACTIVE_OFFSET]}
+        failOffsetY={[-VERTICAL_FAIL_OFFSET, VERTICAL_FAIL_OFFSET]}
         shouldCancelWhenOutside={true}
       >
         <Animated.View style={animatedStyle} className="bg-white">
@@ -305,4 +347,34 @@ export const SwipeableTransactionItem: React.FC<SwipeableTransactionItemProps> =
       </PanGestureHandler>
     </View>
   );
-}); 
+};
+
+// Custom comparison function for React.memo to prevent unnecessary re-renders
+const arePropsEqual = (prevProps: SwipeableTransactionItemProps, nextProps: SwipeableTransactionItemProps) => {
+  // Compare transaction data
+  if (prevProps.transaction.id !== nextProps.transaction.id) return false;
+  if (prevProps.transaction.amount !== nextProps.transaction.amount) return false;
+  if (prevProps.transaction.description !== nextProps.transaction.description) return false;
+  if (prevProps.transaction.type !== nextProps.transaction.type) return false;
+  
+  // Compare context
+  if (prevProps.context !== nextProps.context) return false;
+  
+  // Compare category data (shallow comparison)
+  const prevCategory = prevProps.transaction.category;
+  const nextCategory = nextProps.transaction.category;
+  if (prevCategory?.name !== nextCategory?.name || 
+      prevCategory?.icon !== nextCategory?.icon || 
+      prevCategory?.color !== nextCategory?.color) return false;
+  
+  // Compare subcategory data
+  const prevSubCategory = prevProps.transaction.subCategory;
+  const nextSubCategory = nextProps.transaction.subCategory;
+  if (prevSubCategory?.name !== nextSubCategory?.name || 
+      prevSubCategory?.icon !== nextSubCategory?.icon) return false;
+  
+  // Don't compare onDelete function reference - it may change but functionality remains the same
+  return true;
+};
+
+export const SwipeableTransactionItem = React.memo(SwipeableTransactionItemComponent, arePropsEqual);
