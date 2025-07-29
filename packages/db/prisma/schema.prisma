@@ -31,6 +31,14 @@ model Whitelist {
   @@map("whitelist")
 }
 
+enum SubscriptionStatus {
+  FREE
+  TRIAL
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
 model User {
   id                String    @id @unique @default(uuid())
   username          String?   @unique
@@ -47,6 +55,14 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   currency          String?   @default("EUR") @map("currency")
+  
+  // Subscription fields
+  isPremium              Boolean            @default(false) @map("is_premium")
+  subscriptionStatus     SubscriptionStatus @default(FREE) @map("subscription_status")
+  subscriptionStartDate  DateTime?          @map("subscription_start_date")
+  subscriptionEndDate    DateTime?          @map("subscription_end_date")
+  trialEndDate          DateTime?          @map("trial_end_date")
+  superwallCustomerId   String?            @map("superwall_customer_id")
 
   moneyAccounts  MoneyAccount[]
   recurringRules RecurringTransactionRule[]
@@ -58,6 +74,9 @@ model User {
   accounts Account[]
 
   @@index([id])
+  @@index([isPremium])
+  @@index([subscriptionStatus])
+  @@index([superwallCustomerId])
   @@map("user")
 }
 

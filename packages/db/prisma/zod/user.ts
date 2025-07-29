@@ -1,4 +1,5 @@
 import * as z from "zod"
+import { SubscriptionStatus } from "@prisma/client"
 import { CompleteMoneyAccount, relatedMoneyAccountSchema, CompleteRecurringTransactionRule, relatedRecurringTransactionRuleSchema, CompleteTransaction, relatedTransactionSchema, CompleteBudget, relatedBudgetSchema, CompleteSession, relatedSessionSchema, CompleteAccount, relatedAccountSchema } from "./index"
 
 export const userSchema = z.object({
@@ -17,6 +18,12 @@ export const userSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   currency: z.string().nullish(),
+  isPremium: z.boolean(),
+  subscriptionStatus: z.nativeEnum(SubscriptionStatus),
+  subscriptionStartDate: z.date().nullish(),
+  subscriptionEndDate: z.date().nullish(),
+  trialEndDate: z.date().nullish(),
+  superwallCustomerId: z.string().nullish(),
 })
 
 export interface CompleteUser extends z.infer<typeof userSchema> {
