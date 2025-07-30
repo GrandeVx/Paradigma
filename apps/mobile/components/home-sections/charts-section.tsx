@@ -167,7 +167,7 @@ const SummaryContainer: React.FC<{
   const { t } = useTranslation();
 
   return (
-    <View className="bg-gray-50 rounded-3xl py-6 px-4 mb-4">
+    <View className="bg-gray-50 rounded-3xl p-4 mb-4">
       <MonthSelector
         currentMonth={currentMonth}
         currentYear={currentYear}
@@ -179,7 +179,7 @@ const SummaryContainer: React.FC<{
           <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.income')}
           </Text>
-          <Text className="font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+          <Text className="font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 16 }}>
             {formatCurrency(income, { showSign: false })}
           </Text>
         </View>
@@ -188,7 +188,7 @@ const SummaryContainer: React.FC<{
           <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.expenses')}
           </Text>
-          <Text className="font-medium text-gray-700" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+          <Text className="font-medium text-gray-700" style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 16 }}>
             {formatCurrency(expenses, { showSign: false })}
           </Text>
         </View>
@@ -197,7 +197,7 @@ const SummaryContainer: React.FC<{
           <Text className="font-medium text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
             {t('home.transactions.remaining')}
           </Text>
-          <Text className="font-medium text-black" style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}>
+          <Text className="font-medium text-black" style={{ fontFamily: 'ApfelGrotezkMittel', fontSize: 16 }}>
             {formatCurrency(remaining, { showSign: remaining < 0 })}
           </Text>
         </View>
@@ -648,7 +648,7 @@ export const ChartsSection: React.FC = () => {
   }
 
   return (
-    <Animated.View style={contentStyle} className="flex-1 mx-4">
+    <Animated.View style={contentStyle} className="flex-1 mx-4 pt-2">
       <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
         {/* Summary Container */}
         <Animated.View style={summaryStyle} >

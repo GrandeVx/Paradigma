@@ -13,9 +13,9 @@ import * as WebBrowser from "expo-web-browser";
 import { reloadAppAsync } from "expo";
 import { api } from "@/lib/api";
 import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
-import { ManualUpdateChecker } from "@/components/ui";
 import { useCurrency, type Currency } from "@/hooks/use-currency";
 import { useProfileIcon } from "@/hooks/use-profile-icon";
+import { useUpdateStatus } from "@/hooks/use-update-status";
 import { cacheUtils, budgetUtils, transactionUtils, goalsUtils, notificationUtils } from "@/lib/mmkv-storage";
 import { useBiometricAuth } from "@/hooks/use-biometric-auth";
 import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
@@ -46,9 +46,10 @@ const CategoryItem: React.FC<{
   hasArrow?: boolean;
   isToggle?: boolean;
   toggleValue?: boolean;
+  customIcon?: { name: string; color: string; size?: number };
   onPress?: () => void;
   textColor?: string;
-}> = ({ label, value, hasArrow = false, isToggle = false, toggleValue = false, onPress, textColor = "#6B7280" }) => (
+}> = ({ label, value, hasArrow = false, isToggle = false, toggleValue = false, customIcon, onPress, textColor = "#6B7280" }) => (
   <Pressable style={styles.categoryItem} onPress={onPress}>
     <Text style={[styles.categoryLabel, { color: textColor }]}>{label}</Text>
     {value && (
@@ -59,7 +60,15 @@ const CategoryItem: React.FC<{
         <View style={[styles.toggleKnob, toggleValue && styles.toggleKnobActive]} />
       </View>
     )}
-    {hasArrow && (
+    {customIcon && (
+      <SvgIcon
+        name={customIcon.name as any}
+        width={customIcon.size || 16}
+        height={customIcon.size || 16}
+        color={customIcon.color}
+      />
+    )}
+    {hasArrow && !customIcon && (
       <SvgIcon name="right" width={16} height={16} color="#6B7280" />
     )}
   </Pressable>
@@ -154,6 +163,7 @@ export default function ProfileScreen() {
   const { t, i18n: i18nInstance } = useTranslation();
   const { currency, setCurrency, supportedCurrencies } = useCurrency();
   const { icon, setIcon, supportedIcons } = useProfileIcon();
+  const updateStatus = useUpdateStatus();
 
   const handleLanguageChange = async (language: string) => {
     try {
@@ -304,15 +314,15 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               console.log("🔄 Restarting onboarding process...");
-              
+
               // Set onboarding as not completed
               await AsyncStorage.setItem("hasCompletedOnboarding", "false");
-              
+
               // Clear the onboarded state in Supabase context
               await setIsOnboarded(false);
-              
+
               console.log("✅ Onboarding reset completed");
-              
+
               // Navigate to onboarding
               router.replace("/(onboarding)");
             } catch (error) {
@@ -466,10 +476,16 @@ export default function ProfileScreen() {
 
           {/* AGGIORNAMENTI */}
           <Section title={t('profile.updates')}>
-            <View style={styles.updateSection}>
-              <ManualUpdateChecker />
-            </View>
-
+            <CategoryItem
+              label={t('profile.updates')}
+              value={updateStatus.label}
+              customIcon={{
+                name: "refresh",
+                color: updateStatus.iconColor,
+                size: 16
+              }}
+              onPress={updateStatus.onPress}
+            />
           </Section>
 
 
@@ -673,11 +689,6 @@ const styles = StyleSheet.create({
   sectionContainer: {
     paddingHorizontal: 16,
     gap: 8,
-  },
-  updateSection: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    padding: 16,
   },
   profileContainer: {
     alignItems: "center",
