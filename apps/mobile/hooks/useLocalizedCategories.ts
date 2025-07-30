@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import type { MacroCategory, SubCategory } from '@prisma/client'
 import {
   localizeMacroCategories,
@@ -13,17 +13,28 @@ import {
   type LocalizedMacroCategory,
   type LocalizedSubCategory
 } from '@paradigma/shared'
+import { TranslationCache } from '@/lib/translation-cache'
 
 /**
  * Hook personalizzato per gestire le traduzioni delle categorie
  * Utilizza il sistema i18n di React per ottenere le traduzioni corrette
  */
 export function useLocalizedCategories() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const currentLanguage = i18n.language
 
-  // Crea l'oggetto traduzioni dalla configurazione i18n
-  const translations: CategoryTranslations = useMemo(() => ({
-    macro: {
+  // Crea l'oggetto traduzioni dalla configurazione i18n con caching
+  const translations: CategoryTranslations = useMemo(() => {
+    // Try to get cached translations first
+    const cachedTranslations = TranslationCache.getCachedTranslations(currentLanguage);
+    
+    if (cachedTranslations) {
+      return cachedTranslations;
+    }
+
+    // If no cache hit, generate translations from i18n
+    const freshTranslations: CategoryTranslations = {
+      macro: {
       casa: t('categories.macro.casa'),
       cibo_bevande: t('categories.macro.cibo_bevande'),
       trasporti: t('categories.macro.trasporti'),
@@ -145,13 +156,24 @@ export function useLocalizedCategories() {
       investimenti_interessi: t('categories.sub.investimenti_interessi'),
       investimenti_crypto: t('categories.sub.investimenti_crypto'),
 
-      // Extra
-      extra_vendite: t('categories.sub.extra_vendite'),
-      extra_regali: t('categories.sub.extra_regali'),
-      extra_rimborsi: t('categories.sub.extra_rimborsi'),
-      extra_altro: t('categories.sub.extra_altro')
-    }
-  }), [t])
+        // Extra
+        extra_vendite: t('categories.sub.extra_vendite'),
+        extra_regali: t('categories.sub.extra_regali'),
+        extra_rimborsi: t('categories.sub.extra_rimborsi'),
+        extra_altro: t('categories.sub.extra_altro')
+      }
+    };
+
+    // Cache the fresh translations for future use
+    TranslationCache.cacheTranslations(freshTranslations, currentLanguage);
+    
+    return freshTranslations;
+  }, [t, currentLanguage])
+
+  // Effect to preload translations when language changes
+  useEffect(() => {
+    TranslationCache.preloadCommonTranslations(currentLanguage);
+  }, [currentLanguage]);
 
   // Funzioni helper che utilizzano le traduzioni
   const localizeCategory = (category: MacroCategory): LocalizedMacroCategory => ({

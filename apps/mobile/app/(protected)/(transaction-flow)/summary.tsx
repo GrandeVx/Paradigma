@@ -23,7 +23,6 @@ import { api } from "@/lib/api";
 import { IconName } from "@/components/ui/icons";
 import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
-import { InvalidationUtils } from '@/lib/invalidation-utils';
 import { useAsyncInvalidation } from '@/hooks/use-async-invalidation';
 // Removed StackActions import - using normal router navigation instead
 
@@ -43,7 +42,6 @@ export default function SummaryScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams<{ amount: string, type: TransactionType }>();
-  const queryClient = api.useContext();
   const { getCurrencySymbol } = useCurrency();
   const { scheduleTransactionInvalidations, scheduleRecurringInvalidations } = useAsyncInvalidation();
 
@@ -716,10 +714,10 @@ export default function SummaryScreen() {
                         </View>
                       </Pressable>
                       <View className="flex-row gap-12">
-                        <Pressable onPress={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}>
+                        <Pressable hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}>
                           <SvgIcon name="left" size={14} color="black" />
                         </Pressable>
-                        <Pressable disabled={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date()} onPress={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}>
+                        <Pressable hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} disabled={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date()} onPress={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}>
                           <SvgIcon name="right" size={14} color={new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000) > new Date() ? 'gray' : 'black'} />
                         </Pressable>
                       </View>
