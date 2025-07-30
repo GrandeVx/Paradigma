@@ -3,7 +3,7 @@ import { z } from "zod";
 // Base transaction schema for common fields
 const baseTransactionSchema = z.object({
   accountId: z.string(),
-  description: z.string().min(1),
+  description: z.string(),
   date: z.date(),
   subCategoryId: z.string().optional(),
   notes: z.string().optional(),
@@ -26,7 +26,7 @@ export const createTransferSchema = z.object({
   toAccountId: z.string(),
   amount: z.number().positive(),
   date: z.date(),
-  description: z.string().min(1),
+  description: z.string(),
   notes: z.string().optional(),
   recurringRuleId: z.string().optional(), // Link to recurring rule for installments
 });
@@ -53,7 +53,7 @@ export const updateTransactionSchema = z.object({
   accountId: z.string().optional(),
   amount: z.number().optional(),
   date: z.date().optional(),
-  description: z.string().min(1).optional(),
+  description: z.string().optional(),
   subCategoryId: z.string().nullish(),
   notes: z.string().nullish(),
 });

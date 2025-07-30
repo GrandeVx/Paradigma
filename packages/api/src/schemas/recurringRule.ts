@@ -14,7 +14,7 @@ export const getRecurringRuleByIdSchema = z.object({
 // Schema for creating a recurring rule
 export const createRecurringRuleSchema = z.object({
   accountId: z.string(),
-  description: z.string().min(1),
+  description: z.string(),
   amount: z.number().positive(),
   totalAmount: z.number().positive().optional(), // For installments: original total amount
   currency: z.string().default("EUR"),
@@ -44,7 +44,7 @@ export const updateRecurringRuleSchema = z.object({
   ruleId: z.string(),
   
   // Optional fields to update
-  description: z.string().min(1).optional(),
+  description: z.string().optional(),
   amount: z.number().positive().optional(),
   totalAmount: z.number().positive().optional(), // For installments: original total amount
   accountId: z.string().optional(),
