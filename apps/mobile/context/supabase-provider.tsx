@@ -11,6 +11,9 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import Constants from 'expo-constants';
 import { biometricUtils } from "@/lib/mmkv-storage";
 import { BiometricAuthScreen } from "@/components/BiometricAuthScreen";
+import { useSubscriptionFeatures } from "@/hooks/useFeatureFlags";
+import { useSuperwall } from "@/components/useSuperwall";
+import { SUPERWALL_TRIGGERS } from "@/config/superwall";
 
 
 const STORAGE_KEY = "hasCompletedOnboarding";
@@ -68,8 +71,8 @@ export const SupabaseContext = createContext<SupabaseContextProps>({
 export const useSupabase = () => useContext(SupabaseContext);
 
 
-export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
-
+// Inner component that has access to subscription hooks
+const SupabaseProviderInner = ({ children }: SupabaseProviderProps) => {
   const router = useRouter();
   const segments = useSegments();
   const rootNavigation = useRootNavigation();
@@ -83,6 +86,10 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
   const [skipAutoRouting, setSkipAutoRouting] = useState<boolean>(false);
   const [needsBiometricAuth, setNeedsBiometricAuth] = useState<boolean>(false);
   const [showBiometricScreen, setShowBiometricScreen] = useState<boolean>(false);
+
+  // Subscription features
+  const { shouldRequireSubscription, isBetaMode } = useSubscriptionFeatures();
+  const { isSubscribed, isLoading: isSubscriptionLoading, showPaywall } = useSuperwall();
 
   // Check onboarding status from AsyncStorage
   const checkOnboardingStatus = async () => {
@@ -590,9 +597,35 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
             
             return; // Stop routing until biometric auth is complete
           }
-          
-          // User is authenticated and onboarded → go to app
-          expectedSection = "(protected)";
+
+          // Check subscription requirement (only if not in beta mode)
+          if (shouldRequireSubscription && !isBetaMode) {
+            // Wait for subscription status to load
+            if (isSubscriptionLoading) {
+              console.log("Waiting for subscription status...");
+              return;
+            }
+
+            // If user is not subscribed, show paywall
+            if (!isSubscribed) {
+              console.log("User not subscribed, showing paywall");
+              
+              // Show paywall immediately
+              setTimeout(() => {
+                showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
+              }, 500);
+
+              // For now, still allow access to the app but with restricted features
+              // This can be changed based on business requirements
+              expectedSection = "(protected)";
+            } else {
+              // User is subscribed, full access
+              expectedSection = "(protected)";
+            }
+          } else {
+            // Beta mode or subscription not required → go to app
+            expectedSection = "(protected)";
+          }
         } else {
           // User is authenticated but not onboarded → complete onboarding
           expectedSection = "(onboarding)";
@@ -632,7 +665,7 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
     };
 
     handleRouting();
-  }, [isLoading, session, isOnboarded, isInitialRoutingDone, rootNavigation?.isReady]);
+  }, [isLoading, session, isOnboarded, isInitialRoutingDone, rootNavigation?.isReady, isSubscriptionLoading, isSubscribed, shouldRequireSubscription]);
 
   // Monitor AppState changes for auto-lock functionality
   useEffect(() => {
@@ -696,6 +729,15 @@ export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
         children
       )}
     </SupabaseContext.Provider>
+  );
+};
+
+// Main provider that wraps everything
+export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
+  return (
+    <SupabaseProviderInner>
+      {children}
+    </SupabaseProviderInner>
   );
 };
 

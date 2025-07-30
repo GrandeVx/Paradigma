@@ -6,6 +6,7 @@ import { transactionRouter } from "./routers/transaction";
 import { categoryRouter } from "./routers/category";
 import { budgetRouter } from "./routers/budget";
 import { recurringRuleRouter } from "./routers/recurringRule";
+import { subscriptionRouter } from "./routers/subscription";
 
 /**
  * This is the primary router for your server.
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
   category: categoryRouter,
   budget: budgetRouter,
   recurringRule: recurringRuleRouter,
+  subscription: subscriptionRouter,
 });
 
 // export type definition of API

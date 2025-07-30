@@ -112,12 +112,12 @@ export default function SummaryScreen() {
     selectedAccountId?: string | null
   ) => {
     console.log(`✅ [TransactionSuccess] ${transactionType} created, navigating immediately`);
-    
+
     // Extract transaction date based on transaction type
-    const transactionDate = transactionType === 'transfer' 
-      ? data.outflowTransaction.date 
+    const transactionDate = transactionType === 'transfer'
+      ? data.outflowTransaction.date
       : data.date;
-    
+
     const transactionMonth = transactionDate.getMonth() + 1;
     const transactionYear = transactionDate.getFullYear();
 
@@ -126,7 +126,7 @@ export default function SummaryScreen() {
 
     // 📋 BACKGROUND INVALIDATION - Happens asynchronously
     console.log(`📋 [TransactionSuccess] Scheduling background invalidations for ${transactionType}`);
-    
+
     scheduleTransactionInvalidations({
       currentMonth: transactionMonth,
       currentYear: transactionYear,
@@ -142,18 +142,18 @@ export default function SummaryScreen() {
   const recurringRuleMutation = api.recurringRule.create.useMutation({
     onSuccess: () => {
       console.log('🔁 [RecurringRuleMutation] Recurring rule created, navigating immediately');
-      
+
       // 🚀 IMMEDIATE NAVIGATION
       router.replace("/(protected)/(home)");
-      
+
       // 📋 BACKGROUND INVALIDATION for recurring rules
       scheduleRecurringInvalidations();
-      
+
       // If we have transaction date info, also schedule transaction invalidations
       if (lastTransactionDate) {
         const transactionMonth = lastTransactionDate.getMonth() + 1;
         const transactionYear = lastTransactionDate.getFullYear();
-        
+
         scheduleTransactionInvalidations({
           currentMonth: transactionMonth,
           currentYear: transactionYear,
@@ -167,7 +167,7 @@ export default function SummaryScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   });
-  
+
   const updateRecurringRuleMutation = api.recurringRule.update.useMutation({
     onSuccess: () => {
       console.log('🔄 [UpdateRecurringRuleMutation] Recurring rule updated');
@@ -178,7 +178,7 @@ export default function SummaryScreen() {
       console.error('❌ [UpdateRecurringRuleMutation] Error updating recurring rule:', error);
     },
   });
-  
+
   const convertFrequencyMutation = api.recurringRule.convertFrequency.useMutation();
 
   /*
@@ -297,10 +297,7 @@ export default function SummaryScreen() {
         throw new Error(t("transaction.errors.amountMustBePositive"));
       }
 
-      const description = note ? note :
-        transactionType === 'expense' ? t("transaction.descriptions.expense") :
-          transactionType === 'income' ? t("transaction.descriptions.income") :
-            t("transaction.descriptions.transfer");
+      const description = note ? note : "";
 
       // Handle recurring rule if isRecurring is true
       if (isRecurring) {

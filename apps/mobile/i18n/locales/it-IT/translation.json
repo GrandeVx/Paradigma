@@ -356,7 +356,11 @@
     "restart": "Riavvia",
     "errorChangingCurrency": "Impossibile cambiare la valuta. Riprova.",
     "errorChangingIcon": "Impossibile cambiare l'icona. Riprova.",
-    "user": "Utente"
+    "user": "Utente",
+    "restartOnboarding": "Riavvia Onboarding",
+    "restartOnboardingTitle": "Riavvia Onboarding",
+    "restartOnboardingMessage": "Vuoi rivedere il processo di onboarding? Questo ti permetterà di rivivere l'esperienza iniziale dell'app.",
+    "errorRestartingOnboarding": "Si è verificato un errore durante il riavvio dell'onboarding."
   },
   "flow": {
     "name": {

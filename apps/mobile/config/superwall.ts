@@ -15,12 +15,15 @@ export const createSuperwallConfig = () => {
 
   // Enable debug logging in development
   if (__DEV__) {
+    console.log("🔧 [Superwall] Configuring debug logging...");
     options.logging.level = LogLevel.Debug;
     options.logging.scopes = [
       LogScope.PaywallPresentation,
       LogScope.PaywallTransactions,
       LogScope.Network,
+      LogScope.All,
     ];
+    console.log("✅ [Superwall] Debug logging enabled with scopes:", options.logging.scopes);
   }
 
   return options;

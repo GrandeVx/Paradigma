@@ -67,7 +67,7 @@ const CategoryItem: React.FC<{
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { signOut, user } = useSupabase();
+  const { signOut, user, setIsOnboarded } = useSupabase();
   const { data: userInfo } = api.user.getUserInfo.useQuery();
   const { isSupported, isEnabled, enableBiometric, disableBiometric } = useBiometricAuth();
 
@@ -290,6 +290,44 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const handleRestartOnboarding = () => {
+    Alert.alert(
+      t("profile.restartOnboardingTitle"),
+      t("profile.restartOnboardingMessage"),
+      [
+        {
+          text: t("settings.account.cancel"),
+          style: "cancel",
+        },
+        {
+          text: t("profile.restartOnboarding"),
+          onPress: async () => {
+            try {
+              console.log("🔄 Restarting onboarding process...");
+              
+              // Set onboarding as not completed
+              await AsyncStorage.setItem("hasCompletedOnboarding", "false");
+              
+              // Clear the onboarded state in Supabase context
+              await setIsOnboarded(false);
+              
+              console.log("✅ Onboarding reset completed");
+              
+              // Navigate to onboarding
+              router.replace("/(onboarding)");
+            } catch (error) {
+              console.error("❌ Error restarting onboarding:", error);
+              Alert.alert(
+                t("common.error"),
+                t("profile.errorRestartingOnboarding")
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Get user display name - fallback to email prefix if no name
   const getUserDisplayName = () => {
     if (userInfo?.name) {
@@ -416,6 +454,12 @@ export default function ProfileScreen() {
               label={t('profile.helpCenter')}
               hasArrow={true}
               onPress={() => WebBrowser.openBrowserAsync("https://trybalance.eu/privacy-policy")}
+            />
+
+            <CategoryItem
+              label={t('profile.restartOnboarding')}
+              hasArrow={true}
+              onPress={handleRestartOnboarding}
             />
 
           </Section>

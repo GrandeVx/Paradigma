@@ -332,7 +332,11 @@
     "restart": "Restart",
     "errorChangingCurrency": "Unable to change currency. Please try again.",
     "errorChangingIcon": "Unable to change icon. Please try again.",
-    "user": "User"
+    "user": "User",
+    "restartOnboarding": "Restart Onboarding",
+    "restartOnboardingTitle": "Restart Onboarding",
+    "restartOnboardingMessage": "Would you like to revisit the onboarding process? This will allow you to relive the initial app experience.",
+    "errorRestartingOnboarding": "An error occurred while restarting the onboarding."
   },
   "flow": {
     "name": {

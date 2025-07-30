@@ -13,8 +13,12 @@ export function useSuperwall() {
       return;
     }
 
-    superwallService.initialize();
-    checkSubscription();
+    const initializeAndCheck = async () => {
+      await superwallService.initialize();
+      await checkSubscription();
+    };
+
+    initializeAndCheck();
   }, []);
 
   const checkSubscription = async () => {
@@ -33,10 +37,61 @@ export function useSuperwall() {
 
     try {
       await superwallService.presentPaywall(triggerId);
+      
       // Refresh subscription status after paywall interaction
       await checkSubscription();
+      
+      // Track paywall event
+      superwallService.trackSubscriptionEvent('paywall_presented', { triggerId });
     } catch (error) {
       console.error("[Superwall] Hook failed to show paywall:", error);
+    }
+  };
+
+  const showPaywallWithCallback = async (
+    triggerId: string, 
+    onComplete: (completed: boolean, purchased: boolean) => void
+  ) => {
+    if (isLoading || Platform.OS === "web") {
+      onComplete(false, false);
+      return;
+    }
+
+    try {
+      await superwallService.presentPaywallWithCallback(triggerId, async (completed, purchased) => {
+        console.log(`[Superwall] Paywall completed: ${completed}, purchased: ${purchased}`);
+        
+        // Refresh subscription status after paywall interaction
+        if (completed) {
+          await checkSubscription();
+        }
+        
+        // Track paywall event
+        superwallService.trackSubscriptionEvent('paywall_completed', { 
+          triggerId, 
+          completed, 
+          purchased 
+        });
+        
+        // Call the provided callback
+        onComplete(completed, purchased);
+      });
+      
+      // Track paywall presentation
+      superwallService.trackSubscriptionEvent('paywall_presented', { triggerId });
+    } catch (error) {
+      console.error("[Superwall] Hook failed to show paywall with callback:", error);
+      onComplete(false, false);
+    }
+  };
+
+  const syncSubscriptionWithBackend = async (userId: string) => {
+    if (Platform.OS === "web") return;
+
+    try {
+      await superwallService.syncSubscriptionStatus(userId);
+    } catch (error) {
+      console.error("[Superwall] Failed to sync subscription with backend:", error);
     }
   };
 
@@ -44,6 +99,8 @@ export function useSuperwall() {
     isSubscribed,
     isLoading,
     showPaywall,
+    showPaywallWithCallback,
     checkSubscription,
+    syncSubscriptionWithBackend,
   };
 }

@@ -26,7 +26,7 @@ const FULL_SWIPE_THRESHOLD = 200; // Threshold to trigger delete confirmation
 const HORIZONTAL_ACTIVE_OFFSET = 3; // activeOffsetX - very small for minimal interference
 const VERTICAL_FAIL_OFFSET = 2; // failOffsetY - very small to fail immediately on vertical gestures
 // Legacy thresholds for gesture logic (if needed)
-const HORIZONTAL_THRESHOLD = 10; 
+const HORIZONTAL_THRESHOLD = 10;
 const VERTICAL_THRESHOLD = 15;
 
 // Global state to manage active swipe instances - prevents multiple simultaneous swipes
@@ -41,7 +41,7 @@ const resetOtherSwipes = (currentId: string) => {
   if (DEBUG_GESTURES) {
     console.log(`[SwipeGesture] Resetting other swipes, activating: ${currentId}`);
   }
-  
+
   activeSwipeCallbacks.forEach((resetCallback, id) => {
     if (id !== currentId) {
       if (DEBUG_GESTURES) {
@@ -101,17 +101,17 @@ const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps>
   useEffect(() => {
     const instanceId = transaction.id;
     activeSwipeCallbacks.set(instanceId, resetSwipe);
-    
+
     if (DEBUG_GESTURES) {
       console.log(`[SwipeGesture] Registered instance: ${instanceId}`);
     }
-    
+
     return () => {
       activeSwipeCallbacks.delete(instanceId);
       if (activeSwipeInstance === instanceId) {
         activeSwipeInstance = null;
       }
-      
+
       if (DEBUG_GESTURES) {
         console.log(`[SwipeGesture] Unregistered instance: ${instanceId}`);
       }
@@ -195,7 +195,7 @@ const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps>
     onStart: (_, context) => {
       context.startX = translateX.value;
       context.instanceId = transaction.id;
-      
+
       // Reset other swipes immediately when this gesture starts
       // The native activeOffsetX/failOffsetY handles direction detection
       if (activeSwipeInstance !== context.instanceId) {
@@ -212,7 +212,7 @@ const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps>
 
         // Progressive opacity based on swipe distance
         const absTranslateX = Math.abs(newTranslateX);
-        
+
         if (absTranslateX < SWIPE_THRESHOLD) {
           actionsOpacity.value = 0;
         } else if (absTranslateX < FULL_SWIPE_THRESHOLD) {
@@ -231,7 +231,7 @@ const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps>
         if (absTranslateX > SWIPE_THRESHOLD && Math.abs(context.startX) <= SWIPE_THRESHOLD) {
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
         }
-        
+
         if (absTranslateX > FULL_SWIPE_THRESHOLD && Math.abs(context.startX) <= FULL_SWIPE_THRESHOLD) {
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
         }
@@ -271,7 +271,7 @@ const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps>
     opacity: actionsOpacity.value,
     width: Math.abs(translateX.value),
   }));
-  
+
   const deleteIconScale = useAnimatedStyle(() => {
     const progress = Math.abs(translateX.value) / FULL_SWIPE_THRESHOLD;
     return {
@@ -324,11 +324,15 @@ const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps>
               </View>
 
               <View className="flex-1">
-                <Text className="text-sm text-gray-900 font-medium" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
-                  {transaction.description}
-                </Text>
+                {
+                  transaction.description && (
+                    <Text className="text-sm text-gray-900 font-medium" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
+                      {transaction.description}
+                    </Text>
+                  )
+                }
                 {localizedSubCategory && (
-                  <Text className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: 'DM Sans', fontSize: 12 }}>
+                  <Text className="text-xs text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 12 }}>
                     {localizedSubCategory.localizedName}
                   </Text>
                 )}
@@ -356,23 +360,23 @@ const arePropsEqual = (prevProps: SwipeableTransactionItemProps, nextProps: Swip
   if (prevProps.transaction.amount !== nextProps.transaction.amount) return false;
   if (prevProps.transaction.description !== nextProps.transaction.description) return false;
   if (prevProps.transaction.type !== nextProps.transaction.type) return false;
-  
+
   // Compare context
   if (prevProps.context !== nextProps.context) return false;
-  
+
   // Compare category data (shallow comparison)
   const prevCategory = prevProps.transaction.category;
   const nextCategory = nextProps.transaction.category;
-  if (prevCategory?.name !== nextCategory?.name || 
-      prevCategory?.icon !== nextCategory?.icon || 
-      prevCategory?.color !== nextCategory?.color) return false;
-  
+  if (prevCategory?.name !== nextCategory?.name ||
+    prevCategory?.icon !== nextCategory?.icon ||
+    prevCategory?.color !== nextCategory?.color) return false;
+
   // Compare subcategory data
   const prevSubCategory = prevProps.transaction.subCategory;
   const nextSubCategory = nextProps.transaction.subCategory;
-  if (prevSubCategory?.name !== nextSubCategory?.name || 
-      prevSubCategory?.icon !== nextSubCategory?.icon) return false;
-  
+  if (prevSubCategory?.name !== nextSubCategory?.name ||
+    prevSubCategory?.icon !== nextSubCategory?.icon) return false;
+
   // Don't compare onDelete function reference - it may change but functionality remains the same
   return true;
 };

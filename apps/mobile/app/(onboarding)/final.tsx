@@ -10,16 +10,53 @@ import { Text } from "@/components/ui/text";
 import { useTranslation } from "react-i18next";
 
 export default function FinalScreen() {
-  const { showPaywall } = useSuperwall();
+  const { showPaywallWithCallback } = useSuperwall();
   const { setIsOnboarded } = useSupabase();
   const { t } = useTranslation();
 
   const handleGetStarted = async () => {
     try {
-      await showPaywall(SUPERWALL_TRIGGERS.ONBOARDING);
-      setIsOnboarded(true);
+      console.log("🚀 [Onboarding] Starting paywall presentation...");
+      
+      let callbackCalled = false;
+      
+      // Set up a safety timeout in case callback is never called
+      const timeoutId = setTimeout(() => {
+        if (!callbackCalled) {
+          console.warn("⏰ [Onboarding] Paywall callback timeout - proceeding with onboarding");
+          callbackCalled = true;
+          setIsOnboarded(true);
+        }
+      }, 10000); // 10 second timeout
+      
+      await showPaywallWithCallback(
+        SUPERWALL_TRIGGERS.ONBOARDING,
+        (completed: boolean, purchased: boolean) => {
+          if (callbackCalled) {
+            console.log("🔄 [Onboarding] Callback already processed, ignoring");
+            return;
+          }
+          
+          callbackCalled = true;
+          clearTimeout(timeoutId);
+          
+          console.log(`✅ [Onboarding] Paywall completed: ${completed}, purchased: ${purchased}`);
+          
+          // Always complete onboarding regardless of purchase status
+          // The user has seen the paywall and made their decision
+          setIsOnboarded(true);
+          
+          if (purchased) {
+            console.log("🎉 [Onboarding] User purchased subscription!");
+          } else {
+            console.log("📱 [Onboarding] User dismissed paywall or paywall not configured, continuing with free tier");
+          }
+        }
+      );
     } catch (error) {
-      console.error("Failed to show paywall:", error);
+      console.error("❌ [Onboarding] Failed to show paywall:", error);
+      // If paywall fails to show, still complete onboarding
+      setIsOnboarded(true);
     }
   };
 
