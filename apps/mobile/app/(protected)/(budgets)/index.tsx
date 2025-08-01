@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, RefObject, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { View, SafeAreaView, ScrollView, Pressable, RefreshControl } from 'react-native';
 import Animated, {
   FadeIn,
@@ -16,12 +16,6 @@ import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import HeaderContainer from '@/components/layouts/_header';
 import * as Haptics from 'expo-haptics';
-import BottomSheet, {
-  BottomSheetBackdropProps,
-  BottomSheetBackdrop
-} from '@gorhom/bottom-sheet';
-import { BudgetBottomSheet } from '@/components/bottom-sheets/budget-bottom-sheet';
-import { useTabBar } from '@/context/TabBarContext';
 import { api } from '@/lib/api';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -394,54 +388,16 @@ export default function BudgetScreen() {
     refetchTransactions();
   }, [refetchBudgets, refetchCategories, refetchTransactions]);
 
-  // Bottom sheet setup
-  const snapPoints = ['80%'];
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const { hideTabBar, showTabBar } = useTabBar();
-
-  const handleOpenBottomSheet = useCallback(() => {
-    hideTabBar('budget-bottom-sheet');
+  // Navigation to budget management
+  const handleOpenBudgetManagement = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    bottomSheetRef.current?.expand();
-  }, [hideTabBar]);
-
-  const handleCloseBottomSheet = useCallback(() => {
-    showTabBar('budget-bottom-sheet');
-    bottomSheetRef.current?.close();
-
-    // Invalidate queries when bottom sheet is closed to refresh data
-    utils.budget.getCurrentSettings.invalidate();
-    utils.transaction.getMonthlySpending.invalidate({
-      ...queryParams,
-      // Use current selected categories or undefined for all
-      macroCategoryIds: budgetSettings?.map(budget => budget.macroCategoryId),
-    });
-  }, [showTabBar, utils, queryParams, budgetSettings]);
+    router.push('/(protected)/(budgets)/budget-management');
+  }, []);
 
   const handleBudgetClick = useCallback((budgetId: string) => {
     router.push(`/(protected)/(budgets)/(category-transactions)/${budgetId}`);
   }, []);
 
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-        onPress={() => {
-          showTabBar('budget-bottom-sheet');
-        }}
-        enableTouchThrough={false}
-        pressBehavior="close"
-        style={[
-          { backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 10 },
-          props.style
-        ]}
-      />
-    ),
-    [showTabBar]
-  );
 
   // Memoized budget summary calculation
   const budgetSummary = useMemo(() => {
@@ -517,9 +473,9 @@ export default function BudgetScreen() {
   const rightActions = useMemo(() => [
     {
       icon: <SvgIcon name="edit" color={"#005EFD"} size={20} />,
-      onPress: handleOpenBottomSheet
+      onPress: handleOpenBudgetManagement
     },
-  ], [handleOpenBottomSheet]);
+  ], [handleOpenBudgetManagement]);
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
@@ -599,7 +555,7 @@ export default function BudgetScreen() {
                       size="lg"
                       rounded="default"
                       className="w-a"
-                      onPress={handleOpenBottomSheet}
+                      onPress={handleOpenBudgetManagement}
                     >
                       <Text className="text-white font-semibold">{t('budgets.getStarted')}</Text>
                     </Button>
@@ -765,14 +721,6 @@ export default function BudgetScreen() {
           )}
         </SafeAreaView>
       </HeaderContainer>
-
-      {/* Budget Bottom Sheet */}
-      <BudgetBottomSheet
-        bottomSheetRef={bottomSheetRef as RefObject<BottomSheet>}
-        snapPoints={snapPoints}
-        renderBackdrop={renderBackdrop}
-        handleClosePress={handleCloseBottomSheet}
-      />
     </>
   );
 } 

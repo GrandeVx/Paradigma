@@ -386,8 +386,38 @@ export default function SummaryScreen() {
         } catch (apiError) {
           throw new Error(t("transaction.errors.createInstallmentError"));
         }
+      } else if (recurrenceOption.id !== 'none' && !isRecurring) {
+        // Handle recurring transactions (not installments)
+        // Only create the recurring rule - backend will generate the first transaction
+        try {
+          // Store the transaction date for recurring rule invalidation
+          setLastTransactionDate(selectedDate);
+
+          // Use the recurrence option to determine frequency type and interval
+          const { frequencyType, frequencyInterval } = await convertFrequencyMutation.mutateAsync({
+            frequencyDays: recurrenceOption.days
+          });
+
+          // Create a recurring rule (not an installment)
+          await recurringRuleMutation.mutateAsync({
+            accountId: selectedAccountId,
+            description,
+            amount: parseFloat(amount),
+            currency: getCurrencySymbol() || "EUR",
+            type: transactionType === "income" ? "INCOME" : "EXPENSE",
+            subCategoryId: selectedCategoryId || undefined,
+            startDate: selectedDate, // Use selected date as start date
+            frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
+            frequencyInterval,
+            isInstallment: false, // Not an installment, but a recurring transaction
+            notes: note ? `${note} (${recurrenceOption.label.toLowerCase()})` : t("transaction.descriptions.recurringNote", { frequency: recurrenceOption.label.toLowerCase() })
+          });
+
+        } catch (apiError) {
+          throw new Error(t("transaction.errors.createRecurringError"));
+        }
       } else {
-        // Handle single transactions
+        // Handle single transactions (no recurrence)
         try {
           switch (transactionType) {
             case 'expense':
@@ -469,37 +499,6 @@ export default function SummaryScreen() {
             transactionType === 'income' ? t('transaction.types.income') :
               t('transaction.types.transfer');
           throw new Error(t("transaction.errors.createTransactionError", { type }));
-        }
-      }
-
-      // Add recurring rule if recurrence is selected
-      if (recurrenceOption.id !== 'none' && !isRecurring) {
-        try {
-          // Store the transaction date for recurring rule invalidation
-          setLastTransactionDate(selectedDate);
-
-          // Use the recurrence option to determine frequency type and interval
-          const { frequencyType, frequencyInterval } = await convertFrequencyMutation.mutateAsync({
-            frequencyDays: recurrenceOption.days
-          });
-
-          // Create a recurring rule (not an installment)
-          await recurringRuleMutation.mutateAsync({
-            accountId: selectedAccountId,
-            description,
-            amount: parseFloat(amount),
-            currency: getCurrencySymbol() || "EUR",
-            type: transactionType === "income" ? "INCOME" : "EXPENSE",
-            subCategoryId: selectedCategoryId || undefined,
-            startDate: selectedDate, // Use selected date as start date
-            frequencyType: frequencyType as "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY",
-            frequencyInterval,
-            isInstallment: false, // Not an installment, but a recurring transaction
-            notes: note ? `${note} (${recurrenceOption.label.toLowerCase()})` : t("transaction.descriptions.recurringNote", { frequency: recurrenceOption.label.toLowerCase() })
-          });
-
-        } catch (apiError) {
-          throw new Error(t("transaction.errors.createRecurringError"));
         }
       }
 

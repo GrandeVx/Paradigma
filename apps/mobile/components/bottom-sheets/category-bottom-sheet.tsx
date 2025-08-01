@@ -112,7 +112,7 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
                       <Text className="text-black text-base font-semibold uppercase" style={{ fontFamily: 'DM Sans', color: category.color, fontWeight: 'bold' }}>{category.localizedName}</Text>
                     </View>
                     {/* Subcategories Display */}
-                    <View className="flex flex-row flex-wrap w-full justify-center pt-2 gap-y-3 gap-x-2 px-2">
+                    <View className="flex flex-row flex-wrap w-full justify-center pt-2 gap-y-3 gap-x-2 px-2 pb-6">
                       {
                         category.subCategories?.map((subCategory) => (
                           <Pressable

@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { mmkvStorage, cacheUtils, categoryUtils } from './mmkv-storage';
 
 // Current cache version - increment when API schema changes
-const CACHE_VERSION = '1.1.3';
+const CACHE_VERSION = '1.1.4';
 const CACHE_VERSION_KEY = 'cache-version';
 
 // Custom hook for manual cache management
