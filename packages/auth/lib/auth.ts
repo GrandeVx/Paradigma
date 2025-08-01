@@ -105,14 +105,26 @@ export const auth = betterAuth({
   plugins: [nextCookies(),expo(), emailOTP(
     {
         async sendVerificationOTP({ email, otp, type}) { 
+            const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
+            const isDemoAccount = email === 'test@paradigma.com';
+            
             console.log("🔐 [BetterAuth] Sending verification OTP:", { 
                 email, 
                 otp, 
                 type,
+                isDemoMode,
+                isDemoAccount,
                 emailHost: process.env.EMAIL_HOST,
                 emailUser: process.env.EMAIL_USER,
                 hasPassword: !!process.env.EMAIL_PASSWORD
             });
+            
+            // Demo mode: Skip email sending for demo account
+            if (isDemoMode && isDemoAccount) {
+                console.log("🎭 [BetterAuth] Demo mode enabled - Skipping email for demo account");
+                console.log("🎭 [BetterAuth] Use fixed OTP: 123456");
+                return; // Don't send email, use fixed OTP
+            }
             
             try {
                 const transporter = nodemailer.createTransport({
