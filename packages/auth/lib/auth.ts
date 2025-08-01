@@ -104,6 +104,20 @@ export const auth = betterAuth({
     trustedOrigins: ["balance://","https://appleid.apple.com"],
   plugins: [nextCookies(),expo(), emailOTP(
     {
+        generateOTP: ({ email }) => {
+            const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
+            const isDemoAccount = email === 'test@paradigma.com';
+            
+            if (isDemoMode && isDemoAccount) {
+                console.log('🎭 [BetterAuth] Generating fixed OTP for demo account');
+                return '123456'; // Fixed OTP for demo account
+            }
+            
+            // Default random OTP generation for regular users
+            const randomOtp = Math.random().toString(36).substring(2, 8).toUpperCase();
+            console.log('🔐 [BetterAuth] Generated random OTP for regular user');
+            return randomOtp;
+        },
         async sendVerificationOTP({ email, otp, type}) { 
             const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
             const isDemoAccount = email === 'test@paradigma.com';
