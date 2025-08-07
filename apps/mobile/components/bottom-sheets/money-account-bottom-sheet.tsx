@@ -3,10 +3,8 @@ import { View, ScrollView, Pressable } from 'react-native';
 import BottomSheet, { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Text } from '@/components/ui/text';
 import { SvgIcon } from '@/components/ui/svg-icon';
-import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { IconName } from '../ui/icons';
-import { useCurrency } from '@/hooks/use-currency';
 
 interface MoneyAccountBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheet>;
@@ -29,17 +27,63 @@ interface AccountWithBalance {
   balance: number;
 }
 
-// Account Card Component similar to index.tsx
+// Mock data for placeholder accounts
+const MOCK_ACCOUNTS: AccountWithBalance[] = [
+  {
+    account: {
+      id: '1',
+      name: 'Main Account',
+      iconName: 'card',
+      color: '#3B82F6',
+    },
+    balance: 2450.75,
+  },
+  {
+    account: {
+      id: '2', 
+      name: 'Savings',
+      iconName: 'pig-money',
+      color: '#10B981',
+    },
+    balance: 8920.50,
+  },
+  {
+    account: {
+      id: '3',
+      name: 'Business',
+      iconName: 'briefcase',
+      color: '#F59E0B',
+    },
+    balance: 3240.25,
+  },
+  {
+    account: {
+      id: '4',
+      name: 'Emergency Fund',
+      iconName: 'shield',
+      color: '#EF4444',
+    },
+    balance: 5000.00,
+  },
+];
+
+// Account Card Component
 const AccountCard: React.FC<{
   account: AccountWithBalance;
   isSelected: boolean;
   onPress: () => void;
-  formatDisplayCurrency: (amount: number) => { integer: string; decimal: string };
-  getCurrencySymbol: () => string;
   isLast: boolean;
-}> = React.memo(({ account, isSelected, onPress, formatDisplayCurrency, getCurrencySymbol, isLast }) => {
-  const { integer, decimal } = formatDisplayCurrency(account.balance);
-  const currencySymbol = getCurrencySymbol();
+}> = React.memo(({ account, isSelected, onPress, isLast }) => {
+  const formatCurrency = (amount: number) => {
+    const formatted = amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const [integer, decimal] = formatted.split('.');
+    return { integer, decimal };
+  };
+
+  const { integer, decimal } = formatCurrency(account.balance);
 
   return (
     <Pressable
@@ -62,13 +106,13 @@ const AccountCard: React.FC<{
           </View>
 
           <View className="flex-row items-baseline gap-1">
-            <Text className="text-white text-sm font-normal">{currencySymbol}</Text>
+            <Text className="text-white text-sm font-normal">$</Text>
             <View className="flex-row items-baseline">
               <Text className="text-white text-lg font-medium" style={{ fontFamily: 'Apfel Grotezk' }}>
                 {integer}
               </Text>
               <Text className="text-white text-sm font-normal" style={{ fontFamily: 'Apfel Grotezk' }}>
-                ,{decimal}
+                .{decimal}
               </Text>
             </View>
           </View>
@@ -81,100 +125,64 @@ const AccountCard: React.FC<{
 export const MoneyAccountBottomSheet: React.FC<MoneyAccountBottomSheetProps> = ({
   bottomSheetRef,
   snapPoints,
-  accountToFilter,
+  accountToFilter = [],
   renderBackdrop,
   handleClosePress,
   selectedAccountId,
   setSelectedAccountId,
 }) => {
-  const { data: moneyAccounts, isLoading: isMoneyAccountsLoading } = api.account.listWithBalances.useQuery({});
-  const { getCurrencySymbol } = useCurrency();
+  // Filter accounts based on accountToFilter prop
+  const filteredAccounts = useMemo(() => {
+    return MOCK_ACCOUNTS.filter(account => !accountToFilter.includes(account.account.id));
+  }, [accountToFilter]);
 
-  const filteredMoneyAccounts = useMemo(() => {
-    if (accountToFilter) {
-      return moneyAccounts?.filter((account) => !accountToFilter.includes(account.account.id));
-    }
-    return moneyAccounts;
-  }, [moneyAccounts, accountToFilter]);
-
-  // Custom formatter for the display format used in the accounts screen
-  const formatDisplayCurrency = (amount: number) => {
-    const [integer, decimal] = amount.toFixed(2).split('.');
-    // Format with dot as thousand separator and comma as decimal separator (Italian format)
-    const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return {
-      integer: formattedInteger,
-      decimal: decimal
-    };
+  const handleAccountSelect = (accountId: string) => {
+    setSelectedAccountId(accountId);
+    handleClosePress();
   };
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={-1} // Start closed
+      index={-1}
       snapPoints={snapPoints}
-      enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
-      handleStyle={{
-        backgroundColor: '#FFFFFF',
-        borderTopLeftRadius: 15,
-        borderTopRightRadius: 15,
-      }}
-      handleIndicatorStyle={{
-        backgroundColor: "#000",
-        width: 40,
-      }}
-      containerStyle={{
-        zIndex: 1000,
-      }}
-      backgroundStyle={{
-        backgroundColor: "#FFFFFF"
-      }}
+      enablePanDownToClose={true}
+      onClose={handleClosePress}
     >
-      <View className="w-full h-full px-4">
-        <View className="flex-row justify-between items-center w-full pb-8 ">
-          <View className="">
-            <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
-              Seleziona Conto
-            </Text>
+      <View className="flex-1 px-4 pb-4">
+        <Text className="text-lg font-semibold text-gray-900 mb-4 text-center">
+          Select Account
+        </Text>
+        
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <View className="space-y-3">
+            {filteredAccounts.map((account, index) => (
+              <AccountCard
+                key={account.account.id}
+                account={account}
+                isSelected={selectedAccountId === account.account.id}
+                isLast={index === filteredAccounts.length - 1}
+                onPress={() => handleAccountSelect(account.account.id)}
+              />
+            ))}
           </View>
-          <SvgIcon name="close" size={12} color="black" onPress={handleClosePress} />
-        </View>
-
-        <View className="mb-4">
-          {isMoneyAccountsLoading ? (
-            <View className="flex items-center justify-center h-40">
-              <Text>Caricamento conti...</Text>
+          
+          {filteredAccounts.length === 0 && (
+            <View className="flex-1 items-center justify-center py-20">
+              <Text className="text-gray-500 text-center">
+                No accounts available
+              </Text>
             </View>
-          ) : (
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingBottom: 20,
-              }}
-            >
-              {filteredMoneyAccounts?.map((item, index) => (
-                <AccountCard
-                  key={item.account.id}
-                  account={item}
-                  isSelected={selectedAccountId === item.account.id}
-                  onPress={() => {
-                    if (selectedAccountId === item.account.id) {
-                      setSelectedAccountId(null);
-                    } else {
-                      setSelectedAccountId(item.account.id);
-                    }
-                    handleClosePress();
-                  }}
-                  formatDisplayCurrency={formatDisplayCurrency}
-                  getCurrencySymbol={getCurrencySymbol}
-                  isLast={index === filteredMoneyAccounts.length - 1}
-                />
-              ))}
-            </ScrollView>
           )}
+        </ScrollView>
+        
+        <View className="mt-4 p-3 bg-gray-50 rounded-xl">
+          <Text className="text-gray-500 text-xs text-center">
+            This is a template with placeholder data
+          </Text>
         </View>
       </View>
     </BottomSheet>
   );
-}; 
+};

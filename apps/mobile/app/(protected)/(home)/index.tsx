@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo, useRef, RefObject } from "react";
 import { View, Pressable } from "react-native";
 import HeaderContainer from "@/components/layouts/_header";
 import { TabBar } from "@/components/tab-navigation/tab-bar";
@@ -7,35 +7,42 @@ import { useTranslation } from 'react-i18next';
 import { Text } from "@/components/ui/text";
 import { useRouter } from 'expo-router';
 import { Button } from "@/components/ui/button";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
+import { CategoryBottomSheet } from "@/components/bottom-sheets/category-bottom-sheet";
+import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
+import { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 
-// Simple placeholder section component
-const PlaceholderSection: React.FC<{
-  title: string;
-  description: string;
-  icon: string;
-  color: string;
-}> = ({ title, description, icon, color }) => {
-  return (
-    <View className="flex-1 justify-center items-center px-8">
-      <View
-        className="w-20 h-20 rounded-full items-center justify-center mb-6"
-        style={{ backgroundColor: `${color}20` }}
-      >
-        <Text className="text-4xl">{icon}</Text>
-      </View>
-      <Text className="text-2xl font-bold text-gray-800 text-center mb-3">
-        {title}
-      </Text>
-      <Text className="text-gray-600 text-center text-base mb-6">
-        {description}
-      </Text>
-      <View className="bg-gray-100 rounded-lg px-4 py-3">
-        <Text className="text-gray-500 text-sm text-center">
-          Placeholder content area
-        </Text>
-      </View>
-    </View>
-  );
+const categoryBottomSheetRef = useRef<BottomSheet>(null);
+const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+
+const snapPointsCategory = useMemo(() => ["70%"], []);
+
+const renderBackdrop = useCallback(
+  (props: BottomSheetBackdropProps) => (
+    <BottomSheetBackdrop
+      {...props}
+      disappearsOnIndex={-1}
+      appearsOnIndex={0}
+      opacity={0.5}
+      enableTouchThrough={false}
+      pressBehavior="close"
+      style={[
+        { backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 10 },
+        props.style
+      ]}
+    />
+  ),
+  []
+);
+
+
+const handleOpenCategoryBottomSheet = () => {
+  categoryBottomSheetRef.current?.expand();
+};
+
+const handleCloseCategoryBottomSheet = () => {
+  categoryBottomSheetRef.current?.close();
 };
 
 // Static tab content components
@@ -81,23 +88,77 @@ const FirstTabSection = () => {
   );
 };
 
-const SecondTabSection = () => (
-  <PlaceholderSection
-    title="Secondary View"
-    description="This would show alternative content or data"
-    icon="📊"
-    color="#10B981"
-  />
-);
+const SecondTabSection = () => {
 
-const ThirdTabSection = () => (
-  <PlaceholderSection
-    title="Additional Features"
-    description="This would contain extra functionality"
-    icon="🎯"
-    color="#F59E0B"
-  />
-);
+  return (
+    <>
+      <View className="flex-1 justify-center items-center px-8">
+        <View
+          className="w-20 h-20 rounded-full items-center justify-center mb-6"
+          style={{ backgroundColor: `#10B98120` }}
+        >
+          <Text className="text-4xl">📊</Text>
+        </View>
+        <Text className="text-2xl font-bold text-gray-800 text-center mb-3">
+          Bottom Sheets Demo
+        </Text>
+        <Text className="text-gray-600 text-center text-base mb-6">
+          Test the interactive bottom sheet components
+        </Text>
+
+        {/* Demo buttons for bottom sheets */}
+        <View className="space-y-3 w-full">
+          <Button
+            variant="outline"
+            size="default"
+            onPress={handleOpenCategoryBottomSheet}
+            className="mb-3"
+          >
+            <Text className="text-primary-600 font-semibold">Select Category</Text>
+          </Button>
+        </View>
+
+        {/* Show selected values */}
+        <View className="bg-gray-100 rounded-lg px-4 py-3 w-full mt-6">
+          <Text className="text-gray-500 text-sm text-center mb-2">
+            Selected Category: {selectedCategoryId || 'None'}
+          </Text>
+        </View>
+      </View>
+
+    </>
+  );
+};
+
+const ThirdTabSection = () => {
+
+
+  return (
+    <>
+      <View className="flex-1 justify-center items-center px-8">
+        <View
+          className="w-20 h-20 rounded-full items-center justify-center mb-6"
+          style={{ backgroundColor: `#F59E0B20` }}
+        >
+          <Text className="text-4xl">🎯</Text>
+        </View>
+        <Text className="text-2xl font-bold text-gray-800 text-center mb-3">
+          Settings Demo
+        </Text>
+        <Text className="text-gray-600 text-center text-base mb-6">
+          Test notification settings bottom sheet
+        </Text>
+
+
+        <View className="bg-gray-100 rounded-lg px-4 py-3">
+          <Text className="text-gray-500 text-sm text-center">
+            Or access via Profile → Notifications
+          </Text>
+        </View>
+      </View>
+    </>
+  );
+};
 
 export default function TabNavigationTemplate() {
   const { t } = useTranslation();
@@ -127,20 +188,34 @@ export default function TabNavigationTemplate() {
   };
 
   return (
-    <HeaderContainer variant="secondary" customTitle="Dashboard">
-      <View className="flex-1">
-        {/* Tab Navigation */}
-        <TabBar
-          tabs={homeTabs}
-          activeIndex={activeTabIndex}
-          onTabPress={handleTabPress}
-        />
-
-        {/* Active Tab Content */}
+    <>
+      <HeaderContainer variant="secondary" customTitle="Dashboard">
         <View className="flex-1">
-          {renderTabContent()}
+          {/* Tab Navigation */}
+          <TabBar
+            tabs={homeTabs}
+            activeIndex={activeTabIndex}
+            onTabPress={handleTabPress}
+          />
+
+          {/* Active Tab Content */}
+          <View className="flex-1">
+            {renderTabContent()}
+          </View>
         </View>
-      </View>
-    </HeaderContainer>
+      </HeaderContainer>
+
+
+
+      <CategoryBottomSheet
+        bottomSheetRef={categoryBottomSheetRef as unknown as RefObject<BottomSheetMethods>}
+        snapPoints={snapPointsCategory}
+        renderBackdrop={renderBackdrop}
+        handleClosePress={handleCloseCategoryBottomSheet}
+        type="expense"
+        selectedCategoryId={selectedCategoryId}
+        setSelectedCategoryId={setSelectedCategoryId}
+      />
+    </>
   );
 }

@@ -17,7 +17,7 @@ export default function FormInputScreen() {
   useFocusEffect(
     useCallback(() => {
       setName("");
-      return () => {};
+      return () => { };
     }, [])
   );
 
@@ -38,17 +38,17 @@ export default function FormInputScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
         <View className="flex-1 justify-between p-4 bg-white gap-2 w-full">
-          
+
           {/* Input Section */}
           <View className="flex-1 justify-center items-center w-full">
-            <Pressable 
-              onPress={() => nameInputRef.current?.focus()} 
+            <Pressable
+              onPress={() => nameInputRef.current?.focus()}
               className="w-full flex flex-col items-center justify-center"
             >
               <Text className="text-gray-600 text-base font-normal mb-4 text-center">
                 What would you like to name it?
               </Text>
-              
+
               <View className="relative w-full h-fit items-center justify-center">
                 <TextInput
                   autoFocus

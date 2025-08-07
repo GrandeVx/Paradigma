@@ -232,8 +232,6 @@ export default function ProfileScreen() {
     }
   };
 
-
-
   const currentLanguage = LANGUAGES.find(
     (lang) => lang.code === i18nInstance.language
   );

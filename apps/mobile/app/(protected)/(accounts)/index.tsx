@@ -34,13 +34,13 @@ const ItemCard: React.FC<{
         <View className="flex-row items-center gap-3">
           <SvgIcon name={item.icon} width={24} height={24} color="#FFFFFF" />
           <View>
-            <Text className="text-white font-semibold text-base">{item.title}</Text>
+            <Text className="text-white font-semibold text-base" style={{ fontFamily: 'ApfelGrotezkMittel' }}>{item.title}</Text>
             <Text className="text-white opacity-80 text-sm">{item.subtitle}</Text>
           </View>
         </View>
 
         <View className="items-end">
-          <Text className="text-white text-lg font-medium">{item.value}</Text>
+          <Text className="text-white text-lg font-medium" style={{ fontFamily: 'ApfelGrotezkMittel' }} >{item.value}</Text>
         </View>
       </View>
     </Pressable>
@@ -58,15 +58,15 @@ export default function GenericListScreen() {
       id: '1',
       title: 'Primary Item',
       subtitle: 'Main category',
-      icon: 'card',
+      icon: 'bank-card',
       color: '#3B82F6',
       value: '2,450.75',
     },
     {
-      id: '2', 
+      id: '2',
       title: 'Secondary Item',
       subtitle: 'Alternative option',
-      icon: 'piggy-bank',
+      icon: 'bank',
       color: '#10B981',
       value: '1,250.00',
     },
@@ -74,7 +74,7 @@ export default function GenericListScreen() {
       id: '3',
       title: 'Special Item',
       subtitle: 'Featured content',
-      icon: 'airplane',
+      icon: 'pig-money',
       color: '#F59E0B',
       value: '850.25',
     },
@@ -113,7 +113,7 @@ export default function GenericListScreen() {
         <View className="pb-10 items-center justify-center px-6">
           <Pressable onPress={toggleVisibility} className="items-center">
             <Text className="text-gray-400 text-2xl">$</Text>
-            <Text className="text-black text-5xl font-medium">
+            <Text className="text-black text-5xl font-medium" style={{ fontFamily: 'ApfelGrotezkMittel' }}>
               {isBalanceVisible ? total.toFixed(2) : '••••••'}
             </Text>
             <Text className="text-gray-500 text-sm mt-2">Total Value</Text>

@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(grep:*)"
+    ]
+  },
   "enabledMcpjsonServers": [
     "figma-personal-mcp",
     "sequential-thinking",
@@ -9,10 +15,5 @@
   "disabledMcpjsonServers": [
     "dbhub",
     "figma-work-mcp"
-  ],
-  "permissions": {
-    "allow": [
-      "Bash(tree:*)"
-    ]
-  }
+  ]
 }

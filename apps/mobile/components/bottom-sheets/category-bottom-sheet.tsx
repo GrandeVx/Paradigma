@@ -1,16 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
 import BottomSheet, { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { Text } from '@/components/ui/text'; // Assuming Skeleton is a loading indicator component
-
-import { api } from '@/lib/api';
+import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { SvgIcon } from '../ui/svg-icon';
-import { useLocalizedCategories } from '@/hooks/useLocalizedCategories';
 
-// Ensure TransactionType is defined or imported if it's a shared type
-// For now, defining it locally based on its usage in the original file.
-export type TransactionType = 'income' | 'expense' | 'transfer'; // Exporting for potential reuse
+export type TransactionType = 'income' | 'expense' | 'transfer';
 
 interface CategoryBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheet>;
@@ -22,6 +17,113 @@ interface CategoryBottomSheetProps {
   setSelectedCategoryId: (categoryId: string | null) => void;
 }
 
+interface SubCategory {
+  id: string;
+  name: string;
+  icon: string;
+  key?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  type: string;
+  subCategories: SubCategory[];
+}
+
+// Mock categories data
+const MOCK_EXPENSE_CATEGORIES: Category[] = [
+  {
+    id: '1',
+    name: 'Food & Dining',
+    color: '#FF6B6B',
+    icon: '🍽️',
+    type: 'EXPENSE',
+    subCategories: [
+      { id: '1-1', name: 'Restaurants', icon: '🏪', key: 'restaurants' },
+      { id: '1-2', name: 'Groceries', icon: '🛒', key: 'groceries' },
+      { id: '1-3', name: 'Fast Food', icon: '🍔', key: 'fast_food' },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Transportation',
+    color: '#4ECDC4',
+    icon: '🚗',
+    type: 'EXPENSE',
+    subCategories: [
+      { id: '2-1', name: 'Gas', icon: '⛽', key: 'gas' },
+      { id: '2-2', name: 'Public Transit', icon: '🚌', key: 'public_transit' },
+      { id: '2-3', name: 'Uber/Taxi', icon: '🚕', key: 'rideshare' },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Entertainment',
+    color: '#45B7D1',
+    icon: '🎬',
+    type: 'EXPENSE',
+    subCategories: [
+      { id: '3-1', name: 'Movies', icon: '🍿', key: 'movies' },
+      { id: '3-2', name: 'Games', icon: '🎮', key: 'games' },
+      { id: '3-3', name: 'Events', icon: '🎪', key: 'events' },
+    ],
+  },
+  {
+    id: '4',
+    name: 'Shopping',
+    color: '#96CEB4',
+    icon: '🛍️',
+    type: 'EXPENSE',
+    subCategories: [
+      { id: '4-1', name: 'Clothing', icon: '👕', key: 'clothing' },
+      { id: '4-2', name: 'Electronics', icon: '📱', key: 'electronics' },
+      { id: '4-3', name: 'Home', icon: '🏠', key: 'home' },
+    ],
+  },
+];
+
+const MOCK_INCOME_CATEGORIES: Category[] = [
+  {
+    id: '5',
+    name: 'Salary',
+    color: '#6C7CE7',
+    icon: '💼',
+    type: 'INCOME',
+    subCategories: [
+      { id: '5-1', name: 'Primary Job', icon: '💰', key: 'salary_primary' },
+      { id: '5-2', name: 'Bonus', icon: '🎁', key: 'bonus' },
+      { id: '5-3', name: 'Overtime', icon: '⏰', key: 'overtime' },
+    ],
+  },
+  {
+    id: '6',
+    name: 'Business',
+    color: '#A8E6CF',
+    icon: '📈',
+    type: 'INCOME',
+    subCategories: [
+      { id: '6-1', name: 'Freelancing', icon: '💻', key: 'freelance' },
+      { id: '6-2', name: 'Consulting', icon: '🤝', key: 'consulting' },
+      { id: '6-3', name: 'Side Project', icon: '🚀', key: 'side_project' },
+    ],
+  },
+  {
+    id: '7',
+    name: 'Investments',
+    color: '#FFB74D',
+    icon: '📊',
+    type: 'INCOME',
+    subCategories: [
+      { id: '7-1', name: 'Dividends', icon: '💎', key: 'dividends' },
+      { id: '7-2', name: 'Interest', icon: '🏦', key: 'interest' },
+      { id: '7-3', name: 'Capital Gains', icon: '📈', key: 'capital_gains' },
+    ],
+  },
+];
+
 export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
   bottomSheetRef,
   snapPoints,
@@ -31,118 +133,119 @@ export const CategoryBottomSheet: React.FC<CategoryBottomSheetProps> = ({
   selectedCategoryId,
   setSelectedCategoryId,
 }) => {
-  const { data: categories, isLoading: isCategoriesLoading } = api.category.list.useQuery({
-    type: type === "income" ? "INCOME" : "EXPENSE"
-  }, {
-    staleTime: 0, // Always fetch fresh data for colors
-    refetchOnMount: true, // Refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch on window focus to avoid too many requests
-  });
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
 
-  const { localizeCategoriesWithSubs, translations } = useLocalizedCategories();
+  const categories = type === 'income' ? MOCK_INCOME_CATEGORIES : MOCK_EXPENSE_CATEGORIES;
 
-  const HandleHexColorOpacity = (color: string) => {
-    const rgb = color.match(/\w\w/g)?.map(hex => parseInt(hex, 16));
+  const handleHexColorOpacity = (color: string) => {
+    const rgb = color.match(/\\w\\w/g)?.map(hex => parseInt(hex, 16));
     if (!rgb) return color;
     return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.1)`;
-  }
+  };
 
-  // Get localized categories
-  const localizedCategories = categories ? localizeCategoriesWithSubs(categories) : [];
+  const handleCategoryPress = (categoryId: string) => {
+    setExpandedCategoryId(expandedCategoryId === categoryId ? null : categoryId);
+  };
+
+  const handleSubCategorySelect = (subCategoryId: string) => {
+    setSelectedCategoryId(subCategoryId);
+    handleClosePress();
+  };
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={-1} // Start closed
+      index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
       handleStyle={{
-        backgroundColor: '#FFFFFF', // Consider theme variables
+        backgroundColor: '#FFFFFF',
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
       }}
       handleIndicatorStyle={{
-        backgroundColor: "#000", // Consider theme variables
+        backgroundColor: "#000",
         width: 40,
       }}
       containerStyle={{
         zIndex: 1000,
       }}
       backgroundStyle={{
-        backgroundColor: "#FFFFFF" // Consider theme variables
+        backgroundColor: "#FFFFFF"
       }}
     >
       <View className="w-full h-full pt-4 px-6">
-
-        <View className="flex-row justify-between items-center w-full pb-4 ">
-          <View className="">
-            <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
-              Categoria
-            </Text>
-          </View>
-          <SvgIcon name="close" size={12} color="black" onPress={handleClosePress} />
+        <View className="flex-row justify-between items-center w-full pb-4">
+          <Text className="text-black text-center font-medium uppercase" style={{ fontSize: 14 }}>
+            {type === 'income' ? 'Income Categories' : 'Expense Categories'}
+          </Text>
         </View>
 
-
-        <View className="mb-4">
-          {isCategoriesLoading ? (
-            <View className="flex items-center justify-center h-40">
-              <Text>Caricamento categorie...</Text>
-            </View>
-          ) : (
-            localizedCategories && localizedCategories.length > 0 ? (
-              <ScrollView
-                showsHorizontalScrollIndicator={false}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingBottom: 40,
-                }}
-              >
-                {localizedCategories?.map((category) => (
-                  <View key={category.id} className="flex flex-col items-center justify-center gap-2 mb-4">
-                    {/* Main Category Display */}
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <View className="space-y-2">
+            {categories.map((category) => (
+              <View key={category.id}>
+                {/* Category Header */}
+                <Pressable
+                  className="flex-row items-center justify-between p-4 rounded-xl border border-gray-200"
+                  style={{ backgroundColor: handleHexColorOpacity(category.color) }}
+                  onPress={() => handleCategoryPress(category.id)}
+                >
+                  <View className="flex-row items-center gap-3">
                     <View
-                      style={{ backgroundColor: HandleHexColorOpacity(category.color) || '#CCCCCC', }}
-                      className="w-fit h-10 rounded-full flex flex-row gap-2 items-center justify-center px-4"
+                      className="w-8 h-8 rounded-lg items-center justify-center"
+                      style={{ backgroundColor: category.color }}
                     >
-                      <Text className="text-white text-base font-medium">
-                        {category.icon}
-                      </Text>
-                      <Text className="text-black text-base font-semibold uppercase" style={{ fontFamily: 'DM Sans', color: category.color, fontWeight: 'bold' }}>{category.localizedName}</Text>
+                      <Text className="text-white text-sm">{category.icon}</Text>
                     </View>
-                    {/* Subcategories Display */}
-                    <View className="flex flex-row flex-wrap w-full justify-center pt-2 gap-y-3 gap-x-2 px-2 pb-6">
-                      {
-                        category.subCategories?.map((subCategory) => (
-                          <Pressable
-                            onPress={() => {
-                              setSelectedCategoryId(subCategory.id);
-                              handleClosePress();
-                            }}
-                            key={subCategory.id}
-                            className={cn(
-                              "w-fit min-h-10 px-5 py-2 rounded-full flex items-center justify-center text-black border border-gray-300",
-                              selectedCategoryId === subCategory.id ? "bg-gray-100" : "bg-white"
-                            )}
-                          >
-                            <Text className="text-black text-sm font-medium text-center">{subCategory.icon} {subCategory.localizedName}</Text>
-                          </Pressable>
-                        ))
-                      }
-                    </View>
+                    <Text className="text-gray-900 font-medium">{category.name}</Text>
                   </View>
-                ))}
-              </ScrollView>
-            ) : (
-              <View className="flex items-center justify-center h-40">
-                <Text>Nessuna categoria trovata.</Text>
-              </View>
-            )
+                  
+                  <SvgIcon
+                    name={expandedCategoryId === category.id ? "up" : "down"}
+                    size={16}
+                    color="#6B7280"
+                  />
+                </Pressable>
 
-          )}
+                {/* Subcategories */}
+                {expandedCategoryId === category.id && (
+                  <View className="mt-2 ml-4 space-y-1">
+                    {category.subCategories.map((subCategory) => (
+                      <Pressable
+                        key={subCategory.id}
+                        className={cn(
+                          "flex-row items-center gap-3 p-3 rounded-lg",
+                          selectedCategoryId === subCategory.id
+                            ? "bg-primary-100 border border-primary-300"
+                            : "bg-gray-50"
+                        )}
+                        onPress={() => handleSubCategorySelect(subCategory.id)}
+                      >
+                        <Text className="text-base">{subCategory.icon}</Text>
+                        <Text className="text-gray-800 font-medium">{subCategory.name}</Text>
+                        
+                        {selectedCategoryId === subCategory.id && (
+                          <View className="ml-auto">
+                            <SvgIcon name="check" size={16} color="#3B82F6" />
+                          </View>
+                        )}
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+
+        <View className="mt-4 p-3 bg-gray-50 rounded-xl">
+          <Text className="text-gray-500 text-xs text-center">
+            This is a template with placeholder categories
+          </Text>
         </View>
       </View>
     </BottomSheet>
   );
-}; 
+};
