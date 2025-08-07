@@ -19,15 +19,11 @@ import * as Haptics from 'expo-haptics';
 import { useCurrency } from '@/hooks/use-currency';
 import { useLocalizedSubCategory } from '@/hooks/useLocalizedCategories';
 
-const ACTION_WIDTH = 80;
-const SWIPE_THRESHOLD = 50; // Threshold to show delete background
-const FULL_SWIPE_THRESHOLD = 200; // Threshold to trigger delete confirmation
+const SWIPE_THRESHOLD = 50;
+const FULL_SWIPE_THRESHOLD = 200;
 // Minimized thresholds to reduce scroll conflict to minimum
 const HORIZONTAL_ACTIVE_OFFSET = 3; // activeOffsetX - very small for minimal interference
 const VERTICAL_FAIL_OFFSET = 2; // failOffsetY - very small to fail immediately on vertical gestures
-// Legacy thresholds for gesture logic (if needed)
-const HORIZONTAL_THRESHOLD = 10;
-const VERTICAL_THRESHOLD = 15;
 
 // Global state to manage active swipe instances - prevents multiple simultaneous swipes
 let activeSwipeInstance: string | null = null;
@@ -324,6 +320,11 @@ const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps>
               </View>
 
               <View className="flex-1">
+                {localizedSubCategory && (
+                  <Text className="text-xs text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 12 }}>
+                    {localizedSubCategory.localizedName}
+                  </Text>
+                )}
                 {
                   transaction.description && (
                     <Text className="text-sm text-gray-900 font-medium" style={{ fontFamily: 'DM Sans', fontSize: 14 }}>
@@ -331,11 +332,6 @@ const SwipeableTransactionItemComponent: React.FC<SwipeableTransactionItemProps>
                     </Text>
                   )
                 }
-                {localizedSubCategory && (
-                  <Text className="text-xs text-gray-500" style={{ fontFamily: 'DM Sans', fontSize: 12 }}>
-                    {localizedSubCategory.localizedName}
-                  </Text>
-                )}
               </View>
             </View>
 

@@ -47,7 +47,8 @@ export function useLocalizedCategories() {
       sociale: t('categories.macro.sociale'),
       lavoro: t('categories.macro.lavoro'),
       investimenti: t('categories.macro.investimenti'),
-      extra: t('categories.macro.extra')
+      extra: t('categories.macro.extra'),
+      entrate: t('categories.macro.entrate')
     },
     sub: {
       // Casa
@@ -160,7 +161,23 @@ export function useLocalizedCategories() {
         extra_vendite: t('categories.sub.extra_vendite'),
         extra_regali: t('categories.sub.extra_regali'),
         extra_rimborsi: t('categories.sub.extra_rimborsi'),
-        extra_altro: t('categories.sub.extra_altro')
+        extra_altro: t('categories.sub.extra_altro'),
+        
+        // Entrate (Income)
+        entrate_stipendio: t('categories.sub.entrate_stipendio'),
+        entrate_freelance: t('categories.sub.entrate_freelance'),
+        entrate_affitti_ricevuti: t('categories.sub.entrate_affitti_ricevuti'),
+        entrate_investimenti: t('categories.sub.entrate_investimenti'),
+        entrate_regali_ricevuti: t('categories.sub.entrate_regali_ricevuti'),
+        entrate_rimborsi: t('categories.sub.entrate_rimborsi'),
+        entrate_vincite: t('categories.sub.entrate_vincite'),
+        entrate_borsa_studio: t('categories.sub.entrate_borsa_studio'),
+        entrate_bonus_premi: t('categories.sub.entrate_bonus_premi'),
+        entrate_interessi_bancari: t('categories.sub.entrate_interessi_bancari'),
+        entrate_pensione: t('categories.sub.entrate_pensione'),
+        entrate_prestiti_ricevuti: t('categories.sub.entrate_prestiti_ricevuti'),
+        entrate_trading: t('categories.sub.entrate_trading'),
+        entrate_vendite: t('categories.sub.entrate_vendite')
       }
     };
 

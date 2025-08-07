@@ -35,7 +35,7 @@
       "loading": "Caricamento...",
       "empty": {
         "title": "Tutto tace... per ora",
-        "subtitle": "Aggiungi una transazione per visualizzare il tuo andamento"
+        "description": "Aggiungi una transazione per visualizzare il tuo andamento"
       },
       "months": {
         "january": "Gennaio",
@@ -504,7 +504,7 @@
   "biometric": {
     "types": {
       "faceId": "Face ID",
-      "touchId": "Touch ID", 
+      "touchId": "Touch ID",
       "iris": "Iris",
       "biometric": "Biometrico"
     },
@@ -561,7 +561,7 @@
       "message": "Per attivare le notifiche, è necessario concedere i permessi nelle impostazioni del dispositivo."
     },
     "dailyReminder": {
-      "title": "Reminder giornaliero", 
+      "title": "Reminder giornaliero",
       "description": "Ti invieremo una notifica al giorno, all'orario che preferisci, per ricordarti di aggiornare i tuoi conti",
       "timeLabel": "Orario",
       "body": "Hai aggiunto le tue spese oggi? 👀"
@@ -592,7 +592,7 @@
     "frequency": {
       "daily": "Ogni giorno",
       "multiDaily": "Ogni {{interval}} giorni",
-      "weekly": "Ogni settimana", 
+      "weekly": "Ogni settimana",
       "multiWeekly": "Ogni {{interval}} settimane",
       "monthly": "Ogni mese",
       "multiMonthly": "Ogni {{interval}} mesi",
@@ -600,8 +600,20 @@
       "multiYearly": "Ogni {{interval}} anni",
       "unknown": "Frequenza sconosciuta"
     },
+    "timing": {
+      "today": "oggi",
+      "tomorrow": "domani",
+      "inDays": "tra {{days}} giorni"
+    },
     "status": {
-      "inactive": "⏸️ Sospesa"
+      "inactive": "⏸️ Sospesa",
+      "suspended": "⏸️ Sospesa"
+    },
+    "category": {
+      "other": "❓ Altro"
+    },
+    "account": {
+      "unspecified": "Conto non specificato"
     },
     "defaults": {
       "category": "❓ Altro",
@@ -639,7 +651,7 @@
     },
     "errors": {
       "selectAccount": "Seleziona un conto",
-      "selectCategory": "Seleziona una categoria", 
+      "selectCategory": "Seleziona una categoria",
       "amountMustBePositive": "L'importo deve essere maggiore di zero",
       "endDateAfterStart": "La data di fine deve essere successiva alla data di inizio",
       "saveError": "Si è verificato un errore nel salvataggio della ricorrenza"
@@ -655,7 +667,7 @@
       "daily": "Ogni giorno",
       "multiDaily": "Ogni {{interval}} giorni",
       "weekly": "Ogni settimana",
-      "multiWeekly": "Ogni {{interval}} settimane", 
+      "multiWeekly": "Ogni {{interval}} settimane",
       "monthly": "Ogni mese",
       "multiMonthly": "Ogni {{interval}} mesi",
       "yearly": "Ogni anno",
@@ -664,8 +676,8 @@
     },
     "timing": {
       "today": "oggi",
-      "inOneDay": "in 1 giorno",
-      "inXDays": "in {{days}} giorni"
+      "inOneDay": "tra 1 giorno",
+      "inDays": "tra {{days}} giorni"
     },
     "status": {
       "inactive": "⏸️ Sospesa"
@@ -701,7 +713,7 @@
       "delete": {
         "title": "Elimina rata",
         "message": "Sei sicuro di voler eliminare questa rata? Questa azione non può essere annullata.",
-        "cancel": "Annulla", 
+        "cancel": "Annulla",
         "delete": "Elimina"
       },
       "deleteError": {
@@ -826,7 +838,7 @@
       "exampleText": "Lotto con X ogni giorno, e mi costa Y ore a settimana...",
       "points": {
         "expensive": "Le soluzioni attuali sono costose e complesse",
-        "timeWaste": "Gli utenti perdono tempo con soluzioni manuali", 
+        "timeWaste": "Gli utenti perdono tempo con soluzioni manuali",
         "missingFeatures": "Gli strumenti esistenti mancano di funzionalità chiave"
       },
       "seeTheSolution": "Vedi la Soluzione"

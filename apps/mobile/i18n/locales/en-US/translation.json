@@ -48,7 +48,7 @@
       "loading": "Loading...",
       "empty": {
         "title": "All quiet... for now",
-        "subtitle": "Add a transaction to view your progress"
+        "description": "Add a transaction to view your progress"
       },
       "days": {
         "sun": "SUN",
@@ -570,8 +570,20 @@
       "multiYearly": "Every {{interval}} years",
       "unknown": "Unknown frequency"
     },
+    "timing": {
+      "today": "today",
+      "tomorrow": "tomorrow",
+      "inDays": "in {{days}} days"
+    },
     "status": {
-      "inactive": "⏸️ Suspended"
+      "inactive": "⏸️ Suspended",
+      "suspended": "⏸️ Suspended"
+    },
+    "category": {
+      "other": "❓ Other"
+    },
+    "account": {
+      "unspecified": "Account not specified"
     },
     "defaults": {
       "category": "❓ Other",

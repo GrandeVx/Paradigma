@@ -119,16 +119,16 @@ export default function ValueScreen() {
         {/* Transaction Type Selector */}
 
         <View className="flex-1 justify-center items-center px-4">
-          <View className="flex flex-row items-center gap-2">
-            <Text className="text-gray-400 text-4xl font-bold">{getCurrencySymbol()}</Text>
-            <View className={`flex flex-row items-center ${isAnimating ? 'scale-110' : 'scale-100'}`}>
-              <Text className={`text-6xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700'}`}>
+          <View className="flex flex-row items-baseline gap-2">
+            <Text className="text-gray-400 text-4xl font-bold" style={{ fontFamily: 'ApfelGrotezkMittel' }}>{getCurrencySymbol()}</Text>
+            <View className={`flex flex-row items-baseline ${isAnimating ? 'scale-110' : 'scale-100'}`}>
+              <Text style={{ fontFamily: 'ApfelGrotezkMittel' }} className={`text-6xl font-bold ${formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700'}`}>
                 {formattedAmount.split('.')[0]}
               </Text>
-              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
+              <Text style={{ fontFamily: 'ApfelGrotezkMittel' }} className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[0] === '0' && formattedAmount.split('.')[1] === '00' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
                 ,
               </Text>
-              <Text className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[1] === '00' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
+              <Text style={{ fontFamily: 'ApfelGrotezkMittel' }} className={`text-4xl font-bold ${isDecimalActive ? (formattedAmount.split('.')[1] === '00' ? 'text-gray-400' : 'text-primary-700') : 'text-gray-300'}`}>
                 {formattedAmount.split('.')[1]}
               </Text>
             </View>

@@ -49,6 +49,27 @@ interface RecurringTransaction {
   endDate?: Date | null;
 }
 
+// Get days until next execution
+const getDaysUntilNext = (t: TFunction, nextDate?: Date | string) => {
+  if (!nextDate) return null;
+
+  const next = new Date(nextDate);
+  const now = new Date();
+  const diffTime = next.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return t('recurring.timing.today');
+  if (diffDays === 1) return t('recurring.timing.tomorrow');
+  if (diffDays > 1 && diffDays <= 7) return t('recurring.timing.inDays', { days: diffDays });
+  
+  // Format date for dates more than a week away
+  const options: Intl.DateTimeFormatOptions = {
+    day: 'numeric',
+    month: 'short'
+  };
+  return next.toLocaleDateString('it-IT', options);
+}
+
 // Format currency helper (Italian format)
 const formatCurrency = (amount: number | Decimal) => {
   const numAmount = typeof amount === 'number' ? amount : Number(amount);
@@ -63,13 +84,13 @@ const getFrequencyText = (frequencyType: string, frequencyInterval: number, t: T
 
   switch (frequencyType) {
     case 'DAILY':
-      return interval === 1 ? t('recurring.frequency.daily') : t('recurring.frequency.dailyInterval', { interval });
+      return interval === 1 ? t('recurring.frequency.daily') : t('recurring.frequency.multiDaily', { interval });
     case 'WEEKLY':
-      return interval === 1 ? t('recurring.frequency.weekly') : t('recurring.frequency.weeklyInterval', { interval });
+      return interval === 1 ? t('recurring.frequency.weekly') : t('recurring.frequency.multiWeekly', { interval });
     case 'MONTHLY':
-      return interval === 1 ? t('recurring.frequency.monthly') : t('recurring.frequency.monthlyInterval', { interval });
+      return interval === 1 ? t('recurring.frequency.monthly') : t('recurring.frequency.multiMonthly', { interval });
     case 'YEARLY':
-      return interval === 1 ? t('recurring.frequency.yearly') : t('recurring.frequency.yearlyInterval', { interval });
+      return interval === 1 ? t('recurring.frequency.yearly') : t('recurring.frequency.multiYearly', { interval });
     default:
       return t('recurring.frequency.unknown');
   }
@@ -92,12 +113,18 @@ const RecurringCard: React.FC<{
   const frequencyText = getFrequencyText(recurring.frequencyType, recurring.frequencyInterval, t);
   const categoryText = getCategoryDisplay(recurring.subCategory, t);
   const accountName = recurring.moneyAccount?.name || t('recurring.account.unspecified');
+  const nextExecution = getDaysUntilNext(t, recurring.nextDueDate);
 
   return (
     <View style={styles.card}>
       {/* Header with title and edit button */}
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{recurring.description.length > 15 ? recurring.description.slice(0, 12) + '...' : recurring.description}</Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.cardTitle}>{recurring.description.length > 15 ? recurring.description.slice(0, 12) + '...' : recurring.description}</Text>
+          {nextExecution && (
+            <Text style={styles.nextExecutionText}>{nextExecution}</Text>
+          )}
+        </View>
         <Pressable
           style={styles.editButton}
           onPress={() => onEdit(recurring.id)}
@@ -318,12 +345,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
+  },
+  titleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
   },
   cardTitle: {
     fontSize: 24,
     fontWeight: '400',
     color: '#000',
-    flex: 1,
+    fontFamily: 'DM Sans',
+    letterSpacing: -0.48,
+  },
+  nextExecutionText: {
+    fontSize: 24,
+    fontWeight: '400',
+    color: '#6B7280',
     fontFamily: 'DM Sans',
     letterSpacing: -0.48,
   },

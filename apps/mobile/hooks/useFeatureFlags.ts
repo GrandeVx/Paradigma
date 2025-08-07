@@ -3,8 +3,6 @@ import { useMemo } from 'react';
 export interface FeatureFlags {
   requireSubscription: boolean;
   paywallEnabled: boolean;
-  demoModeEnabled: boolean;
-  demoFixedOtp: string;
 }
 
 /**
@@ -15,8 +13,6 @@ export function useFeatureFlags(): FeatureFlags {
   const flags = useMemo<FeatureFlags>(() => ({
     requireSubscription: process.env.EXPO_PUBLIC_REQUIRE_SUBSCRIPTION === 'true',
     paywallEnabled: process.env.EXPO_PUBLIC_PAYWALL_ENABLED === 'true',
-    demoModeEnabled: process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true',
-    demoFixedOtp: process.env.EXPO_PUBLIC_DEMO_FIXED_OTP || '123456',
   }), []);
 
   if (__DEV__) {
@@ -39,16 +35,3 @@ export function useSubscriptionFeatures() {
   }), [requireSubscription, paywallEnabled]);
 }
 
-/**
- * Hook specifically for demo account features (Apple Review)
- */
-export function useDemoFeatures() {
-  const { demoModeEnabled, demoFixedOtp } = useFeatureFlags();
-
-  return useMemo(() => ({
-    isDemoModeEnabled: demoModeEnabled,
-    demoOtp: demoFixedOtp,
-    demoEmail: 'test@paradigma.com',
-    isDemoAccount: (email: string) => email === 'test@paradigma.com',
-  }), [demoModeEnabled, demoFixedOtp]);
-}

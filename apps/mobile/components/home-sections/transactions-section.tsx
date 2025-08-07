@@ -872,7 +872,7 @@ export const TransactionsSection: React.FC = () => {
             className="text-black text-center font-medium"
             style={{ fontFamily: 'DM Sans', fontSize: 16, lineHeight: 24 }}
           >
-            {t('home.transactions.emptyTitle')}
+            {t('home.transactions.empty.title')}
           </Text>
 
           {/* Subtitle */}
@@ -880,7 +880,7 @@ export const TransactionsSection: React.FC = () => {
             className="text-gray-500 text-center text-sm"
             style={{ fontFamily: 'DM Sans', lineHeight: 20 }}
           >
-            {t('home.transactions.emptyDescription')}
+            {t('home.transactions.empty.description')}
           </Text>
         </Animated.View>
       ) : (

@@ -526,9 +526,9 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
           <View className="flex-1 px-4">
             <View className="flex-col">
               <Pressable disabled={transactionType === 'transfer'} onPress={handleOpenCategoryBottomSheet} className="border-b border-t border-gray-200 py-4">
-                <View className="flex-row gap-8 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.category')}</Text>
-                  <View className="flex-row items-center">
+                <View className="flex-row items-center py-2">
+                  <Text className="text-gray-400 font-medium w-28" style={{ fontSize: 16 }}>{t('transaction.fields.category')}</Text>
+                  <View className="flex-row items-center flex-1">
                     {transactionType === 'transfer' ? (
                       <View className="flex-row items-center gap-3">
                         <SvgIcon name="target" size={16} color="gray" />
@@ -542,9 +542,9 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
               </Pressable>
 
               <Pressable onPress={handleOpenMoneyAccountBottomSheet} className="border-b border-gray-200 py-4">
-                <View className="flex-row gap-8 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{transactionType === 'transfer' ? t('transaction.fields.fromAccount') : t('transaction.fields.account')}</Text>
-                  <View className="flex-row items-center gap-3">
+                <View className="flex-row items-center py-2">
+                  <Text className="text-gray-400 font-medium w-28" style={{ fontSize: 16 }}>{transactionType === 'transfer' ? t('transaction.fields.fromAccount') : t('transaction.fields.account')}</Text>
+                  <View className="flex-row items-center gap-3 flex-1">
                     <SvgIcon name={getAccountIcon()} size={16} color="gray" />
                     <Text className="text-black text-base">{getAccountName()}</Text>
                   </View>
@@ -553,9 +553,9 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
               {transactionType === 'transfer' && (
                 <Pressable onPress={handleOpenTransferAccountBottomSheet} className="border-b border-gray-200 py-4">
-                  <View className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.toAccount')}</Text>
-                    <View className="flex-row items-center">
+                  <View className="flex-row items-center py-2">
+                    <Text className="text-gray-400 font-medium w-28" style={{ fontSize: 16 }}>{t('transaction.fields.toAccount')}</Text>
+                    <View className="flex-row items-center flex-1">
                       <Text className="text-black text-base">{getTransferAccountName()}</Text>
                     </View>
                   </View>
@@ -564,8 +564,8 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
               <View className="border-b border-gray-200 py-4">
                 <View className="flex-row justify-between pr-2 items-center">
-                  <Pressable onPress={handleOpenDateBottomSheet} className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.date')}</Text>
+                  <Pressable onPress={handleOpenDateBottomSheet} className="flex-row items-center py-2">
+                    <Text className="text-gray-400 font-medium w-28" style={{ fontSize: 16 }}>{t('transaction.fields.date')}</Text>
                     <View className="flex-row items-center gap-4">
                       <SvgIcon name="calendar" size={16} color="black" />
                       <Text className="text-black text-base">{getDateText(selectedDate)}</Text>
@@ -584,8 +584,8 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
 
               {!transaction.transferId && (
                 <View className="border-b border-gray-200 py-4">
-                  <View className="flex-row gap-8 items-center py-2">
-                    <Text className="text-gray-400 font-medium" style={{ fontSize: 16 }}>{t('transaction.fields.repeat')}</Text>
+                  <View className="flex-row items-center py-2">
+                    <Text className="text-gray-400 font-medium w-28" style={{ fontSize: 16 }}>{t('transaction.fields.repeat')}</Text>
                     <Pressable onPress={handleOpenRecurrenceBottomSheet} style={{ flex: 1 }}>
                       <View className="flex-row items-center gap-4 w-full">
                         <SvgIcon name="schedule" size={16} color="black" />
@@ -602,16 +602,18 @@ export default function TransactionEditForm({ transactionId }: TransactionEditFo
               )}
 
               <View className="border-b border-gray-200 py-4">
-                <View className="flex-row gap-x-4 items-center py-2">
-                  <Text className="text-gray-400 font-medium" style={{ fontSize: 16, marginRight: 18 }}>{t('transaction.fields.notes')}</Text>
-                  <SvgIcon name="schedule" size={16} color="black" />
-                  <TextInput
-                    value={note}
-                    onChangeText={setNote}
-                    placeholder={t('transaction.placeholders.addNote')}
-                    className="text-black text-base flex-1 text-left"
-                    placeholderTextColor="#9CA3AF"
-                  />
+                <View className="flex-row items-center py-2">
+                  <Text className="text-gray-400 font-medium w-28" style={{ fontSize: 16 }}>{t('transaction.fields.notes')}</Text>
+                  <View className="flex-row items-center gap-4 flex-1">
+                    <SvgIcon name="schedule" size={16} color="black" />
+                    <TextInput
+                      value={note}
+                      onChangeText={setNote}
+                      placeholder={t('transaction.placeholders.addNote')}
+                      className="text-black text-base flex-1 text-left"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </View>
                 </View>
               </View>
             </View>

@@ -10,20 +10,16 @@ import { cn } from '@/lib/utils';
 import { SvgIcon } from '@/components/ui/svg-icon';
 import { router } from 'expo-router';
 import { useLocalizedCategories } from '@/hooks/useLocalizedCategories';
-import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   FadeInDown,
   FadeIn,
-  Layout,
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming
 } from 'react-native-reanimated';
 
 export default function BudgetManagementScreen() {
-  const { formatCurrency } = useCurrency();
   const { translations } = useLocalizedCategories();
   const { t } = useTranslation();
 
@@ -202,7 +198,7 @@ export default function BudgetManagementScreen() {
   // Header actions
   const leftActions = useMemo(() => [
     {
-      icon: <SvgIcon name="arrow-left" color="#111827" size={24} />,
+      icon: <SvgIcon name="left" color="#111827" size={24} />,
       onPress: handleBack
     },
   ], [handleBack]);
@@ -216,7 +212,7 @@ export default function BudgetManagementScreen() {
 
   if (isLoadingBudgets || !expenseCategories.length) {
     return (
-      <HeaderContainer variant="secondary" customTitle="IL TUO BUDGET MENSILE" leftActions={leftActions}>
+      <HeaderContainer variant="secondary" customTitle="IL TUO BUDGET MENSILE" onBackPress={handleBack}>
         <SafeAreaView className="flex-1 bg-white">
           <View className="flex-1 justify-center items-center">
             <Text className="text-gray-500" style={{ fontSize: 16 }}>{t('common.loading')}</Text>
@@ -263,7 +259,7 @@ export default function BudgetManagementScreen() {
                 {editingIncome ? (
                   <TextInput
                     className="text-black font-medium text-right"
-                    style={{ fontSize: 16 }}
+                    style={{ fontSize: 16, fontFamily: 'ApfelGrotezkMittel' }}
                     keyboardType="numeric"
                     value={monthlyIncome.toString()}
                     onChangeText={handleIncomeChange}
@@ -272,7 +268,7 @@ export default function BudgetManagementScreen() {
                     placeholder="0"
                   />
                 ) : (
-                  <Text className="text-black font-medium" style={{ fontSize: 16 }}>
+                  <Text className="text-black font-medium" style={{ fontSize: 16, fontFamily: 'ApfelGrotezkMittel' }}>
                     € {monthlyIncome.toFixed(2).replace('.', ',')}
                   </Text>
                 )}
@@ -325,7 +321,7 @@ export default function BudgetManagementScreen() {
                   <Animated.View
                     key={category.id}
                     entering={FadeInDown.delay((index + 2) * 50).duration(400).springify()}
-                    className={`bg-gray-50 rounded-3xl ${monthlyIncome === 0 ? 'opacity-50' : ''
+                    className={`bg-gray-50 rounded-3xl p-3 ${monthlyIncome === 0 ? 'opacity-50' : ''
                       }`}
                   >
                     <Pressable
@@ -352,7 +348,7 @@ export default function BudgetManagementScreen() {
                       {editingCategory === category.id ? (
                         <TextInput
                           className="text-black font-medium text-right"
-                          style={{ fontSize: 16 }}
+                          style={{ fontSize: 16, fontFamily: 'ApfelGrotezkMittel' }}
                           keyboardType="numeric"
                           value={budgetAmounts[category.id]?.toString() || '0'}
                           onChangeText={(value) => handleAmountChange(category.id, value)}
@@ -361,7 +357,7 @@ export default function BudgetManagementScreen() {
                           placeholder="0"
                         />
                       ) : (
-                        <Text className="text-black font-medium" style={{ fontSize: 16 }}>
+                        <Text className="text-black font-medium" style={{ fontSize: 16, fontFamily: 'ApfelGrotezkMittel' }}>
                           € {categoryBudget.toFixed(2).replace('.', ',')}
                         </Text>
                       )}

@@ -218,7 +218,7 @@ const SubCategoryItem: React.FC<{
     : subCategory.name;
 
   return (
-    <View className="flex-row items-center justify-between py-2 pl-6 pr-4">
+    <View className="flex-row items-center justify-between py-2 pl-6 pr-12">
       {/* Sub-category info */}
       <View className="flex-row items-center flex-1 gap-3">
         <Text
@@ -296,7 +296,7 @@ const AnimatedCategoryLegendItem: React.FC<{
           onPress={() => onCategoryPress(category.id)}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          className="flex-row items-center flex-1 gap-3 pr-4"
+          className="flex-row items-center flex-1 gap-2"
           activeOpacity={0.7}
         >
           {/* Color indicator */}
@@ -324,31 +324,33 @@ const AnimatedCategoryLegendItem: React.FC<{
 
         {/* Amount, percentage and arrow */}
         <View className="flex-row items-center gap-4">
-          <Text
-            className="text-gray-500"
-            style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
-          >
-            {category.percentage}%
-          </Text>
-
-          <Text
-            className="text-black font-medium"
-            style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
-          >
-            {formatCurrency(category.amount, { showSign: false })}
-          </Text>
-
-          {/* Expand/Collapse arrow - separate touchable area */}
           <TouchableOpacity
             onPress={onToggleExpand}
-            className="w-8 h-8 items-center justify-center"
+            className="flex-row items-center gap-4"
             activeOpacity={0.7}
           >
-            {isExpanded ? (
-              <UpIcon size={14} className="text-gray-500" />
-            ) : (
-              <DownIcon size={14} className="text-gray-500" />
-            )}
+            <Text
+              className="text-gray-500"
+              style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
+            >
+              {category.percentage}%
+            </Text>
+
+            <Text
+              className="text-black font-medium"
+              style={{ fontFamily: 'Apfel Grotezk', fontSize: 16 }}
+            >
+              {formatCurrency(category.amount, { showSign: false })}
+            </Text>
+
+            {/* Expand/Collapse arrow - separate touchable area */}
+            <View className="w-8 h-8 items-center justify-center">
+              {isExpanded ? (
+                <UpIcon size={12} className="text-gray-500" />
+              ) : (
+                <DownIcon size={12} className="text-gray-500" />
+              )}
+            </View>
           </TouchableOpacity>
         </View>
       </View>

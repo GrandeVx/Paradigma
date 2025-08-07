@@ -306,14 +306,14 @@ export default function InstallmentsScreen() {
   const renderInstallmentCard = (installment: InstallmentTransaction) => {
     const current = installment.occurrencesGenerated || 0;
     const total = installment.totalOccurrences || 0;
-    
+
     // Use totalAmount if available (for installments), otherwise use amount
-    const totalAmount = installment.totalAmount ? 
+    const totalAmount = installment.totalAmount ?
       (typeof installment.totalAmount === 'string' ? parseFloat(installment.totalAmount) :
-       installment.totalAmount instanceof Decimal ? installment.totalAmount.toNumber() : installment.totalAmount) :
+        installment.totalAmount instanceof Decimal ? installment.totalAmount.toNumber() : installment.totalAmount) :
       (typeof installment.amount === 'string' ? parseFloat(installment.amount) :
-       installment.amount instanceof Decimal ? installment.amount.toNumber() : installment.amount);
-    
+        installment.amount instanceof Decimal ? installment.amount.toNumber() : installment.amount);
+
     // For installments, amount is already the per-installment amount
     const installmentAmountNum = typeof installment.amount === 'string' ? parseFloat(installment.amount) :
       installment.amount instanceof Decimal ? installment.amount.toNumber() : installment.amount;
@@ -459,7 +459,7 @@ export default function InstallmentsScreen() {
 
             <Text style={styles.emptyTitle}>{t('installments.empty.title')}</Text>
             <Text style={styles.emptyDescription}>
-              {t('installments.empty.description')}
+              {t('installments.empty.subtitle')}
             </Text>
           </View>
         )}
