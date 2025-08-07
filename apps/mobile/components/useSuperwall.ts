@@ -24,7 +24,7 @@ export function useSuperwall() {
   const checkSubscription = async () => {
     try {
       const status = await superwallService.getSubscriptionStatus();
-      setIsSubscribed(status === SubscriptionStatus.ACTIVE);
+      setIsSubscribed(status === SubscriptionStatus.Active);
     } catch (error) {
       console.error("[Superwall] Hook subscription check failed:", error);
     } finally {
@@ -37,10 +37,10 @@ export function useSuperwall() {
 
     try {
       await superwallService.presentPaywall(triggerId);
-      
+
       // Refresh subscription status after paywall interaction
       await checkSubscription();
-      
+
       // Track paywall event
       superwallService.trackSubscriptionEvent('paywall_presented', { triggerId });
     } catch (error) {
@@ -49,7 +49,7 @@ export function useSuperwall() {
   };
 
   const showPaywallWithCallback = async (
-    triggerId: string, 
+    triggerId: string,
     onComplete: (completed: boolean, purchased: boolean) => void
   ) => {
     if (isLoading || Platform.OS === "web") {
@@ -60,23 +60,23 @@ export function useSuperwall() {
     try {
       await superwallService.presentPaywallWithCallback(triggerId, async (completed, purchased) => {
         console.log(`[Superwall] Paywall completed: ${completed}, purchased: ${purchased}`);
-        
+
         // Refresh subscription status after paywall interaction
         if (completed) {
           await checkSubscription();
         }
-        
+
         // Track paywall event
-        superwallService.trackSubscriptionEvent('paywall_completed', { 
-          triggerId, 
-          completed, 
-          purchased 
+        superwallService.trackSubscriptionEvent('paywall_completed', {
+          triggerId,
+          completed: completed.toString(),
+          purchased: purchased.toString()
         });
-        
+
         // Call the provided callback
         onComplete(completed, purchased);
       });
-      
+
       // Track paywall presentation
       superwallService.trackSubscriptionEvent('paywall_presented', { triggerId });
     } catch (error) {

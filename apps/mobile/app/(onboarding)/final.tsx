@@ -2,7 +2,7 @@ import { StyleSheet, View, ScrollView } from "react-native";
 
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useSuperwall } from "@/components/useSuperwall";
-import { useSupabase } from "@/context/supabase-provider";
+import { useAuth } from "@/context/auth-provider";
 import { SUPERWALL_TRIGGERS } from "@/config/superwall";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 
 export default function FinalScreen() {
   const { showPaywallWithCallback } = useSuperwall();
-  const { setIsOnboarded } = useSupabase();
+  const { setIsOnboarded } = useAuth();
   const { t } = useTranslation();
 
   const handleGetStarted = async () => {

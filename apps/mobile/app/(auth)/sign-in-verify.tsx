@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { useSupabase } from "@/context/supabase-provider";
+import { useAuth } from "@/context/auth-provider";
 import { api } from "@/lib/api";
 import { z } from "zod";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
@@ -24,7 +24,7 @@ export default function SignInVerify(
   const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const otpInputRef = useRef<TextInput>(null);
-  const { signInWithVerificationOtp, sendVerificationOtp } = useSupabase();
+  const { signInWithVerificationOtp, sendVerificationOtp } = useAuth();
 
   const snapPointsNotifications = useMemo(() => ["85%"], []);
   const bottomSheetNotificationsRef = useRef<BottomSheet>(null);

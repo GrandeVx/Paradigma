@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
-import { useSupabase } from "@/context/supabase-provider";
+import { useAuth } from "@/context/auth-provider";
 import { api } from "@/lib/api";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
@@ -20,7 +20,7 @@ import * as WebBrowser from 'expo-web-browser';
 export default function SignUp() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { signInWithGoogle, signInWithApple, forceRouting } = useSupabase();
+  const { signInWithGoogle, signInWithApple, forceRouting } = useAuth();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isCheckingAccounts, setIsCheckingAccounts] = useState(false);

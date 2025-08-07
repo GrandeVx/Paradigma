@@ -46,16 +46,16 @@ const CACHE_SIZE_LIMITS = {
 export const cacheUtils = {
   // Get cache size in bytes
   getCacheSize: () => mmkvStorage.size,
-  
+
   // Get cache size in MB
   getCacheSizeMB: () => Math.round((mmkvStorage.size / (1024 * 1024)) * 100) / 100,
-  
+
   // Check if cache size exceeds limits
   isCacheOverLimit: () => cacheUtils.getCacheSizeMB() > CACHE_SIZE_LIMITS.CLEANUP_THRESHOLD_MB,
-  
+
   // Clear all cache
   clearCache: () => mmkvStorage.clearAll(),
-  
+
   // Clear specific React Query cache
   clearReactQueryCache: () => {
     try {
@@ -65,21 +65,21 @@ export const cacheUtils = {
       console.error('Failed to clear React Query cache:', error)
     }
   },
-  
+
   // Smart cleanup to keep cache under limits
   performSmartCleanup: () => {
     try {
       const currentSizeMB = cacheUtils.getCacheSizeMB();
       console.log(`🧹 [CacheUtils] Starting smart cleanup. Current size: ${currentSizeMB}MB`);
-      
+
       if (currentSizeMB <= CACHE_SIZE_LIMITS.CLEANUP_THRESHOLD_MB) {
         return; // No cleanup needed
       }
-      
+
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
-      
+
       // Clean old transaction caches
       for (let year = currentYear - 1; year <= currentYear; year++) {
         for (let month = 1; month <= 12; month++) {
@@ -89,7 +89,7 @@ export const cacheUtils = {
           }
         }
       }
-      
+
       // Clean old charts caches
       for (let year = currentYear - 1; year <= currentYear; year++) {
         for (let month = 1; month <= 12; month++) {
@@ -99,14 +99,14 @@ export const cacheUtils = {
           }
         }
       }
-      
+
       const newSizeMB = cacheUtils.getCacheSizeMB();
       console.log(`✅ [CacheUtils] Cleanup completed. New size: ${newSizeMB}MB`);
     } catch (error) {
       console.error('❌ [CacheUtils] Error during smart cleanup:', error);
     }
   },
-  
+
   // Get specific cached query
   getCachedQuery: (key: string) => {
     try {
@@ -116,7 +116,7 @@ export const cacheUtils = {
       return null
     }
   },
-  
+
   // Set specific cached query with size check
   setCachedQuery: (key: string, data: unknown) => {
     try {
@@ -124,13 +124,13 @@ export const cacheUtils = {
       if (cacheUtils.isCacheOverLimit()) {
         cacheUtils.performSmartCleanup();
       }
-      
+
       mmkvStorage.set(key, JSON.stringify(data))
     } catch (error) {
       console.error('Failed to cache query:', error)
     }
   },
-  
+
   // Remove specific cached query
   removeCachedQuery: (key: string) => {
     try {
@@ -139,14 +139,14 @@ export const cacheUtils = {
       console.error('Failed to remove cached query:', error)
     }
   },
-  
+
   // Get cache statistics
   getCacheStats: () => {
     try {
       const allKeys = mmkvStorage.getAllKeys();
       const transactionCacheKeys = allKeys.filter(key => key.startsWith('transaction-cache-'));
       const chartsCacheKeys = allKeys.filter(key => key.startsWith('charts-cache-'));
-      
+
       return {
         totalSizeMB: cacheUtils.getCacheSizeMB(),
         totalKeys: allKeys.length,
@@ -201,7 +201,7 @@ export const budgetUtils = {
       return 0
     }
   },
-  
+
   // Set monthly total budget (stored locally)
   setMonthlyTotalBudget: (amount: number): void => {
     try {
@@ -210,7 +210,7 @@ export const budgetUtils = {
       console.error('Failed to set monthly budget:', error)
     }
   },
-  
+
   // Clear monthly total budget
   clearMonthlyTotalBudget: (): void => {
     try {
@@ -335,55 +335,55 @@ export const transactionUtils = {
   setTransactionCacheData: (transactions: TransactionData[], month: number, year: number): void => {
     try {
       const cacheKey = `transaction-cache-${month}-${year}`;
-      
-             // Process transactions for cache
-       const cachedTransactions: CachedTransactionInfo[] = transactions.slice(0, 10).map(t => {
-         // Safely convert amount to number
-         let amountValue: number;
-         if (typeof t.amount === 'number') {
-           amountValue = t.amount;
-         } else if (typeof t.amount === 'string') {
-           amountValue = parseFloat(t.amount);
-         } else {
-           // Handle Decimal or other object types
-           amountValue = Number(t.amount.toString());
-         }
 
-         return {
-           id: t.id,
-           amount: amountValue,
-           description: t.description,
-           categoryName: t.subCategory?.macroCategory?.name,
-           categoryColor: t.subCategory?.macroCategory?.color,
-           categoryIcon: t.subCategory?.icon,
-           type: amountValue > 0 ? 'income' : 'expense'
-         };
-       });
+      // Process transactions for cache
+      const cachedTransactions: CachedTransactionInfo[] = transactions.slice(0, 10).map(t => {
+        // Safely convert amount to number
+        let amountValue: number;
+        if (typeof t.amount === 'number') {
+          amountValue = t.amount;
+        } else if (typeof t.amount === 'string') {
+          amountValue = parseFloat(t.amount);
+        } else {
+          // Handle Decimal or other object types
+          amountValue = Number(t.amount.toString());
+        }
 
-             // Count daily groups (simplified)
-       const dates = new Set(transactions.map(t => {
-         try {
-           // Handle different date types safely
-           let dateObj: Date;
-           if (t.date instanceof Date) {
-             dateObj = t.date;
-           } else if (typeof t.date === 'string') {
-             dateObj = new Date(t.date);
-           } else {
-             // Handle object with toString method
-             dateObj = new Date(String(t.date));
-           }
-           
-           // Validate date
-           if (isNaN(dateObj.getTime())) {
-             dateObj = new Date();
-           }
-           
-           return dateObj.toISOString().split('T')[0];
-         } catch {
-           return new Date().toISOString().split('T')[0];
-         }
-       }));
+        return {
+          id: t.id,
+          amount: amountValue,
+          description: t.description,
+          categoryName: t.subCategory?.macroCategory?.name,
+          categoryColor: t.subCategory?.macroCategory?.color,
+          categoryIcon: t.subCategory?.icon,
+          type: amountValue > 0 ? 'income' : 'expense'
+        };
+      });
+
+      // Count daily groups (simplified)
+      const dates = new Set(transactions.map(t => {
+        try {
+          // Handle different date types safely
+          let dateObj: Date;
+          if (t.date instanceof Date) {
+            dateObj = t.date;
+          } else if (typeof t.date === 'string') {
+            dateObj = new Date(t.date);
+          } else {
+            // Handle object with toString method
+            dateObj = new Date(String(t.date));
+          }
+
+          // Validate date
+          if (isNaN(dateObj.getTime())) {
+            dateObj = new Date();
+          }
+
+          return dateObj.toISOString().split('T')[0];
+        } catch {
+          return new Date().toISOString().split('T')[0];
+        }
+      }));
 
       const cacheData: TransactionCacheData = {
         count: transactions.length,
@@ -472,7 +472,7 @@ export const chartsUtils = {
   setChartsCacheData: (categories: CategoryInputData[], hasHeatmapData: boolean, month: number, year: number): void => {
     try {
       const cacheKey = `charts-cache-${month}-${year}`;
-      
+
       // Process categories for cache
       const cachedCategories: CachedCategoryInfo[] = categories.slice(0, 8).map(cat => ({
         id: cat.id,
@@ -611,39 +611,39 @@ export const categoryUtils = {
     try {
       // Clear React Query cache
       cacheUtils.clearReactQueryCache();
-      
+
       // Clear any category-specific local cache if it exists
       const allKeys = mmkvStorage.getAllKeys();
       const categoryKeys = allKeys.filter(key => key.includes('category'));
-      
+
       categoryKeys.forEach(key => {
         mmkvStorage.delete(key);
       });
-      
+
       console.log('🗑️ [CategoryUtils] All category cache cleared');
     } catch (error) {
       console.error('Failed to clear category cache:', error);
     }
   },
-  
+
   // Clear React Query cache and force reload
   forceClearCategoryCache: (): void => {
     try {
       // Clear React Query persistent cache
       cacheUtils.clearReactQueryCache();
-      
+
       // Also clear any MMKV keys that might contain category data
       const allKeys = mmkvStorage.getAllKeys();
-      const relevantKeys = allKeys.filter(key => 
-        key.includes('category') || 
+      const relevantKeys = allKeys.filter(key =>
+        key.includes('category') ||
         key.includes('react-query') ||
         key.includes('query-cache')
       );
-      
+
       relevantKeys.forEach(key => {
         mmkvStorage.delete(key);
       });
-      
+
       console.log('🗑️ [CategoryUtils] Force clear completed - all category and query cache cleared');
     } catch (error) {
       console.error('Failed to force clear category cache:', error);
@@ -827,7 +827,7 @@ export const uiUtils = {
       return false
     }
   },
-  
+
   // Set balance blur state
   setBalanceBlurred: (blurred: boolean): void => {
     try {
@@ -836,7 +836,7 @@ export const uiUtils = {
       console.error('Failed to set balance blur state:', error)
     }
   },
-  
+
   // Clear all UI preferences
   clearUIPreferences: (): void => {
     try {

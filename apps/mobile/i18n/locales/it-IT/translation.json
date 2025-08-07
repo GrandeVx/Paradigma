@@ -410,7 +410,8 @@
       "title": "NUOVA TRANSAZIONE"
     },
     "edit": {
-      "title": "TRANSAZIONE"
+      "title": "TRANSAZIONE",
+      "amount_title": "MODIFICA IMPORTO"
     },
     "list": {
       "title": "ULTIME TRANSAZIONI"

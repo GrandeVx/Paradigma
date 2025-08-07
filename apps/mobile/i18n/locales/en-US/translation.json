@@ -386,7 +386,8 @@
       "title": "NEW TRANSACTION"
     },
     "edit": {
-      "title": "TRANSACTION"
+      "title": "TRANSACTION",
+      "amount_title": "EDIT AMOUNT"
     },
     "list": {
       "title": "RECENT TRANSACTIONS"

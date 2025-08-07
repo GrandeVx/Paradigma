@@ -20,7 +20,7 @@ console.log("🚀 [BetterAuth] Initializing with config:", {
     appleClientId: process.env.APPLE_CLIENT_ID ? "Set" : "Missing",
     appleClientSecret: process.env.APPLE_CLIENT_SECRET ? "Set" : "Missing",
 });
- 
+
 export const auth = betterAuth({
     user: {
         modelName: "User",
@@ -41,7 +41,7 @@ export const auth = betterAuth({
             },
             notifications: {
                 type: "boolean",
-                defaultValue: true, 
+                defaultValue: true,
             },
             notificationToken: {
                 type: "string",
@@ -57,39 +57,13 @@ export const auth = betterAuth({
                 required: false,
                 nullable: true,
             },
-            moneyAccounts: {
-                type: "string[]",
-                required: false,
-                nullable: true,
-            },
-            recurringRules: {
-                type: "string[]",
-                required: false,
-                nullable: true,
-            },
-            transactions: {
-                type: "string[]",
-                required: false,
-                nullable: true,
-            },
-            goals: {
-                type: "string[]",
-                required: false,
-                nullable: true,
-            },
-            budgets: {
-                type: "string[]",
-                required: false,
-                nullable: true,
-            }
-        
         }
     },
     database: prismaAdapter(db, {
         provider: "postgresql", // or "mysql", "postgresql", ...etc
     }),
-    emailAndPassword: { 
-        enabled: true, 
+    emailAndPassword: {
+        enabled: true,
     },
     socialProviders: {
         google: {
@@ -101,69 +75,69 @@ export const auth = betterAuth({
             clientSecret: process.env.APPLE_CLIENT_SECRET!,
         },
     },
-    trustedOrigins: ["balance://","https://appleid.apple.com"],
-  plugins: [nextCookies(),expo(), emailOTP(
-    {
-        generateOTP: ({ email }) => {
-            const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
-            const isDemoAccount = email === 'test@paradigma.com';
-            
-            if (isDemoMode && isDemoAccount) {
-                console.log('🎭 [BetterAuth] Generating fixed OTP for demo account');
-                return '123456'; // Fixed OTP for demo account
-            }
-            
-            // Default random OTP generation for regular users
-            const randomOtp = Math.random().toString(36).substring(2, 8).toUpperCase();
-            console.log('🔐 [BetterAuth] Generated random OTP for regular user');
-            return randomOtp;
-        },
-        async sendVerificationOTP({ email, otp, type}) { 
-            const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
-            const isDemoAccount = email === 'test@paradigma.com';
-            
-            console.log("🔐 [BetterAuth] Sending verification OTP:", { 
-                email, 
-                otp, 
-                type,
-                isDemoMode,
-                isDemoAccount,
-                emailHost: process.env.EMAIL_HOST,
-                emailUser: process.env.EMAIL_USER,
-                hasPassword: !!process.env.EMAIL_PASSWORD
-            });
-            
-            // Demo mode: Skip email sending for demo account
-            if (isDemoMode && isDemoAccount) {
-                console.log("🎭 [BetterAuth] Demo mode enabled - Skipping email for demo account");
-                console.log("🎭 [BetterAuth] Use fixed OTP: 123456");
-                return; // Don't send email, use fixed OTP
-            }
-            
-            try {
-                const transporter = nodemailer.createTransport({
-                    host: process.env.EMAIL_HOST,
-                    port: 587,
-                    secure: false,
-                    auth: {
-                        user: process.env.EMAIL_USER,
-                        pass: process.env.EMAIL_PASSWORD
-                    }
+    trustedOrigins: ["balance://", "https://appleid.apple.com"],
+    plugins: [nextCookies(), expo(), emailOTP(
+        {
+            generateOTP: ({ email }) => {
+                const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
+                const isDemoAccount = email === 'test@paradigma.com';
+
+                if (isDemoMode && isDemoAccount) {
+                    console.log('🎭 [BetterAuth] Generating fixed OTP for demo account');
+                    return '123456'; // Fixed OTP for demo account
+                }
+
+                // Default random OTP generation for regular users
+                const randomOtp = Math.random().toString(36).substring(2, 8).toUpperCase();
+                console.log('🔐 [BetterAuth] Generated random OTP for regular user');
+                return randomOtp;
+            },
+            async sendVerificationOTP({ email, otp, type }) {
+                const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
+                const isDemoAccount = email === 'test@paradigma.com';
+
+                console.log("🔐 [BetterAuth] Sending verification OTP:", {
+                    email,
+                    otp,
+                    type,
+                    isDemoMode,
+                    isDemoAccount,
+                    emailHost: process.env.EMAIL_HOST,
+                    emailUser: process.env.EMAIL_USER,
+                    hasPassword: !!process.env.EMAIL_PASSWORD
                 });
 
-                const result = await transporter.sendMail({
-                    from: process.env.EMAIL_USER,
-                    to: email,
-                    subject: `Verification Code (${type})`,
-                    text: `Your verification code is ${otp}`
-                });
-                
-                console.log("✅ [BetterAuth] Email sent successfully:", result);
-            } catch (error) {
-                console.error("❌ [BetterAuth] Email sending failed:", error);
-                throw error;
+                // Demo mode: Skip email sending for demo account
+                if (isDemoMode && isDemoAccount) {
+                    console.log("🎭 [BetterAuth] Demo mode enabled - Skipping email for demo account");
+                    console.log("🎭 [BetterAuth] Use fixed OTP: 123456");
+                    return; // Don't send email, use fixed OTP
+                }
+
+                try {
+                    const transporter = nodemailer.createTransport({
+                        host: process.env.EMAIL_HOST,
+                        port: 587,
+                        secure: false,
+                        auth: {
+                            user: process.env.EMAIL_USER,
+                            pass: process.env.EMAIL_PASSWORD
+                        }
+                    });
+
+                    const result = await transporter.sendMail({
+                        from: process.env.EMAIL_USER,
+                        to: email,
+                        subject: `Verification Code (${type})`,
+                        text: `Your verification code is ${otp}`
+                    });
+
+                    console.log("✅ [BetterAuth] Email sent successfully:", result);
+                } catch (error) {
+                    console.error("❌ [BetterAuth] Email sending failed:", error);
+                    throw error;
+                }
             }
         }
-    }
-  )],
+    )],
 });

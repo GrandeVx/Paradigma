@@ -189,7 +189,7 @@ class SuperwallService {
 
       // Present the paywall
       console.log("🚀 [Superwall] Calling Superwall.shared.register()...");
-      await Superwall.shared.register(triggerId);
+      await Superwall.shared.register({ placement: triggerId });
       console.log("✅ [Superwall] Superwall.shared.register() completed");
     } catch (error) {
       console.error("❌ [Superwall] Failed to present paywall with callback:", error);

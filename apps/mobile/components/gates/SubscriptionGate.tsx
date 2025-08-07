@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import { View, Alert } from 'react-native';
 import { useSubscriptionFeatures } from '@/hooks/useFeatureFlags';
 import { useSuperwall } from '@/components/useSuperwall';
-import { useSupabase } from '@/context/supabase-provider';
+import { useAuth } from '@/context/auth-provider';
 import { SUPERWALL_TRIGGERS } from '@/config/superwall';
 
 interface SubscriptionGateProps {
@@ -28,7 +28,7 @@ export const SubscriptionGate: React.FC<SubscriptionGateProps> = ({
 }) => {
   const { shouldRequireSubscription, isBetaMode } = useSubscriptionFeatures();
   const { isSubscribed, isLoading, showPaywall } = useSuperwall();
-  const { user } = useSupabase();
+  const { user } = useAuth();
 
   // During beta mode, always allow access regardless of subscription status
   if (isBetaMode || !shouldRequireSubscription) {
@@ -97,7 +97,7 @@ export const SubscriptionGate: React.FC<SubscriptionGateProps> = ({
 export const useFeatureAccess = (featureName: string = 'premium_feature') => {
   const { shouldRequireSubscription, isBetaMode } = useSubscriptionFeatures();
   const { isSubscribed, isLoading } = useSuperwall();
-  const { user } = useSupabase();
+  const { user } = useAuth();
 
   const hasAccess = React.useMemo(() => {
     // Beta mode - always allow

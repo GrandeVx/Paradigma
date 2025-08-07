@@ -1,726 +1,182 @@
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
-import { View, SafeAreaView, ScrollView, Pressable, RefreshControl } from 'react-native';
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  FadeOutUp,
-  Layout,
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-  withDelay,
-  runOnJS
-} from 'react-native-reanimated';
+import React, { useState } from 'react';
+import { View, SafeAreaView, ScrollView, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import HeaderContainer from '@/components/layouts/_header';
 import * as Haptics from 'expo-haptics';
-import { api } from '@/lib/api';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { SvgIcon } from '@/components/ui/svg-icon';
-import { budgetUtils } from '@/lib/mmkv-storage';
-import { useLocalizedCategories } from '@/hooks/useLocalizedCategories';
-import { router } from 'expo-router';
-import { useCurrency } from '@/hooks/use-currency';
 import { useTranslation } from 'react-i18next';
 
-// Legacy helper function to format currency - now using global currency hook in components
-// const formatCurrency = (amount: number) => {
-//   return new Intl.NumberFormat('it-IT', {
-//     style: 'currency',
-//     currency: 'EUR',
-//     minimumFractionDigits: 2,
-//   }).format(amount);
-// };
+// Simple category item interface  
+interface CategoryItem {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  progress: number; // Static percentage 0-100
+}
 
-// Helper to get category background color with opacity - memoized
-const getCategoryBackgroundColor = (color: string) => {
-  const hex = color.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  return `rgba(${r}, ${g}, ${b}, 0.1)`;
+// Simple Category Card Component
+const CategoryCard: React.FC<{
+  category: CategoryItem;
+  onPress: (id: string) => void;
+}> = ({ category, onPress }) => {
+  return (
+    <Pressable
+      className="mb-6"
+      onPress={() => onPress(category.id)}
+    >
+      {/* Category header */}
+      <View className="items-center mb-3">
+        <View
+          style={{ backgroundColor: `${category.color}20` }}
+          className="flex-row items-center py-2 px-4 rounded-xl"
+        >
+          <Text className="font-medium mr-2" style={{ color: category.color, fontSize: 16 }}>
+            {category.icon}
+          </Text>
+          <Text
+            className="font-semibold uppercase"
+            style={{ color: category.color, fontSize: 14 }}
+          >
+            {category.name}
+          </Text>
+        </View>
+      </View>
+
+      {/* Progress bar */}
+      <View className="h-4 bg-gray-100 rounded-full w-full overflow-hidden mb-3">
+        <View
+          className="h-full rounded-full"
+          style={{
+            backgroundColor: category.color,
+            width: `${category.progress}%`
+          }}
+        />
+      </View>
+
+      {/* Simple stats */}
+      <View className="flex-row justify-center">
+        <Text className="text-gray-600 text-sm">
+          {category.progress}% complete
+        </Text>
+      </View>
+    </Pressable>
+  );
 };
 
-// Memoized loading skeleton component for better performance
-const LoadingSkeleton = React.memo<{ budgetCount?: number }>(({ budgetCount = 3 }) => {
-  const shimmerOpacity = useSharedValue(0.3);
-
-  useEffect(() => {
-    const animate = () => {
-      shimmerOpacity.value = withTiming(1, { duration: 800 }, () => {
-        shimmerOpacity.value = withTiming(0.3, { duration: 800 }, () => {
-          runOnJS(animate)();
-        });
-      });
-    };
-    animate();
-  }, [shimmerOpacity]);
-
-  const shimmerStyle = useAnimatedStyle(() => ({
-    opacity: shimmerOpacity.value,
-  }));
-
-  // Memoize skeleton items
-  const skeletonItems = useMemo(() =>
-    Array.from({ length: Math.max(1, budgetCount) }, (_, index) => index + 1),
-    [budgetCount]
-  );
-
-  return (
-    <Animated.View
-      entering={FadeIn.duration(300)}
-      className="flex-1 p-4 gap-y-4"
-    >
-      {/* Summary Card Skeleton */}
-      <Animated.View style={shimmerStyle} className="bg-gray-200 rounded-3xl h-48" />
-
-      {/* Budget Items Skeleton - Dynamic count based on cache */}
-      {skeletonItems.map((item) => (
-        <Animated.View
-          key={item}
-          style={shimmerStyle}
-          entering={FadeInDown.delay(item * 100).duration(400)}
-          className="bg-gray-200 rounded-2xl h-32"
-        />
-      ))}
-    </Animated.View>
-  );
-});
-
-LoadingSkeleton.displayName = 'LoadingSkeleton';
-
-// Memoized Budget Item Component with simplified animations for better performance
-const BudgetItem = React.memo<{
-  budget: {
-    id: string;
-    allocatedAmount: string | number;
-    macroCategoryId: string;
-  };
-  category: {
-    id: string;
-    name: string;
-    color: string;
-    icon?: string;
-    type: string;
-  };
-  spending: number;
-  onPress: () => void;
-  index: number;
-  formatCurrency: (amount: number | string, options?: { showSymbol?: boolean; showSign?: boolean; decimals?: number; }) => string;
-}>(({
-  budget,
-  category,
-  spending,
-  onPress,
-  index,
-  formatCurrency
-}) => {
+export default function CategoryGridScreen() {
   const { t } = useTranslation();
-  const { translations } = useLocalizedCategories();
+  const [hasCategories] = useState(true);
 
-  // Get localized category name
-  const localizedName = category.key && translations.macro[category.key]
-    ? translations.macro[category.key]
-    : category.name;
+  // Static placeholder categories - 4 simple items
+  const placeholderCategories: CategoryItem[] = [
+    {
+      id: '1',
+      name: 'Primary',
+      color: '#F59E0B',
+      icon: '🏠',
+      progress: 75,
+    },
+    {
+      id: '2', 
+      name: 'Secondary',
+      color: '#3B82F6',
+      icon: '🚗',
+      progress: 45,
+    },
+    {
+      id: '3',
+      name: 'Lifestyle',
+      color: '#8B5CF6',
+      icon: '🎯',
+      progress: 60,
+    },
+    {
+      id: '4',
+      name: 'Extras',
+      color: '#EC4899',
+      icon: '🎮',
+      progress: 30,
+    },
+  ];
 
-  // Memoize calculations to avoid recalculation on every render
-  const calculations = useMemo(() => {
-    const budgetAmount = Number(budget.allocatedAmount);
-    const spent = spending;
-    const remaining = budgetAmount - spent;
-    const percentage = Math.min(100, (spent / budgetAmount) * 100);
+  const handleCategoryPress = (categoryId: string) => {
+    alert(`Category ${categoryId} details coming soon!`);
+  };
 
-    return { budgetAmount, spent, remaining, percentage };
-  }, [budget.allocatedAmount, spending]);
-
-  const progressWidth = useSharedValue(0);
-  const itemScale = useSharedValue(1);
-
-  useEffect(() => {
-    progressWidth.value = withDelay(
-      index * 50, // Reduced delay for smoother feel
-      withSpring(calculations.percentage, {
-        damping: 20, // Increased damping for less bouncy animation
-        stiffness: 120,
-      })
-    );
-  }, [calculations.percentage, index]);
-
-  const progressStyle = useAnimatedStyle(() => ({
-    width: `${progressWidth.value}%`,
-  }));
-
-  const itemStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: itemScale.value }],
-  }));
-
-  const handlePressIn = useCallback(() => {
-    itemScale.value = withSpring(0.98);
-  }, [itemScale]);
-
-  const handlePressOut = useCallback(() => {
-    itemScale.value = withSpring(1);
-  }, [itemScale]);
-
-  // Memoize background color calculation
-  const categoryBackgroundColor = useMemo(() =>
-    getCategoryBackgroundColor(category.color),
-    [category.color]
-  );
-
-  // Memoize remaining amount color
-  const remainingAmountColor = useMemo(() => {
-    if (calculations.remaining < 0) return '#DE4841';
-    if (calculations.remaining < calculations.budgetAmount * 0.2) return '#EBAE46';
-    return '#66BD50';
-  }, [calculations.remaining, calculations.budgetAmount]);
-
-  return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 100).duration(400).springify()} // Reduced duration
-      exiting={FadeOutUp.duration(300)}
-      layout={Layout.springify().damping(20).stiffness(120)} // Adjusted for smoother animation
-      style={itemStyle}
-    >
-      <Pressable
-        className="mb-4"
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-      >
-        {/* Category header */}
-        <View className="items-center mb-2">
-          <View
-            style={{ backgroundColor: categoryBackgroundColor }}
-            className="flex-row items-center py-1.5 px-3 rounded-xl"
-          >
-            <Text
-              className="font-medium mr-2"
-              style={{ color: category.color, fontSize: 14 }}
-            >
-              {category.icon || '📊'}
-            </Text>
-            <Text
-              className="font-semibold uppercase"
-              style={{ color: category.color, fontSize: 14 }}
-            >
-              {localizedName}
-            </Text>
-          </View>
-        </View>
-
-        {/* Progress bar */}
-        <View className="h-3 bg-gray-50 rounded-full w-full overflow-hidden mb-2">
-          <Animated.View
-            style={[
-              progressStyle,
-              {
-                height: '100%',
-                backgroundColor: category.color,
-              }
-            ]}
-          />
-        </View>
-
-        {/* Details */}
-        <View className="flex-row justify-between px-6">
-          <View className="items-center">
-            <Text className="text-gray-400" style={{ fontSize: 14 }}>{t('budgets.budget')}</Text>
-            <Text className="text-gray-700 font-medium" style={{ fontSize: 16 }}>
-              {formatCurrency(calculations.budgetAmount, { showSign: false })}
-            </Text>
-          </View>
-          <View className="items-center">
-            <Text className="text-gray-400" style={{ fontSize: 14 }}>{t('budgets.alreadySpent')}</Text>
-            <Text className="text-gray-700 font-medium" style={{ fontSize: 16 }}>
-              {formatCurrency(calculations.spent, { showSign: false })}
-            </Text>
-          </View>
-          <View className="items-center">
-            <Text className="text-gray-400" style={{ fontSize: 14 }}>{t('budgets.remaining')}</Text>
-            <Text
-              className="font-medium"
-              style={{ color: remainingAmountColor, fontSize: 16 }}
-            >
-              {calculations.remaining < 0 ? '-' : ''}{formatCurrency(Math.abs(calculations.remaining), { showSign: false })}
-            </Text>
-          </View>
-        </View>
-
-        {/* Divider */}
-        <View className="h-px bg-gray-200 w-full mt-4" />
-      </Pressable>
-    </Animated.View>
-  );
-});
-
-BudgetItem.displayName = 'BudgetItem';
-
-export default function BudgetScreen() {
-  const { formatCurrency, getCurrencySymbol } = useCurrency();
-  const { t } = useTranslation();
-
-  // State for current month
-  const [currentDate, setCurrentDate] = useState(new Date());
-
-  // State for monthly total budget from MMKV
-  const [monthlyTotalBudget, setMonthlyTotalBudget] = useState<number>(0);
-
-  // State for cached budget info
-  const [cachedBudgetCount, setCachedBudgetCount] = useState<number>(0);
-  const [hasBudgetsInCache, setHasBudgetsInCache] = useState<boolean>(false);
-
-  // Animation values
-  const contentOpacity = useSharedValue(0);
-  const summaryScale = useSharedValue(0.9);
-
-  // Get API utils
-  const utils = api.useContext();
-
-  // Memoize query parameters to avoid unnecessary refetches
-  const queryParams = useMemo(() => ({
-    month: currentDate.getMonth() + 1,
-    year: currentDate.getFullYear(),
-  }), [currentDate]);
-
-  // API queries with optimized caching
-  const {
-    data: budgetSettings,
-    isLoading: isLoadingBudgets,
-    refetch: refetchBudgets,
-    isRefetching: isRefetchingBudgets
-  } = api.budget.getCurrentSettings.useQuery({}, {
-    staleTime: 1000 * 60 * 10, // 10 minutes - budget settings change rarely
-    cacheTime: 1000 * 60 * 60 * 24, // 24 hours
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: allCategories, refetch: refetchCategories } = api.category.list.useQuery({}, {
-    staleTime: 1000 * 60 * 30, // 30 minutes - categories change very rarely
-    cacheTime: 1000 * 60 * 60 * 24 * 7, // 1 week
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-
-  // Extract macro categories - memoized
-  const macroCategories = useMemo(() =>
-    allCategories?.filter(cat => cat.type === 'INCOME' || cat.type === 'EXPENSE'),
-    [allCategories]
-  );
-
-  // Get transaction data for the current month with optimized caching
-  const {
-    data: transactionData,
-    refetch: refetchTransactions,
-    isRefetching: isRefetchingTransactions
-  } = api.transaction.getMonthlySpending.useQuery({
-    ...queryParams,
-    // Pass selected categories if any, undefined means get all transactions
-    macroCategoryIds: budgetSettings?.map(budget => budget.macroCategoryId),
-  }, {
-    staleTime: 1000 * 60 * 2, // 2 minutes - transaction data needs to be relatively fresh
-    cacheTime: 1000 * 60 * 15, // 15 minutes
-    refetchOnWindowFocus: false, // Don't refetch on focus to avoid unnecessary loads
-    enabled: !!budgetSettings, // Only run when budget settings are available
-  });
-
-  // Memoize loading and content states
-  const contentStates = useMemo(() => {
-    const isInitialLoading = isLoadingBudgets;
-    const hasBudgets = budgetSettings && budgetSettings.length > 0;
-
-    return {
-      shouldShowSkeleton: isInitialLoading && hasBudgetsInCache,
-      shouldShowEmptyState: !isInitialLoading && !hasBudgets,
-      shouldShowBudgetView: !isInitialLoading && hasBudgets,
-    };
-  }, [isLoadingBudgets, budgetSettings, hasBudgetsInCache]);
-
-  // Initialize monthly total budget and cache from MMKV
-  useEffect(() => {
-    const storedTotalBudget = budgetUtils.getMonthlyTotalBudget();
-    setMonthlyTotalBudget(storedTotalBudget);
-
-    // Initialize cache data
-    const cachedBudgetCount = budgetUtils.getBudgetCountFromCache();
-    const hasBudgetsFromCache = budgetUtils.hasBudgetsFromCache();
-
-    setCachedBudgetCount(cachedBudgetCount);
-    setHasBudgetsInCache(hasBudgetsFromCache);
-  }, []);
-
-  // Update cache when data loads successfully
-  useEffect(() => {
-    if (budgetSettings && allCategories && budgetSettings.length > 0) {
-      // Update cache with fresh data
-      budgetUtils.setBudgetCacheData(budgetSettings, allCategories);
-
-      // Update local cache state
-      const newBudgetCount = budgetSettings.filter(budget => {
-        const category = allCategories.find(cat => cat.id === budget.macroCategoryId);
-        return category && category.type === 'EXPENSE';
-      }).length;
-
-      setCachedBudgetCount(newBudgetCount);
-      setHasBudgetsInCache(newBudgetCount > 0);
-    }
-  }, [budgetSettings, allCategories]);
-
-  // Animate content when data loads
-  useEffect(() => {
-    if (!isLoadingBudgets) {
-      contentOpacity.value = withTiming(1, { duration: 400 }); // Reduced duration
-      summaryScale.value = withSpring(1, {
-        damping: 20, // Increased damping for smoother animation
-        stiffness: 120,
-      });
-    }
-  }, [isLoadingBudgets, contentOpacity, summaryScale]);
-
-  // Memoized refresh handler
-  const handleRefresh = useCallback(() => {
-    refetchBudgets();
-    refetchCategories();
-    refetchTransactions();
-  }, [refetchBudgets, refetchCategories, refetchTransactions]);
-
-  // Navigation to budget management
-  const handleOpenBudgetManagement = useCallback(() => {
+  const handleManageCategories = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push('/(protected)/(budgets)/budget-management');
-  }, []);
+    alert('Category management coming soon!');
+  };
 
-  const handleBudgetClick = useCallback((budgetId: string) => {
-    router.push(`/(protected)/(budgets)/(category-transactions)/${budgetId}`);
-  }, []);
-
-
-  // Memoized budget summary calculation
-  const budgetSummary = useMemo(() => {
-    if (!budgetSettings || !transactionData) return null;
-
-    // Calculate total allocated budget from expense categories
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const totalAllocatedBudget = budgetSettings.reduce((sum: number, budget: any) => {
-      // Only include expense categories in the allocated budget
-      const category = macroCategories?.find(cat => cat.id === budget.macroCategoryId);
-      if (category && category.type === 'EXPENSE') {
-        return sum + Number(budget.allocatedAmount);
-      }
-      return sum;
-    }, 0);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const totalSpent = transactionData.reduce((sum: number, item: any) => sum + Number(item.amount), 0);
-
-    // Remaining budget is monthly total - allocated budget (not spent)
-    // This shows how much of the monthly budget is still available to allocate
-    const remainingBudget = monthlyTotalBudget - totalAllocatedBudget;
-
-    return {
-      totalBudget: totalAllocatedBudget, // This is the sum of allocated budgets
-      monthlyTotalBudget, // This is the total monthly budget from MMKV
-      totalSpent: Math.abs(totalSpent),
-      remainingBudget // This is what's left to allocate
-    };
-  }, [budgetSettings, transactionData, macroCategories, monthlyTotalBudget]);
-
-  // Memoized category spending calculation
-  const getCategorySpending = useCallback((categoryId: string) => {
-    if (!transactionData) return 0;
-
-    return transactionData
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((transaction: any) => transaction.subCategory?.macroCategoryId === categoryId)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .reduce((sum: number, transaction: any) => sum + Math.abs(Number(transaction.amount)), 0);
-  }, [transactionData]);
-
-  // Handle month navigation with animation - memoized
-  const goToPreviousMonth = useCallback(() => {
-    summaryScale.value = withSpring(0.95, { duration: 150 }, () => {
-      summaryScale.value = withSpring(1, { duration: 200 });
-    });
-
-    const newDate = new Date(currentDate);
-    newDate.setMonth(newDate.getMonth() - 1);
-    setCurrentDate(newDate);
-  }, [currentDate, summaryScale]);
-
-  const goToNextMonth = useCallback(() => {
-    summaryScale.value = withSpring(0.95, { duration: 150 }, () => {
-      summaryScale.value = withSpring(1, { duration: 200 });
-    });
-
-    const newDate = new Date(currentDate);
-    newDate.setMonth(newDate.getMonth() + 1);
-    setCurrentDate(newDate);
-  }, [currentDate, summaryScale]);
-
-  // Memoized month formatting
-  const formattedMonthYear = useMemo(() =>
-    format(currentDate, 'MMMM yyyy', { locale: it }),
-    [currentDate]
-  );
-
-  // Determine if we're refreshing
-  const isRefreshing = isRefetchingBudgets || isRefetchingTransactions;
-
-  const rightActions = useMemo(() => [
+  const rightActions = [
     {
       icon: <SvgIcon name="edit" color={"#005EFD"} size={20} />,
-      onPress: handleOpenBudgetManagement
+      onPress: handleManageCategories
     },
-  ], [handleOpenBudgetManagement]);
-
-  const contentStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
-
-  const summaryStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: summaryScale.value }],
-  }));
+  ];
 
   return (
-    <>
-      <HeaderContainer variant="secondary" customTitle={t('budgets.title')} rightActions={rightActions} modal>
-        <SafeAreaView className="flex-1 bg-white">
-          {contentStates.shouldShowSkeleton ? (
-            <LoadingSkeleton budgetCount={cachedBudgetCount} />
-          ) : contentStates.shouldShowEmptyState ? (
-            // Empty state - no budgets set
-            <ScrollView
-              contentContainerStyle={{ flexGrow: 1 }}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-                />
-              }
-            >
-              <Animated.View
-                style={contentStyle}
-                className="flex-1 relative"
+    <HeaderContainer variant="secondary" customTitle="Categories" rightActions={rightActions} modal>
+      <SafeAreaView className="flex-1 bg-white">
+        {!hasCategories ? (
+          // Empty state
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <View className="flex-1 justify-center items-center px-16">
+              <Text className="text-6xl mb-4">📊</Text>
+              <Text className="text-3xl font-semibold text-black text-center mb-2">
+                No Categories Yet
+              </Text>
+              <Text className="text-sm text-gray-500 text-center mb-6">
+                Create categories to organize your content
+              </Text>
+              <Button
+                variant="primary"
+                size="lg"
+                rounded="default"
+                onPress={handleManageCategories}
               >
-                {/* Background emojis with staggered animations */}
-                <Animated.Text
-                  entering={FadeIn.delay(200).duration(800)}
-                  className="absolute top-[200px] right-[45px] text-4xl rotate-[15deg] opacity-5 scale-150"
-                >
-                  💰
-                </Animated.Text>
-                <Animated.Text
-                  entering={FadeIn.delay(400).duration(800)}
-                  className="text-4xl text-gray-500 absolute rotate-[20deg] top-[418px] right-[40px]"
-                >
-                  🛒
-                </Animated.Text>
-                <Animated.Text
-                  entering={FadeIn.delay(100).duration(800)}
-                  className="text-[64px] text-gray-500 absolute rotate-[-10deg] top-[89px] left-[126px]"
-                >
-                  🏠
-                </Animated.Text>
-                <Animated.Text
-                  entering={FadeIn.delay(300).duration(800)}
-                  className="text-[40px] text-gray-500 absolute rotate-[-10deg] top-[196px] left-[24px]"
-                >
-                  🍽️
-                </Animated.Text>
-                <Animated.Text
-                  entering={FadeIn.delay(500).duration(800)}
-                  className="text-[64px] text-gray-500 rotate-[-10deg] absolute top-[447px] left-[59px]"
-                >
-                  🎬
-                </Animated.Text>
+                <Text className="text-white font-semibold">Get Started</Text>
+              </Button>
+            </View>
+          </ScrollView>
+        ) : (
+          // Categories grid
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 72 }}
+            className="px-6 pt-6"
+          >
+            {/* Summary header */}
+            <View className="bg-gray-50 rounded-2xl p-4 mb-6">
+              <Text className="text-center text-gray-600 text-sm mb-1">Overall Progress</Text>
+              <Text className="text-center text-2xl font-bold text-gray-800">
+                52% Complete
+              </Text>
+            </View>
 
-                {/* Content container */}
-                <View className="flex-1 justify-center items-center px-16">
-                  <Animated.View
-                    entering={FadeInDown.delay(600).duration(600).springify()}
-                    className="items-center"
-                  >
-                    <Text className="text-3xl font-semibold text-black text-center mb-2">
-                      {t('budgets.monthlyBudget')}
-                    </Text>
-                    <Text className="text-sm text-gray-500 text-center mb-6">
-                      {t('budgets.description')}
-                    </Text>
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      rounded="default"
-                      className="w-a"
-                      onPress={handleOpenBudgetManagement}
-                    >
-                      <Text className="text-white font-semibold">{t('budgets.getStarted')}</Text>
-                    </Button>
-                  </Animated.View>
-                </View>
-              </Animated.View>
-            </ScrollView>
-          ) : contentStates.shouldShowBudgetView ? (
-            // Budget view - when budgets exist
-            <ScrollView
-              contentContainerStyle={{ flexGrow: 1, paddingBottom: 72 }}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
+            {/* Categories grid */}
+            <View className="space-y-4">
+              {placeholderCategories.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  onPress={handleCategoryPress}
                 />
-              }
+              ))}
+            </View>
+
+            {/* Add category placeholder */}
+            <Pressable
+              className="w-full rounded-2xl border-2 border-dashed border-gray-300 p-6 items-center justify-center mt-6"
+              onPress={handleManageCategories}
             >
-              <Animated.View
-                style={contentStyle}
-                className="flex-1 p-4 gap-y-4"
-              >
-                {/* Budget Summary Card */}
-                <Animated.View
-                  style={summaryStyle}
-                  entering={FadeInDown.duration(600).springify()}
-                  layout={Layout.springify().damping(15).stiffness(100)}
-                  className="bg-gray-50 rounded-3xl p-4"
-                >
-                  {/* Month selector */}
-                  <View className="flex-row justify-between items-center mb-4">
-                    <Pressable onPress={goToPreviousMonth} className="w-10 h-10 items-center justify-center">
-                      <Text className="text-black">←</Text>
-                    </Pressable>
-                    <Text className="font-normal text-black capitalize" style={{ fontSize: 16 }}>
-                      {formattedMonthYear}
-                    </Text>
-                    <Pressable onPress={goToNextMonth} disabled={
-                      // check if the next month is in the future
-                      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1) > new Date()
-                    } className={cn("w-10 h-10 items-center justify-center",
-                      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1) > new Date() ? 'opacity-50' : ''
-                    )
-
-                    }>
-                      <Text className="text-black">→</Text>
-                    </Pressable>
-                  </View>
-
-                  {/* Budget amount */}
-                  {budgetSummary && (
-                    <Animated.View
-                      entering={FadeIn.delay(300).duration(600)}
-                      className="mb-4"
-                    >
-                      <View className="flex-row items-baseline justify-center">
-                        <Text className="text-gray-500" style={{ fontSize: 16 }}>{getCurrencySymbol()}</Text>
-                        <Text className="text-black font-medium" style={{ fontSize: 45 }}>
-                          {Math.floor(
-                            budgetSummary.totalBudget - budgetSummary.totalSpent > 0 ? budgetSummary.totalBudget - budgetSummary.totalSpent : 0
-                          )}
-                        </Text>
-                        <Text className="text-black font-normal" style={{ fontSize: 32 }}>
-                          ,{(budgetSummary.totalBudget - budgetSummary.totalSpent > 0 ? budgetSummary.totalBudget - budgetSummary.totalSpent : 0 % 1).toFixed(2).substring(3)}
-                        </Text>
-                      </View>
-                      <Text className="text-gray-500 text-center" style={{ fontSize: 14 }}>
-                        {t('budgets.availableThisMonth')}
-                      </Text>
-                    </Animated.View>
-                  )}
-
-                  {/* Progress bar */}
-                  {budgetSummary && (
-                    <Animated.View
-                      entering={FadeIn.delay(400).duration(600)}
-                      className="mb-2"
-                    >
-                      <View className="h-3 bg-white rounded-full w-full overflow-hidden">
-                        {/* Colored segments - would need to calculate width percentages based on category spending */}
-                        {budgetSettings &&
-                          budgetSettings
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            .filter((budget: any) => {
-                              const cat = macroCategories?.find(c => c.id === budget.macroCategoryId);
-                              return cat && cat.type === 'EXPENSE';
-                            })
-                            // dobbiamo effetturare un sort per quanto in percentuale influisca sul totale
-                            .sort((a, b) => {
-                              const spentA = getCategorySpending(a.macroCategoryId);
-                              const spentB = getCategorySpending(b.macroCategoryId);
-                              return spentB - spentA;
-                            })
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            .map((budget: any) => {
-                              const category = macroCategories?.find(cat => cat.id === budget.macroCategoryId);
-                              if (!category) return null;
-
-                              const spent = getCategorySpending(budget.macroCategoryId);
-                              const percentage = (spent / budgetSummary.totalBudget) * 100;
-
-                              return (
-                                <View
-                                  key={budget.id}
-                                  style={{
-                                    position: 'absolute',
-                                    width: `${percentage}%`,
-                                    height: '100%',
-                                    backgroundColor: category.color
-                                  }}
-                                />
-                              );
-                            })}
-                      </View>
-                      <Text className="text-gray-500 mt-2" style={{ fontSize: 12 }}>
-                        {t('budgets.spentOnTotal', {
-                          spent: formatCurrency(budgetSummary.totalSpent, { showSign: false }),
-                          total: formatCurrency(budgetSummary.totalBudget, { showSign: false })
-                        })}
-                      </Text>
-                    </Animated.View>
-                  )}
-                </Animated.View>
-
-                {/* Budget Categories */}
-                <View className="mt-4">
-                  {budgetSettings &&
-                    budgetSettings
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      .filter((budget: any) => {
-                        const cat = macroCategories?.find(c => c.id === budget.macroCategoryId);
-                        return cat && cat.type === 'EXPENSE';
-                      })
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      .map((budget: any, index: number) => {
-                        const category = macroCategories?.find(cat => cat.id === budget.macroCategoryId);
-                        if (!category) return null;
-
-                        const spending = getCategorySpending(budget.macroCategoryId);
-
-                        return (
-                          <BudgetItem
-                            key={budget.id}
-                            budget={budget}
-                            category={category}
-                            spending={spending}
-                            onPress={() => handleBudgetClick(budget.macroCategoryId)}
-                            index={index}
-                            formatCurrency={formatCurrency}
-                          />
-                        );
-                      })}
-                </View>
-              </Animated.View>
-            </ScrollView>
-          ) : (
-            // Loading state - when actually loading
-            isLoadingBudgets ? (
-              <View className="flex-1 justify-center items-center">
-                <Text className="text-gray-500">{t('common.loading')}</Text>
-              </View>
-            ) : null
-          )}
-        </SafeAreaView>
-      </HeaderContainer>
-    </>
+              <Text className="text-4xl mb-2">➕</Text>
+              <Text className="text-gray-500">Add New Category</Text>
+            </Pressable>
+          </ScrollView>
+        )}
+      </SafeAreaView>
+    </HeaderContainer>
   );
-} 
+}

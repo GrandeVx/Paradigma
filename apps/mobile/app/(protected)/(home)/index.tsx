@@ -1,204 +1,146 @@
-import React, { useState, useEffect, createContext, useContext, useMemo, useCallback } from "react";
-import { View } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming
-} from "react-native-reanimated";
+import React, { useState, useCallback } from "react";
+import { View, Pressable } from "react-native";
 import HeaderContainer from "@/components/layouts/_header";
 import { TabBar } from "@/components/tab-navigation/tab-bar";
-import { TransactionsSection } from "@/components/home-sections/transactions-section";
-import { ChartsSection } from "@/components/home-sections/charts-section";
-import { GoalsSection } from "@/components/home-sections/goals-section";
 import { getHomeTabs, type HomeTab } from "@/types/tabs";
-import { api } from "@/lib/api";
-import { MonthProvider } from "@/context/month-context";
 import { useTranslation } from 'react-i18next';
+import { Text } from "@/components/ui/text";
+import { useRouter } from 'expo-router';
+import { Button } from "@/components/ui/button";
 
-// Context to disable animations in inactive tabs
-const TabVisibilityContext = createContext<{ isTabVisible: boolean }>({ isTabVisible: true });
+// Simple placeholder section component
+const PlaceholderSection: React.FC<{
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+}> = ({ title, description, icon, color }) => {
+  return (
+    <View className="flex-1 justify-center items-center px-8">
+      <View
+        className="w-20 h-20 rounded-full items-center justify-center mb-6"
+        style={{ backgroundColor: `${color}20` }}
+      >
+        <Text className="text-4xl">{icon}</Text>
+      </View>
+      <Text className="text-2xl font-bold text-gray-800 text-center mb-3">
+        {title}
+      </Text>
+      <Text className="text-gray-600 text-center text-base mb-6">
+        {description}
+      </Text>
+      <View className="bg-gray-100 rounded-lg px-4 py-3">
+        <Text className="text-gray-500 text-sm text-center">
+          Placeholder content area
+        </Text>
+      </View>
+    </View>
+  );
+};
 
-export const useTabVisibility = () => useContext(TabVisibilityContext);
+// Static tab content components
+const FirstTabSection = () => {
+  const router = useRouter();
 
-// Memoized TabContent with simplified animations for better performance
-const TabContent = React.memo<{
-  isActive: boolean;
-  children: React.ReactNode;
-}>(({ isActive, children }) => {
-  const opacity = useSharedValue(isActive ? 1 : 0);
-
-  useEffect(() => {
-    // Simplified animation for better performance
-    opacity.value = withTiming(isActive ? 1 : 0, { duration: 200 });
-  }, [isActive, opacity]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
+  const handleOpenDailyView = () => {
+    const today = new Date().toISOString().split('T')[0];
+    router.push(`/(protected)/(home)/(daily-transactions)/${today}`);
+  };
 
   return (
-    <TabVisibilityContext.Provider value={{ isTabVisible: isActive }}>
+    <View className="flex-1 justify-center items-center px-8">
       <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: isActive ? 10 : 1,
-        }}
-        pointerEvents={isActive ? 'auto' : 'none'}
+        className="w-20 h-20 rounded-full items-center justify-center mb-6"
+        style={{ backgroundColor: `#3B82F620` }}
       >
-        <Animated.View style={[animatedStyle, { flex: 1 }]}>
-          {children}
-        </Animated.View>
+        <Text className="text-4xl">📋</Text>
       </View>
-    </TabVisibilityContext.Provider>
+      <Text className="text-2xl font-bold text-gray-800 text-center mb-3">
+        Main Content
+      </Text>
+      <Text className="text-gray-600 text-center text-base mb-6">
+        This would be your primary content area
+      </Text>
+
+      {/* Demo button to access daily-transactions template */}
+      <Button
+        variant="primary"
+        size="default"
+        onPress={handleOpenDailyView}
+        className="mb-4"
+      >
+        <Text className="text-white font-semibold">View Daily Template</Text>
+      </Button>
+
+      <View className="bg-gray-100 rounded-lg px-4 py-3">
+        <Text className="text-gray-500 text-sm text-center">
+          Tap button above to see the Date List template
+        </Text>
+      </View>
+    </View>
   );
-});
+};
 
-TabContent.displayName = 'TabContent';
+const SecondTabSection = () => (
+  <PlaceholderSection
+    title="Secondary View"
+    description="This would show alternative content or data"
+    icon="📊"
+    color="#10B981"
+  />
+);
 
-export default function Home() {
+const ThirdTabSection = () => (
+  <PlaceholderSection
+    title="Additional Features"
+    description="This would contain extra functionality"
+    icon="🎯"
+    color="#F59E0B"
+  />
+);
+
+export default function TabNavigationTemplate() {
   const { t } = useTranslation();
   const [activeTabIndex, setActiveTabIndex] = useState(0);
-  const [mountedTabs, setMountedTabs] = useState<Set<number>>(new Set([0])); // Start with first tab mounted
 
-  // Memoize current date to avoid recalculations
-  const currentDate = useMemo(() => new Date(), []);
-  const currentMonth = useMemo(() => currentDate.getMonth() + 1, [currentDate]);
-  const currentYear = useMemo(() => currentDate.getFullYear(), [currentDate]);
+  // Get tabs with translations
+  const homeTabs = getHomeTabs(t);
 
-  // Memoize translated tabs to avoid recalculation on every render
-  const homeTabs = useMemo(() => getHomeTabs(t), [t]);
-
-  // Get API utils
-  const utils = api.useContext();
-
-  // Only load the most critical query immediately (active tab)
-  api.transaction.getMonthlySpending.useQuery({
-    month: currentMonth,
-    year: currentYear,
-  }, {
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: true, // Always enabled for active transactions
-  });
-
-  // Delay other queries to avoid blocking initial navigation
-  const [enableBackgroundQueries, setEnableBackgroundQueries] = useState(false);
-
-  // Background queries - only enabled after delay
-  api.transaction.getMonthlySummary.useQuery({
-    month: currentMonth,
-    year: currentYear,
-  }, {
-    staleTime: 5 * 60 * 1000,
-    enabled: enableBackgroundQueries,
-  });
-
-  api.transaction.getCategoryBreakdown.useQuery({
-    month: currentMonth,
-    year: currentYear,
-    type: 'expense',
-  }, {
-    staleTime: 5 * 60 * 1000,
-    enabled: enableBackgroundQueries,
-  });
-
-  api.account.listWithBalances.useQuery({}, {
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    enabled: enableBackgroundQueries,
-  });
-
-  // Simplified progressive loading strategy
-  useEffect(() => {
-    // Enable background queries after initial render
-    const timer = setTimeout(() => {
-      setEnableBackgroundQueries(true);
-    }, 300); // Reduced delay
-
-    return () => clearTimeout(timer);
+  // Simple tab press handler
+  const handleTabPress = useCallback((tab: HomeTab, index: number) => {
+    setActiveTabIndex(index);
+    console.log(`[Tab Navigation] Switched to tab: ${tab.title}`);
   }, []);
 
-  // Mount adjacent tabs after a delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMountedTabs(prev => {
-        const newSet = new Set(prev);
-        if (activeTabIndex > 0) newSet.add(activeTabIndex - 1);
-        if (activeTabIndex < homeTabs.length - 1) newSet.add(activeTabIndex + 1);
-        return newSet;
-      });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [activeTabIndex, homeTabs]);
-
-  // Mount all tabs after everything is loaded
-  useEffect(() => {
-    if (enableBackgroundQueries) {
-      const timer = setTimeout(() => {
-        setMountedTabs(new Set([0, 1, 2]));
-      }, 1000);
-
-      return () => clearTimeout(timer);
+  // Render active tab content
+  const renderTabContent = () => {
+    switch (activeTabIndex) {
+      case 0:
+        return <FirstTabSection />;
+      case 1:
+        return <SecondTabSection />;
+      case 2:
+        return <ThirdTabSection />;
+      default:
+        return <FirstTabSection />;
     }
-  }, [enableBackgroundQueries]);
-
-  // Memoized tab press handler
-  const handleTabPress = useCallback((tab: HomeTab, index: number) => {
-    // Mount the new tab if not already mounted
-    setMountedTabs(prev => new Set([...prev, index]));
-
-    // Switch active tab
-    setActiveTabIndex(index);
-
-    // Prefetch specific data only when needed
-    if (enableBackgroundQueries && index === 1) {
-      // Charts tab - prefetch daily spending for heatmap
-      utils.transaction.getDailySpending.prefetch({
-        month: currentMonth,
-        year: currentYear,
-      });
-    }
-  }, [enableBackgroundQueries, utils, currentMonth, currentYear]);
+  };
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t("home.title")}>
-      <MonthProvider>
+    <HeaderContainer variant="secondary" customTitle="Dashboard">
+      <View className="flex-1">
+        {/* Tab Navigation */}
+        <TabBar
+          tabs={homeTabs}
+          activeIndex={activeTabIndex}
+          onTabPress={handleTabPress}
+        />
+
+        {/* Active Tab Content */}
         <View className="flex-1">
-          {/* Animated Tab Navigation */}
-          <TabBar
-            tabs={homeTabs}
-            activeIndex={activeTabIndex}
-            onTabPress={handleTabPress}
-          />
-
-          {/* Tab Content - All tabs are mounted but only active one is visible */}
-          <View className="flex-1 relative">
-            {/* Transactions Tab */}
-            {mountedTabs.has(0) && (
-              <TabContent isActive={activeTabIndex === 0}>
-                <TransactionsSection />
-              </TabContent>
-            )}
-
-            {/* Charts Tab */}
-            {mountedTabs.has(1) && (
-              <TabContent isActive={activeTabIndex === 1}>
-                <ChartsSection />
-              </TabContent>
-            )}
-
-            {/* Goals Tab */}
-            {mountedTabs.has(2) && (
-              <TabContent isActive={activeTabIndex === 2}>
-                <GoalsSection />
-              </TabContent>
-            )}
-          </View>
+          {renderTabContent()}
         </View>
-      </MonthProvider>
+      </View>
     </HeaderContainer>
   );
 }

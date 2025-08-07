@@ -220,7 +220,7 @@ const NumericKeyboard: React.FC<NumericKeyboardProps> = ({
     <View className={cn("flex-1 pb-28", continuePosition === "top" && "gap-4 p-4 pb-20")}>
       {
         continuePosition === "top" && (
-          <Button onPress={onContinuePress} disabled={continueDisabled} variant="primary" size="lg" rounded="default">
+          <Button onPress={onContinuePress} disabled={continueDisabled} isLoading={disabled} variant="primary" size="lg" rounded="default">
             <Text className='font-sans text-lg font-bold'>Continua</Text>
           </Button>
         )

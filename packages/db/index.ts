@@ -1,5 +1,5 @@
 import pino from 'pino';
-import { PrismaClient , Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import SuperJSON from 'superjson'; // Corretto import
 
@@ -41,12 +41,11 @@ const logger = pino({
 
 // Configurazione Auto-Caching
 const autoCacheConfig: AutoCacheConfig = {
+  /** 
+   * Here you can exclude models from the cache
+  */
   excludedModels: [
     'Session', 'Account', 'Verification', // Better Auth - esclusi per sicurezza
-    'MoneyAccount', // Gestione custom per calcolo balance con transactions
-    'Transaction', // Gestione custom per tutte le operazioni (troppo dinamico)
-    'Budget', // Gestione custom per settings e progress calculation
-    'RecurringTransactionRule' // Gestione custom per scheduling logic
   ],
   excludedOperations: [], // Nessuna operazione esclusa globalmente per ora
   models: [
@@ -56,19 +55,9 @@ const autoCacheConfig: AutoCacheConfig = {
       stale: 600, // 10 minuti
       excludedOperations: ['count'], // Il count degli utenti totali non è rilevante per la cache per-utente
     },
-    {
-      model: 'MacroCategory', // Seed data, cambiano raramente (solo da seed/admin)
-      ttl: 86400, // 1 giorno
-      stale: 3600, // 1 ora
-    },
-    {
-      model: 'SubCategory', // Seed data, cambiano raramente
-      ttl: 86400, // 1 giorno
-      stale: 3600, // 1 ora
-    },
   ],
   ttl: 300, // Default TTL (5 minuti) per le query dei modelli non specificati sopra
-            // e per le operazioni (come 'aggregate') non escluse nei modelli specificati.
+  // e per le operazioni (come 'aggregate') non escluse nei modelli specificati.
 };
 
 // Configurazione Cache Principale
@@ -79,7 +68,7 @@ const cacheMainConfig: CacheConfig = {
   logger,
   onError: (err) => {
     logger.error({ redisError: err, previousErrors: err.previousErrors }, "Errore Cache Redis");
-  },  
+  },
   onHit: (hit) => {
     logger.debug(hit, "Cache Redis HIT");
   },

@@ -45,5 +45,5 @@
       "superjson": "^2.0.0"
     }
   },
-  "packageManager": "pnpm@9.7.0"
+  "packageManager": "pnpm@10.14.0"
 }

@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useColorScheme } from "@/components/useColorScheme";
-import { SupabaseProvider } from "@/context/supabase-provider";
+import { AuthProvider } from "@/context/auth-provider";
 import { TRPCProvider } from "@/lib/api";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "@/i18n";
@@ -29,7 +29,7 @@ import { TabBarProvider } from "@/context/TabBarContext";
 // Import per Expo Updates
 import { useExpoUpdates } from "@/hooks/use-expo-updates";
 import { UpdateModal } from "@/components/ui/update-modal";
-import { useNotificationBadgeSimple } from "@/hooks/use-notification-badge-simple";
+import { useNotificationBadge } from "@/hooks/use-notification-badge";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { NetworkProvider, useNetworkState } from "@/context/NetworkProvider";
 
@@ -105,11 +105,11 @@ function RootLayoutNav() {
   const { updateInfo, downloadAndRestart, dismissUpdate } = useExpoUpdates();
 
   // Clear notification badge when app becomes active
-  useNotificationBadgeSimple();
+  useNotificationBadge();
 
   return (
     <>
-      <SupabaseProvider>
+      <AuthProvider>
         {/* API System */}
         <TRPCProvider>
           {/* SafeAreaProvider */}
@@ -135,7 +135,7 @@ function RootLayoutNav() {
             </ThemeProvider>
           </SafeAreaProvider>
         </TRPCProvider>
-      </SupabaseProvider>
+      </AuthProvider>
     </>
   );
 }
@@ -173,10 +173,6 @@ function AppWithNetworkState() {
     <>
       <Stack>
         <Stack.Screen
-          name="(splash)"
-          options={{ headerShown: false, animation: "fade" }}
-        />
-        <Stack.Screen
           name="(protected)"
           options={{ headerShown: false, animation: "fade" }}
         />
@@ -189,9 +185,9 @@ function AppWithNetworkState() {
           options={{ headerShown: false, animation: "fade" }}
         />
       </Stack>
-      
+
       {/* Network-aware Loading Screen */}
-      <LoadingScreen 
+      <LoadingScreen
         isVisible={shouldShowLoading}
         networkState={{
           isConnected,

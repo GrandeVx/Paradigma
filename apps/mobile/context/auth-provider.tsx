@@ -20,7 +20,7 @@ const STORAGE_KEY = "hasCompletedOnboarding";
 
 SplashScreen.preventAutoHideAsync();
 
-type SupabaseContextProps = {
+type AuthContextProps = {
   user: User | null;
   session: Session | null;
   initialized?: boolean;
@@ -44,11 +44,11 @@ type SupabaseContextProps = {
   getAvatarUrl: () => Promise<string>;
 };
 
-type SupabaseProviderProps = {
+type AuthProviderProps = {
   children: React.ReactNode;
 };
 
-export const SupabaseContext = createContext<SupabaseContextProps>({
+export const AuthContext = createContext<AuthContextProps>({
   user: null,
   session: null,
   initialized: false,
@@ -68,11 +68,11 @@ export const SupabaseContext = createContext<SupabaseContextProps>({
   getAvatarUrl: async () => "",
 });
 
-export const useSupabase = () => useContext(SupabaseContext);
+export const useAuth = () => useContext(AuthContext);
 
 
 // Inner component that has access to subscription hooks
-const SupabaseProviderInner = ({ children }: SupabaseProviderProps) => {
+const AuthProviderInner = ({ children }: AuthProviderProps) => {
   const router = useRouter();
   const segments = useSegments();
   const rootNavigation = useRootNavigation();
@@ -699,7 +699,7 @@ const SupabaseProviderInner = ({ children }: SupabaseProviderProps) => {
 
 
   return (
-    <SupabaseContext.Provider
+    <AuthContext.Provider
       value={{
         user,
         session,
@@ -728,16 +728,16 @@ const SupabaseProviderInner = ({ children }: SupabaseProviderProps) => {
       ) : (
         children
       )}
-    </SupabaseContext.Provider>
+    </AuthContext.Provider>
   );
 };
 
 // Main provider that wraps everything
-export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   return (
-    <SupabaseProviderInner>
+    <AuthProviderInner>
       {children}
-    </SupabaseProviderInner>
+    </AuthProviderInner>
   );
 };
 

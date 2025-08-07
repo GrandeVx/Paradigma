@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { useSupabase } from "@/context/supabase-provider";
+import { useAuth } from "@/context/auth-provider";
 import { z } from "zod";
 
 export default function SignInEmail() {
@@ -15,7 +15,7 @@ export default function SignInEmail() {
   const params = useLocalSearchParams<{ name: string, email: string }>();
   const [email, setEmail] = useState("");
   const emailInputRef = useRef<TextInput>(null);
-  const { sendVerificationOtp } = useSupabase();
+  const { sendVerificationOtp } = useAuth();
   // Automatically focus the input field when the screen mounts
   useEffect(() => {
     emailInputRef.current?.focus();

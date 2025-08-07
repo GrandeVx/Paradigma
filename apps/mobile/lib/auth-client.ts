@@ -14,18 +14,19 @@ if (!backendUrl) {
 } else {
   console.log("✅ [Auth Client] Backend URL is configured correctly");
 }
- 
-export const authClient = createAuthClient({
-    baseURL: backendUrl || "http://localhost:3000", /* base url of your Better Auth backend. */
-    plugins: [
-                emailOTPClient(),
-        expoClient(
-          {
-            scheme: "balance",
-            storagePrefix: "balance",
-            storage: SecureStore,
-        }
-        ),
 
-    ]
+export const authClient = createAuthClient({
+  baseURL: backendUrl || "http://localhost:3000", /* base url of your Better Auth backend. */
+  plugins: [
+    emailOTPClient(),
+    //@ts-expect-error - expoClient is not a valid plugin
+    expoClient(
+      {
+        scheme: "balance",
+        storagePrefix: "balance",
+        storage: SecureStore,
+      }
+    ),
+
+  ]
 });

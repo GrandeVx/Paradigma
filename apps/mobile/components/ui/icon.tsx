@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Image, ImageProps, ImageStyle, Platform } from "react-native";
+import { Image, ImageProps, ImageSourcePropType, ImageStyle, Platform } from "react-native";
 import { cn } from "@/lib/utils";
 
 // Importa le icone SVG
@@ -92,7 +92,7 @@ export const Icon = React.forwardRef<React.ElementRef<typeof Image>, IconProps>(
     return (
       <Image
         ref={ref}
-        source={source}
+        source={source as ImageSourcePropType}
         accessibilityLabel={`${name} icon`}
         className={cn("", className)}
         style={[

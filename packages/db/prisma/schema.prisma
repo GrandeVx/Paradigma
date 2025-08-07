@@ -22,6 +22,9 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+/**
+ * Whitelist for users who can access the app before it's released
+ */
 model Whitelist {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -54,24 +57,20 @@ model User {
   deletedAt         DateTime? @map("deleted_at")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  currency          String?   @default("EUR") @map("currency")
-  
+
   // Subscription fields
-  isPremium              Boolean            @default(false) @map("is_premium")
-  subscriptionStatus     SubscriptionStatus @default(FREE) @map("subscription_status")
-  subscriptionStartDate  DateTime?          @map("subscription_start_date")
-  subscriptionEndDate    DateTime?          @map("subscription_end_date")
+  isPremium             Boolean            @default(false) @map("is_premium")
+  subscriptionStatus    SubscriptionStatus @default(FREE) @map("subscription_status")
+  subscriptionStartDate DateTime?          @map("subscription_start_date")
+  subscriptionEndDate   DateTime?          @map("subscription_end_date")
   trialEndDate          DateTime?          @map("trial_end_date")
   superwallCustomerId   String?            @map("superwall_customer_id")
-
-  moneyAccounts  MoneyAccount[]
-  recurringRules RecurringTransactionRule[]
-  transactions   Transaction[]
-  budgets        Budget[]
 
   // Better Auth Relations
   sessions Session[]
   accounts Account[]
+
+  // Custom Relations
 
   @@index([id])
   @@index([isPremium])
@@ -80,6 +79,9 @@ model User {
   @@map("user")
 }
 
+/**
+ * Better Auth Session
+ */
 model Session {
   id        String   @id @default(uuid())
   expiresAt DateTime
@@ -95,6 +97,9 @@ model Session {
   @@map("session")
 }
 
+/**
+ * Better Auth Account
+ */
 model Account {
   id                    String    @id @default(uuid())
   accountId             String
@@ -114,6 +119,9 @@ model Account {
   @@map("account")
 }
 
+/**
+ * Better Auth Verification
+ */
 model Verification {
   id         String   @id @default(uuid())
   identifier String
@@ -123,196 +131,4 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@map("verification")
-}
-
-// enum AccountType {
-//   BANK
-//   CREDIT_CARD
-//   CASH
-//   INVESTMENT
-//   SAVINGS
-//   OTHER
-// }
-
-model MoneyAccount {
-  id             String   @id @default(cuid())
-  userId         String
-  name           String
-  iconName       String?  @map("icon_name")
-  default        Boolean  @default(false)
-  color          String?  @map("color")
-  initialBalance Decimal  @default(0)
-  currency       String?  @default("EUR")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  includeInTotal Boolean @default(true) @map("include_in_total_balance")
-
-  isGoalAccount   Boolean   @default(false) @map("is_goal_account") // Flag per indicare se questo conto traccia un obiettivo
-  targetAmount    Decimal?  @map("target_amount") // Importo target dell'obiettivo
-  targetDate      DateTime? @map("target_date") // Data target dell'obiettivo
-  goalDescription String?   @map("goal_description") // Descrizione dell'obiettivo
-
-  user           User                       @relation(fields: [userId], references: [id])
-  transactions   Transaction[]
-  recurringRules RecurringTransactionRule[]
-
-  @@index([userId])
-  @@index([isGoalAccount]) // Indice per filtrare rapidamente i conti obiettivo
-  @@map("accounts")
-}
-
-// --- Struttura Categorie Gerarchiche (Invariato da v5) ---
-
-enum CategoryType {
-  INCOME
-  EXPENSE
-}
-
-model MacroCategory {
-  id    String       @id @default(cuid())
-  key   String       @unique // Nuovo campo per chiave internazionale
-  name  String       @unique // Mantenuto per compatibilità durante migrazione
-  type  CategoryType
-  color String
-  icon  String       @default("💰")
-
-  subCategories SubCategory[]
-  budgets       Budget[]
-
-  @@map("macro_categories")
-}
-
-model SubCategory {
-  id              String @id @default(cuid())
-  macroCategoryId String
-  key             String // Nuovo campo per chiave internazionale
-  name            String // Mantenuto per compatibilità durante migrazione
-  icon            String
-
-  macroCategory  MacroCategory              @relation(fields: [macroCategoryId], references: [id])
-  transactions   Transaction[]
-  recurringRules RecurringTransactionRule[]
-
-  @@unique([macroCategoryId, key]) // Chiave unica per macro categoria
-  @@unique([macroCategoryId, name]) // Mantenuto per compatibilità durante migrazione
-  @@map("sub_categories")
-}
-
-// --- Modello Budget (Invariato da v5) ---
-
-model Budget {
-  id              String  @id @default(cuid())
-  userId          String
-  macroCategoryId String
-  allocatedAmount Decimal
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user          User          @relation(fields: [userId], references: [id])
-  macroCategory MacroCategory @relation(fields: [macroCategoryId], references: [id])
-
-  @@unique([userId, macroCategoryId])
-  @@index([userId])
-  @@map("budgets")
-}
-
-// --- Modello Transazione (AGGIORNATO: rimosso goalId) ---
-
-model Transaction {
-  id            String   @id @default(cuid())
-  userId        String
-  description   String
-  amount        Decimal // Positivo per entrate, negativo per uscite
-  date          DateTime
-  subCategoryId String?
-  notes         String?
-  transferId    String? // Stesso ID per l'uscita e l'entrata dello stesso trasferimento
-
-  isRecurringInstance Boolean @default(false)
-  recurringRuleId     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user           User                      @relation(fields: [userId], references: [id])
-  subCategory    SubCategory?              @relation(fields: [subCategoryId], references: [id])
-  recurringRule  RecurringTransactionRule? @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
-  moneyAccount   MoneyAccount?             @relation(fields: [moneyAccountId], references: [id])
-  moneyAccountId String?
-
-  @@index([userId, date])
-  @@index([subCategoryId])
-  @@index([recurringRuleId])
-  @@index([transferId])
-  @@index([moneyAccountId])
-  @@map("transactions")
-}
-
-// --- Modello Regole Ricorrenti (AGGIORNATO: rimosso goalId) ---
-
-enum FrequencyType {
-  DAILY
-  WEEKLY
-  MONTHLY
-  YEARLY
-}
-
-enum RuleType {
-  INCOME
-  EXPENSE
-}
-
-model RecurringTransactionRule {
-  id            String   @id @default(cuid())
-  userId        String
-  description   String
-  amount        Decimal
-  totalAmount   Decimal? // For installments: original total amount before division
-  type          RuleType
-  subCategoryId String?
-
-  // --- Recurrence Configuration ---
-  startDate         DateTime // When the recurring pattern begins
-  frequencyType     FrequencyType // DAILY, WEEKLY, MONTHLY, YEARLY 
-  frequencyInterval Int           @default(1) // How many units between occurrences (e.g. every 2 weeks)
-  dayOfWeek         Int? // 0-6 for specific day of week (Sunday=0)
-  dayOfMonth        Int? // 1-31 for specific day of month
-  nextDueDate       DateTime // Next date this rule should generate a transaction
-
-  // --- End Conditions ---
-  endDate              DateTime? // Optional end date when rule expires
-  totalOccurrences     Int? // For installments: total number of payments
-  occurrencesGenerated Int       @default(0) // Number of transactions generated so far
-  isInstallment        Boolean   @default(false) // true = Fixed occurrences, false = Ongoing
-
-  // --- External Processing Fields ---
-  lastProcessedAt            DateTime? // When an external system last processed this rule
-  processingKey              String? // UUID or identifier for external processing lock
-  isFirstOccurrenceGenerated Boolean   @default(false) // Whether the first instance was created
-  transactionGroupId         String? // Groups related transactions for this rule
-  externalSystemId           String? // ID in an external system 
-
-  // --- Status Fields ---
-  isActive Boolean @default(true) // Whether this rule is active and should generate new instances
-  notes    String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
-
-  subCategory           SubCategory?  @relation(fields: [subCategoryId], references: [id])
-  generatedTransactions Transaction[]
-  moneyAccount          MoneyAccount? @relation(fields: [moneyAccountId], references: [id])
-  moneyAccountId        String?
-
-  @@index([userId])
-  @@index([isActive, nextDueDate]) // For quickly finding rules due for processing
-  @@index([subCategoryId])
-  @@index([isInstallment])
-  @@index([processingKey]) // For external system locking
-  @@index([transactionGroupId]) // For linking related transactions
-  @@map("recurring_transaction_rules")
 }

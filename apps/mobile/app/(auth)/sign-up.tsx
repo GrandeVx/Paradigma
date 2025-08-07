@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
 import { Input } from "@/components/ui/input";
 import { KeyboardAvoidingView } from "react-native"
-import { useSupabase } from "@/context/supabase-provider";
+import { useAuth } from "@/context/auth-provider";
 import { api } from "@/lib/api";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
@@ -24,7 +24,7 @@ import { useTabBar } from "@/context/TabBarContext";
 export default function AuthIndex() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { sendVerificationOtp, signInWithGoogle, signInWithApple, forceRouting } = useSupabase();
+  const { sendVerificationOtp, signInWithGoogle, signInWithApple, forceRouting } = useAuth();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);

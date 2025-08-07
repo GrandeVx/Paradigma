@@ -64,21 +64,6 @@ export default function TabLayout() {
 
 
       <Tabs.Screen
-        name="(transaction-flow)"
-        options={{
-          // This title is used to set the title of the bottom tab
-          // title: t("tab-bar.transactions"),
-          tabBarIcon: () => {
-            return (
-              <View className="flex-row items-center justify-center bg-primary-700 rounded-full w-14 h-14">
-                <SvgIcon name="add" color={"white"} size={20} />
-              </View>
-            )
-          },
-        }}
-      />
-
-      <Tabs.Screen
         name="(accounts)"
         initialParams={{}}
         options={{
@@ -109,6 +94,22 @@ export default function TabLayout() {
           href: null,
         }}
       />
+
+      <Tabs.Screen
+        name="(transaction-flow)"
+        options={{
+          // This title is used to set the title of the bottom tab
+          // title: t("tab-bar.transactions"),
+          tabBarIcon: () => {
+            return (
+              <View className="flex-row items-center justify-center bg-primary-700 rounded-full w-14 h-14">
+                <SvgIcon name="add" color={"white"} size={20} />
+              </View>
+            )
+          },
+        }}
+      />
+
 
     </Tabs>
   );

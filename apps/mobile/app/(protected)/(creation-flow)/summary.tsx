@@ -1,148 +1,134 @@
 import React, { useState, useCallback } from "react";
-import { View } from "react-native";
+import { View, ScrollView, Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import HeaderContainer from "@/components/layouts/_header";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { api } from "@/lib/api";
 
-// Import modular component for better performance
-import { CreationSummaryForm } from './components/creation-summary-form';
-
-export default function SummaryScreen() {
+export default function FormSummaryScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-
-  const [defaultAccount, setDefaultAccount] = useState(false);
-  const [savingsAccount, setSavingsAccount] = useState(false);
-  const [savingTarget, setSavingTarget] = useState("750,00");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const params = useLocalSearchParams<{ name: string, icon: string, color: string, value: string, firstAccount: string, isBudgeting?: string, target?: string }>();
+  const params = useLocalSearchParams<{ 
+    name?: string, 
+    value?: string,
+    details?: string 
+  }>();
 
   // Reset state when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      // Reset form settings to prevent old data from persisting
-      setDefaultAccount(false);
-      // If in goal mode, automatically enable savings account and set target
-      if (params.isBudgeting === 'true' && params.target) {
-        setSavingsAccount(true);
-        setSavingTarget(parseFloat(params.target).toFixed(2).replace('.', ','));
-      } else {
-        setSavingsAccount(false);
-        setSavingTarget("750,00");
-      }
       setIsLoading(false);
-      setError(null);
-      return () => {
-        // Cleanup if necessary
-      };
-    }, [params.isBudgeting, params.target])
+      return () => {};
+    }, [])
   );
 
-  const queryClient = api.useContext();
-
-  // Account creation mutation - OPTIMIZED invalidation and navigation
-  const { mutate: createAccount, isLoading: isCreatingAccount } = api.account.create.useMutation({
-    onSuccess: async () => {
-      // Only invalidate account list, no need for other queries
-      await queryClient.account.listWithBalances.invalidate();
-      // Navigate based on whether this is a goal account or regular account
-      if (params.isBudgeting === 'true') {
-        router.replace("/(protected)/(tabs)/home");
-      } else {
-        router.replace("/(protected)/(accounts)");
-      }
-    },
-    onError: (error) => {
-      setError(error.message);
-      setIsLoading(false);
-    }
-  });
-
-  const handleSave = async () => {
+  const handleSubmit = async () => {
     setIsLoading(true);
-    setError(null);
-
-    try {
-      // Create account with integrated goal functionality if savings is enabled
-      await createAccount({
-        name: params.name,
-        iconName: params.icon,
-        color: params.color,
-        initialBalance: parseFloat(params.value.replace(",", ".")),
-        default: defaultAccount,
-        isGoalAccount: savingsAccount,
-        // Include goal-related fields only if it's a savings account
-        ...(savingsAccount && {
-          targetAmount: parseFloat(savingTarget.replace(",", ".")),
-          goalDescription: t("flow.summary.goalDescription", { name: params.name })
-        })
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.error"));
+    
+    // Simulate form submission
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      alert('Item created successfully!');
+      // Navigate back to list or home
+      router.push("/(protected)/(accounts)/");
+    }, 1500);
   };
 
-  const canSave = () => {
-    // If savings account is enabled, target amount is required and must be a number
-    if (savingsAccount) {
-      try {
-        const targetAmount = parseFloat(savingTarget.replace(",", "."));
-        return !isNaN(targetAmount) && targetAmount > 0;
-      } catch {
-        return false;
-      }
-    }
-    // If savings account is not enabled, target amount is not required
-    return true;
+  const handleBack = () => {
+    router.back();
   };
 
   return (
-    <HeaderContainer variant="secondary" customTitle={t("flow.summary.title", "NUOVO CONTO")}>
-      <View className="flex-1 bg-white">
-        <View className="flex-1 px-4 pt-4 pb-0">
-          {/* Account Settings - MODULARIZED for performance */}
-          <CreationSummaryForm
-            defaultAccount={defaultAccount}
-            savingsAccount={savingsAccount}
-            savingTarget={savingTarget}
-            onDefaultAccountChange={setDefaultAccount}
-            onSavingsAccountChange={setSavingsAccount}
-            onSavingTargetChange={setSavingTarget}
-          />
-        </View>
-
-        {/* Error message */}
-        {error && (
-          <View className="px-4 py-2">
-            <Text className="text-red-500">{error}</Text>
+    <HeaderContainer 
+      variant="secondary" 
+      customTitle="Review & Create"
+      onBackPress={handleBack}
+    >
+      <ScrollView className="flex-1 bg-white">
+        <View className="p-6">
+          
+          {/* Summary Card */}
+          <View className="bg-gray-50 rounded-2xl p-6 mb-6">
+            <Text className="text-lg font-semibold text-gray-800 mb-4">
+              Summary
+            </Text>
+            
+            <View className="space-y-3">
+              <View className="flex-row justify-between">
+                <Text className="text-gray-600">Name:</Text>
+                <Text className="font-medium text-gray-800">
+                  {params.name || 'Unnamed Item'}
+                </Text>
+              </View>
+              
+              {params.value && (
+                <View className="flex-row justify-between">
+                  <Text className="text-gray-600">Value:</Text>
+                  <Text className="font-medium text-gray-800">
+                    {params.value}
+                  </Text>
+                </View>
+              )}
+              
+              {params.details && (
+                <View className="flex-row justify-between">
+                  <Text className="text-gray-600">Details:</Text>
+                  <Text className="font-medium text-gray-800">
+                    {params.details}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        )}
 
-        {/* Bottom Action Buttons */}
-        <View className="px-4 pb-8 pt-2 border-t border-gray-200">
-          <View className="flex-row gap-2">
-            <Button
-              variant="primary"
-              size="lg"
-              rounded="default"
-              onPress={handleSave}
-              disabled={!canSave()}
-              className="flex-1 font-semibold font-sans"
-              isLoading={isLoading || isCreatingAccount}
-            >
-              <Text className="text-white font-semibold">
-                {t("common.actions.save")}
-              </Text>
-            </Button>
+          {/* Settings Options */}
+          <View className="mb-8">
+            <Text className="text-lg font-semibold text-gray-800 mb-4">
+              Options
+            </Text>
+            
+            <Pressable className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
+              <View className="flex-row justify-between items-center">
+                <Text className="text-gray-700">Set as default</Text>
+                <View className="w-6 h-6 rounded border-2 border-gray-300" />
+              </View>
+            </Pressable>
+            
+            <Pressable className="bg-white border border-gray-200 rounded-xl p-4">
+              <View className="flex-row justify-between items-center">
+                <Text className="text-gray-700">Enable notifications</Text>
+                <View className="w-6 h-6 rounded border-2 border-gray-300" />
+              </View>
+            </Pressable>
           </View>
+
+          {/* Progress indicator */}
+          <View className="items-center mb-8">
+            <View className="flex-row gap-2">
+              <View className="w-8 h-2 bg-primary-500 rounded-full" />
+              <View className="w-8 h-2 bg-primary-500 rounded-full" />
+              <View className="w-8 h-2 bg-primary-500 rounded-full" />
+            </View>
+            <Text className="text-gray-400 text-xs mt-2">Step 3 of 3</Text>
+          </View>
+
+          {/* Create Button */}
+          <Button
+            variant="primary"
+            size="lg"
+            onPress={handleSubmit}
+            disabled={isLoading}
+            className="mb-8"
+          >
+            <Text className="text-white font-semibold text-base">
+              {isLoading ? 'Creating...' : 'Create Item'}
+            </Text>
+          </Button>
         </View>
-      </View>
+      </ScrollView>
     </HeaderContainer>
   );
-} 
+}

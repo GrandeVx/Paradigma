@@ -4,7 +4,7 @@ import { Text } from "@/components/ui/text";
 import HeaderContainer from "@/components/layouts/_header";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { useRouter } from "expo-router";
-import { useSupabase } from "@/context/supabase-provider";
+import { useAuth } from "@/context/auth-provider";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRef } from "react";
@@ -76,7 +76,7 @@ const CategoryItem: React.FC<{
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { signOut, user, setIsOnboarded } = useSupabase();
+  const { signOut, user, setIsOnboarded } = useAuth();
   const { data: userInfo } = api.user.getUserInfo.useQuery();
   const { isSupported, isEnabled, enableBiometric, disableBiometric } = useBiometricAuth();
 

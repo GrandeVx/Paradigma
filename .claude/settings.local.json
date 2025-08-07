@@ -7,6 +7,12 @@
     "ios-simulator"
   ],
   "disabledMcpjsonServers": [
-    "dbhub"
-  ]
+    "dbhub",
+    "figma-work-mcp"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)"
+    ]
+  }
 }

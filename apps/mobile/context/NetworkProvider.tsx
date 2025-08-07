@@ -39,7 +39,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
     try {
       const networkStateInfo = await Network.getNetworkStateAsync();
       const isConnected = networkStateInfo.isConnected === true && networkStateInfo.isInternetReachable === true;
-      
+
       setNetworkState(prev => ({
         ...prev,
         isConnected,
@@ -80,12 +80,12 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
       if (checkIntervalRef.current) {
         clearInterval(checkIntervalRef.current);
       }
-      checkIntervalRef.current = setInterval(checkConnection, 30000); // Check every 30 seconds
+      checkIntervalRef.current = setInterval(checkConnection, 30000) as unknown as NodeJS.Timeout; // Check every 30 seconds
       return;
     }
 
     const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 10000); // Exponential backoff, max 10s
-    
+
     setNetworkState(prev => ({
       ...prev,
       isReconnecting: true,
@@ -98,8 +98,8 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
         if (!networkState.isConnected && retryCountRef.current < maxRetries) {
           scheduleRetry();
         }
-      });
-    }, delay);
+      }) as unknown as NodeJS.Timeout;
+    }, delay) as unknown as NodeJS.Timeout;
   };
 
   const forceRetry = () => {
@@ -112,14 +112,14 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
       clearInterval(checkIntervalRef.current);
       checkIntervalRef.current = null;
     }
-    
+
     // Reset retry count and start fresh
     retryCountRef.current = 0;
     setNetworkState(prev => ({
       ...prev,
       isLoading: true,
     }));
-    
+
     checkConnection();
   };
 
@@ -137,7 +137,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
           isConnected: false,
           connectionType: networkState.type || null,
         }));
-        
+
         // Start retry process after a brief delay
         setTimeout(() => {
           if (!networkState.isConnected) {
@@ -206,7 +206,7 @@ export const useNetworkState = (): NetworkContextType => {
 // Hook per componenti che necessitano di connessione
 export const useRequireConnection = () => {
   const { isConnected, isLoading, forceRetry } = useNetworkState();
-  
+
   return {
     isOnline: isConnected && !isLoading,
     isOffline: !isConnected && !isLoading,

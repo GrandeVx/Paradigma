@@ -13,17 +13,7 @@ export default function HomeLayout() {
         animationDuration: 0,
       }} />
 
-      <Stack.Screen name="transaction-edit/[id]" options={{
-        animation: "slide_from_right",
-        presentation: "card",
-      }} />
-
       <Stack.Screen name="(daily-transactions)" options={{
-        animation: "slide_from_right",
-        presentation: "card",
-      }} />
-
-      <Stack.Screen name="(category-transactions)" options={{
         animation: "slide_from_right",
         presentation: "card",
       }} />
