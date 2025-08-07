@@ -1,6 +1,6 @@
-# Balance - Personal Finance Management App
+# Modern Fullstack Boilerplate
 
-A modern fullstack personal finance application built with Next.js, Expo, and a powerful monorepo architecture.
+A clean, production-ready boilerplate for building modern fullstack applications with Next.js, Expo, and powerful monorepo architecture.
 
 ## 🚀 Features
 
@@ -10,7 +10,8 @@ A modern fullstack personal finance application built with Next.js, Expo, and a 
 - **Database**: PostgreSQL with Prisma ORM
 - **State Management**: TanStack React Query for server state
 - **Internationalization**: Multi-language support with i18next
-- **Modern UI**: Tailwind CSS with Shadcn UI components
+- **Modern UI**: Tailwind CSS with NativeWind for cross-platform styling
+- **Template Patterns**: Pre-built UI patterns (lists, forms, tabs, bottom sheets)
 - **Docker Ready**: Optimized Docker setup for development and production
 - **Monorepo**: Efficient development with Turbo and pnpm workspaces
 
@@ -65,7 +66,7 @@ When `COMPOSE_BAKE=true` is set, Docker Compose delegates the build process to D
 ## 📁 Project Structure
 
 ```
-Balance/
+Paradigma/
 ├── apps/
 │   ├── web/                # Next.js web application
 │   │   ├── src/app/       # App router pages
@@ -150,7 +151,7 @@ docker-compose up -d
 
 ### Web Application
 ```bash
-# Build for production
+# Build web app for production
 pnpm --filter @paradigma/web build
 
 # Start production server
@@ -159,10 +160,10 @@ pnpm --filter @paradigma/web start
 
 ### Mobile Application
 ```bash
-# Development build
+# Start mobile development
 pnpm --filter @paradigma/mobile expo start
 
-# Production builds
+# Production builds (requires EAS account)
 pnpm --filter @paradigma/mobile eas build --platform ios
 pnpm --filter @paradigma/mobile eas build --platform android
 ```
@@ -257,14 +258,15 @@ eas submit --platform android
 
 ## 🗄️ Database Schema
 
-The application uses PostgreSQL with Prisma ORM:
+The boilerplate includes a clean PostgreSQL schema with Prisma ORM:
 
-- **Users**: Authentication and user profiles
-- **Accounts**: Bank accounts and financial institutions
-- **Transactions**: Income and expense tracking
-- **Categories**: Transaction categorization
-- **Budgets**: Budget planning and tracking
-- **Goals**: Financial goal setting and monitoring
+- **User**: Authentication and user profiles
+- **Session**: Session management for BetterAuth
+- **Account**: OAuth account linking
+- **Verification**: Email/phone verification tokens
+- **Whitelist**: User access control
+
+*Additional tables can be easily added for your specific application needs.*
 
 ## 🌍 Internationalization
 
@@ -294,12 +296,13 @@ Built with a cohesive design system:
 
 ## 📊 API Documentation
 
-The API is built with tRPC for type-safe, full-stack TypeScript:
+The API layer includes essential tRPC routers:
 
-- **Type Safety**: End-to-end type safety
-- **Real-time**: WebSocket support for live updates
+- **User Router**: Profile management and user operations
+- **Util Router**: Common utilities and health checks
+- **Type Safety**: End-to-end type safety with TypeScript
 - **Validation**: Zod schema validation
-- **Documentation**: Auto-generated API docs
+- **Extensible**: Easy to add new routers for your features
 
 ## 🤝 Contributing
 
@@ -324,9 +327,30 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - **Documentation**: Check the `docs/` directory
-- **Issues**: [GitHub Issues](https://github.com/yourusername/balance/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/balance/discussions)
+- **Issues**: Create issues in your project repository
+- **Discussions**: Start discussions for feature requests and improvements
 
 ---
 
-**Made with ❤️ using Next.js, Expo, and modern web technologies**
+**A clean foundation for building your next modern fullstack application**
+
+## 🎯 Template Patterns Included
+
+This boilerplate includes several common UI patterns ready to customize:
+
+### Mobile App Patterns
+- **List Pattern**: Date-based list view (`/(protected)/(home)/(daily-transactions)/[date]`)
+- **Category Grid**: Category selection with icons (`CategoryBottomSheet`)
+- **Tab Navigation**: Multi-tab interface with smooth transitions
+- **Form Flow**: Multi-step form pattern (`/(protected)/(creation-flow)/`)
+- **Numeric Input**: Specialized numeric keyboard (`NumericKeyboard`)
+- **Settings**: Profile management with toggles and selections
+
+### Bottom Sheets Included
+- **CategoryBottomSheet**: Category selection with subcategories
+- **NotificationsBottomSheet**: Notification settings with time picker
+- **Money Account Bottom Sheet**: Mock account selection (customizable)
+
+All patterns use placeholder data and can be easily adapted for your specific use case.
+
+---
