@@ -1,6 +1,7 @@
 import { betterFetch } from "@better-fetch/fetch";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 
 // Define Session type locally since we don't have access to the auth lib here
 type Session = {
@@ -112,6 +113,7 @@ export async function middleware(req: NextRequest) {
 
     if (!session && !isPublicRoute) {
       // Redirect to login if not authenticated and trying to access a protected route
+      console.log("[Middleware] Not authenticated, redirecting to login");
       return NextResponse.redirect(new URL(`/${locale}/sign-in`, req.url));
     }
 

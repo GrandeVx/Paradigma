@@ -1,25 +1,20 @@
 {
   "expo": {
-    "name": "Balance",
-    "slug": "balance",
+    "name": "Paradigma",
+    "slug": "paradigma",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "balance",
+    "scheme": "paradigma",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.grandevx.balance",
+      "bundleIdentifier": "com.grandevx.paradigma",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
       "appleTeamId": "CA5W3WY58U",
-      "entitlements": {
-        "com.apple.security.application-groups": [
-          "group.com.grandevx.balance.widget"
-        ]
-      },
       "jsEngine": "hermes"
     },
     "notification": {
@@ -27,7 +22,7 @@
       "color": "#005EFD",
       "iosDisplayInForeground": true,
       "androidMode": "default",
-      "androidCollapsedTitle": "Balance - Aggiorna i tuoi conti"
+      "androidCollapsedTitle": "Paradigma"
     },
     "splash": {
       "image": "./assets/images/splash.png",
@@ -39,7 +34,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.grandevx.balance",
+      "package": "com.grandevx.paradigma",
       "jsEngine": "hermes"
     },
     "web": {
@@ -62,7 +57,8 @@
         {
           "ios": {
             "newArchEnabled": true,
-            "usesAppleSignIn": true
+            "usesAppleSignIn": true,
+            "deploymentTarget": "16.0"
           },
           "android": {
             "minSdkVersion": 26,
@@ -95,11 +91,11 @@
       "router": {
         "origin": false
       },
-      "eas": {
-        "projectId": "680ac63d-08e7-4607-8083-ee064a9bdeea"
-      },
       "googleSignIn": {
         "iosClientId": "1010271507170-gq1tot6k4ojt9u55fpt3et3g9lthm2qo.apps.googleusercontent.com"
+      },
+      "eas": {
+        "projectId": "099565be-c3fd-4641-b9b0-44330ad1425c"
       }
     },
     "runtimeVersion": {

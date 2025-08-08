@@ -8,7 +8,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": true
+        "simulator": true,
+        "buildConfiguration": "Debug"
       },
       "env": {
         "NEXT_PUBLIC_WEBSITE_URL": "http://localhost:3000",
@@ -22,9 +23,9 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "NEXT_PUBLIC_WEBSITE_URL": "https://trybalance.eu",
-        "EXPO_PUBLIC_API_ENDPOINT": "https://trybalance.eu",
-        "EXPO_PUBLIC_BACKEND_URL": "https://trybalance.eu",
+        "NEXT_PUBLIC_WEBSITE_URL": "http://localhost:3000",
+        "EXPO_PUBLIC_API_ENDPOINT": "http://localhost:3000",
+        "EXPO_PUBLIC_BACKEND_URL": "http://localhost:3000",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS": "pk_86b4721ca862863fe7a594d6627c8b7993fe60aeab9c2854",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_ANDROID": "pk_86b4721ca862863fe7a594d6627c8b7993fe60aeab9c2854"
       },
@@ -36,9 +37,9 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "NEXT_PUBLIC_WEBSITE_URL": "https://trybalance.eu",
-        "EXPO_PUBLIC_API_ENDPOINT": "https://trybalance.eu",
-        "EXPO_PUBLIC_BACKEND_URL": "https://trybalance.eu",
+        "NEXT_PUBLIC_WEBSITE_URL": "http://localhost:3000",
+        "EXPO_PUBLIC_API_ENDPOINT": "http://localhost:3000",
+        "EXPO_PUBLIC_BACKEND_URL": "http://localhost:3000",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_IOS": "pk_86b4721ca862863fe7a594d6627c8b7993fe60aeab9c2854",
         "EXPO_PUBLIC_SUPERWALL_API_KEY_ANDROID": "pk_86b4721ca862863fe7a594d6627c8b7993fe60aeab9c2854"
       },

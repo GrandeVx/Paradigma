@@ -1,6 +1,6 @@
 import * as z from "zod"
 import { SubscriptionStatus } from "@prisma/client"
-import { CompleteMoneyAccount, relatedMoneyAccountSchema, CompleteRecurringTransactionRule, relatedRecurringTransactionRuleSchema, CompleteTransaction, relatedTransactionSchema, CompleteBudget, relatedBudgetSchema, CompleteSession, relatedSessionSchema, CompleteAccount, relatedAccountSchema } from "./index"
+import { CompleteSession, relatedSessionSchema, CompleteAccount, relatedAccountSchema } from "./index"
 
 export const userSchema = z.object({
   id: z.string(),
@@ -17,7 +17,6 @@ export const userSchema = z.object({
   deletedAt: z.date().nullish(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  currency: z.string().nullish(),
   isPremium: z.boolean(),
   subscriptionStatus: z.nativeEnum(SubscriptionStatus),
   subscriptionStartDate: z.date().nullish(),
@@ -27,10 +26,6 @@ export const userSchema = z.object({
 })
 
 export interface CompleteUser extends z.infer<typeof userSchema> {
-  moneyAccounts: CompleteMoneyAccount[]
-  recurringRules: CompleteRecurringTransactionRule[]
-  transactions: CompleteTransaction[]
-  budgets: CompleteBudget[]
   sessions: CompleteSession[]
   accounts: CompleteAccount[]
 }
@@ -41,10 +36,6 @@ export interface CompleteUser extends z.infer<typeof userSchema> {
  * NOTE: Lazy required in case of potential circular dependencies within schema
  */
 export const relatedUserSchema: z.ZodSchema<CompleteUser> = z.lazy(() => userSchema.extend({
-  moneyAccounts: relatedMoneyAccountSchema.array(),
-  recurringRules: relatedRecurringTransactionRuleSchema.array(),
-  transactions: relatedTransactionSchema.array(),
-  budgets: relatedBudgetSchema.array(),
   sessions: relatedSessionSchema.array(),
   accounts: relatedAccountSchema.array(),
 }))

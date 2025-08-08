@@ -22,9 +22,7 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-/**
- * Whitelist for users who can access the app before it's released
- */
+// Whitelist for users who can access the app before it's released
 model Whitelist {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -34,6 +32,7 @@ model Whitelist {
   @@map("whitelist")
 }
 
+// Subscription status
 enum SubscriptionStatus {
   FREE
   TRIAL
@@ -79,9 +78,7 @@ model User {
   @@map("user")
 }
 
-/**
- * Better Auth Session
- */
+// Better Auth Session
 model Session {
   id        String   @id @default(uuid())
   expiresAt DateTime
@@ -97,9 +94,7 @@ model Session {
   @@map("session")
 }
 
-/**
- * Better Auth Account
- */
+// Better Auth Account
 model Account {
   id                    String    @id @default(uuid())
   accountId             String
@@ -119,9 +114,7 @@ model Account {
   @@map("account")
 }
 
-/**
- * Better Auth Verification
- */
+// Better Auth Verification
 model Verification {
   id         String   @id @default(uuid())
   identifier String

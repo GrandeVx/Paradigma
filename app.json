@@ -1,15 +1,10 @@
 {
   "expo": {
-    "extra": {
-      "eas": {
-        "projectId": "680ac63d-08e7-4607-8083-ee064a9bdeea"
-      }
-    },
     "android": {
-      "package": "com.grandevx.balance"
+      "package": "com.grandevx.paradigma"
     },
     "ios": {
-      "bundleIdentifier": "com.grandevx.balance",
+      "bundleIdentifier": "com.grandevx.paradigma",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
