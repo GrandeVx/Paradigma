@@ -20,36 +20,16 @@ export const useTabPrefetching = (currentTab: string) => {
       }, delay);
     };
 
-    // Prefetch strategies based on current tab
+    // Note: Prefetching has been simplified for the boilerplate
+    // Add your own prefetch strategies based on your app's needs
     if (currentTab === "(home)") {
-      // When on home, prefetch other tab data with staggered delays
-      prefetchWithDelay(500, () => 
-        utils.budget.getCurrentSettings.prefetch({})
-      );
-      prefetchWithDelay(1000, () => 
-        utils.account.listWithBalances.prefetch({})
-      );
-      prefetchWithDelay(1500, () =>
-        utils.category.list.prefetch({})
-      );
+      // Add prefetch logic for home tab
     } 
     else if (currentTab === "(budgets)") {
-      // When on budgets, prefetch transaction data that might be needed
-      prefetchWithDelay(300, () =>
-        utils.transaction.getMonthlySpending.prefetch(queryParams)
-      );
-      prefetchWithDelay(600, () =>
-        utils.account.listWithBalances.prefetch({})
-      );
+      // Add prefetch logic for budgets tab
     }
     else if (currentTab === "(accounts)") {
-      // When on accounts, prefetch recent transactions
-      prefetchWithDelay(300, () =>
-        utils.transaction.getDailySpending.prefetch(queryParams)
-      );
-      prefetchWithDelay(600, () =>
-        utils.budget.getCurrentSettings.prefetch({})
-      );
+      // Add prefetch logic for accounts tab
     }
     else if (currentTab === "(profile)") {
       // Profile tab might need user data, settings etc.
@@ -59,9 +39,7 @@ export const useTabPrefetching = (currentTab: string) => {
 
   // Prefetch static data that rarely changes (aggressive caching)
   useEffect(() => {
-    // Categories change very rarely, prefetch with long stale time
-    utils.category.list.prefetch({}, {
-      staleTime: 1000 * 60 * 30, // 30 minutes for categories
-    });
+    // Add your own static data prefetching here
+    console.log('[Tab Prefetching] Ready for custom prefetch logic');
   }, [utils]);
 }; 

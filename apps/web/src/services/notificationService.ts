@@ -41,10 +41,10 @@ export async function sendBatchNotification(
 
   try {
     const chunks = expoClient.chunkPushNotifications([pushMessage]);
-    
+
     for (const chunk of chunks) {
       const ticketChunk = await expoClient.sendPushNotificationsAsync(chunk);
-      
+
       // Check for errors
       for (const ticket of ticketChunk) {
         if (ticket.status === "error") {
@@ -66,7 +66,7 @@ function getBatchNotificationMessage(count: number, language: string): { title: 
   const messages = {
     en: {
       title: "New Recurring Transactions",
-      body: count === 1 
+      body: count === 1
         ? "You have 1 new recurring transaction"
         : `You have ${count} new recurring transactions`,
     },
@@ -100,10 +100,10 @@ export async function clearNotificationBadge(pushToken: string): Promise<boolean
 
   try {
     const chunks = expoClient.chunkPushNotifications([clearMessage]);
-    
+
     for (const chunk of chunks) {
       const ticketChunk = await expoClient.sendPushNotificationsAsync(chunk);
-      
+
       // Check for errors
       for (const ticket of ticketChunk) {
         if (ticket.status === "error") {

@@ -92,10 +92,21 @@ export async function middleware(req: NextRequest) {
   };
 
   // Check if the request is for a public route
-  const isPublicRoute =
-    ["/login", "/sign-up", "/forgot-password", "/sign-in", "/terms", "privacy-policy"].some((route) =>
-      pathname.endsWith(route),
-    ) || isMarketingRoute(pathname);
+  const publicRoutes = ["/login", "/sign-up", "/forgot-password", "/sign-in", "/sign-in/verify", "/terms", "/privacy-policy"];
+  const isPublicRoute = publicRoutes.some((route) => {
+    // Handle both localized and non-localized paths
+    return pathname === route || pathname === `/${locale}${route}` || pathname.endsWith(route);
+  }) || isMarketingRoute(pathname);
+
+  // Debug logging for verify route
+  if (pathname.includes("verify")) {
+    console.log(`🔍 [Middleware] Verify route detected:`, {
+      pathname,
+      locale,
+      isPublicRoute,
+      matchedRoute: publicRoutes.find(route => pathname === route || pathname === `/${locale}${route}` || pathname.endsWith(route))
+    });
+  }
 
   // Skip auth check for public routes and API routes (already handled above)
   if (isPublicRoute) {
@@ -118,9 +129,22 @@ export async function middleware(req: NextRequest) {
     }
 
     if (session && isPublicRoute && !isMarketingRoute(pathname)) {
-      // Redirect to dashboard if authenticated and trying to access a public route
-      // But don't redirect if it's a marketing page
-      return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
+      // Don't redirect from verification page - user might be completing auth flow
+      const isVerifyRoute = pathname.includes("/verify") || pathname.includes("/sign-in/verify");
+      
+      console.log(`🔄 [Middleware] Session found on public route:`, {
+        pathname,
+        isVerifyRoute,
+        isMarketingRoute: isMarketingRoute(pathname),
+        userId: session?.user?.id
+      });
+      
+      if (!isVerifyRoute) {
+        console.log(`➡️ [Middleware] Redirecting authenticated user from ${pathname} to dashboard`);
+        return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
+      } else {
+        console.log(`✋ [Middleware] Allowing access to verify route: ${pathname}`);
+      }
     }
 
     return NextResponse.next();

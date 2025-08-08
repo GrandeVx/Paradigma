@@ -1,168 +1,151 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "@paradigma/auth";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2, Mail, ArrowLeft } from "lucide-react";
+import { z } from "zod";
+import Link from "next/link";
+
+const emailSchema = z.string().email("Please enter a valid email address");
 
 export default function SignInPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false,
-  });
+  const { sendVerificationOtp, error, isLoading, clearError } = useAuth();
+  const [email, setEmail] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+  useEffect(() => {
+    emailInputRef.current?.focus();
+  }, []);
 
+  const validateEmail = (email: string) => {
     try {
-      const { data, error } = await signIn.email({
-        email: formData.email,
-        password: formData.password,
-        callbackURL: "/",
-        rememberMe: formData.rememberMe,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        router.push("/dashboard");
-      }
+      emailSchema.parse(email);
+      setValidationError(null);
+      return true;
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An error occurred during sign in"
-      );
-    } finally {
-      setIsLoading(false);
+      if (err instanceof z.ZodError) {
+        setValidationError(err.errors[0]?.message || "Invalid email");
+      }
+      return false;
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    clearError();
+    setValidationError(null);
+
+    if (!validateEmail(email)) {
+      return;
+    }
+
+    try {
+      await sendVerificationOtp(email);
+      
+      // Store email in sessionStorage as backup
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('verify-email', email);
+      }
+      
+      // Navigate to verification page
+      router.push(`/sign-in/verify?email=${encodeURIComponent(email)}`);
+    } catch (err) {
+      console.error("Error sending OTP:", err);
+    }
+  };
+
+  const canContinue = email && emailSchema.safeParse(email).success;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
+        {/* Back Button */}
+        <div className="flex justify-start">
+          <Link
+            href="/"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Link>
         </div>
+
+        {/* Header */}
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
+            <Mail className="h-6 w-6 text-white" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back
+          </h2>
+          <p className="text-gray-600">
+            Enter your email to receive a verification code
+          </p>
+        </div>
+
+        {/* Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+          {(error || validationError) && (
+            <div className="rounded-lg bg-red-50 p-4 border border-red-200">
+              <div className="text-sm text-red-700">
+                {validationError || error}
+              </div>
             </div>
           )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-            </div>
-            <div className="relative">
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm pr-10"
-                placeholder="Password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                checked={formData.rememberMe}
-                onChange={(e) =>
-                  setFormData({ ...formData, rememberMe: e.target.checked })
-                }
-              />
-              <label
-                htmlFor="remember-me"
-                className="ml-2 block text-sm text-gray-900"
-              >
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a
-                href="/forgot-password"
-                className="font-medium text-primary-600 hover:text-primary-500"
-              >
-                Forgot your password?
-              </a>
-            </div>
-          </div>
 
           <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                "Sign in"
-              )}
-            </button>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email address
+            </label>
+            <input
+              ref={emailInputRef}
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+              placeholder="Enter your email address"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (validationError) setValidationError(null);
+                if (error) clearError();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && canContinue) {
+                  handleSubmit(e as any);
+                }
+              }}
+            />
           </div>
+
+          <button
+            type="submit"
+            disabled={!canContinue || isLoading}
+            className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+          >
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              "Continue"
+            )}
+          </button>
         </form>
 
+        {/* Footer */}
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
-            <a
+            New to Paradigma?{" "}
+            <Link
               href="/sign-up"
-              className="font-medium text-primary-600 hover:text-primary-500"
+              className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
             >
-              Sign up
-            </a>
+              Create an account
+            </Link>
           </p>
         </div>
       </div>

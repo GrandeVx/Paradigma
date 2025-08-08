@@ -7,21 +7,15 @@ import { nextCookies } from "better-auth/next-js";
 import { expo } from "@better-auth/expo";
 import nodemailer from 'nodemailer';
 
-// Log initialization
-console.log("🚀 [BetterAuth] Initializing with config:", {
-    databaseUrl: process.env.DATABASE_URL ? "Connected" : "Missing",
-    emailHost: process.env.EMAIL_HOST || "Missing",
-    emailUser: process.env.EMAIL_USER || "Missing",
-    hasEmailPassword: !!process.env.EMAIL_PASSWORD,
-    betterAuthSecret: process.env.BETTER_AUTH_SECRET ? "Set" : "Missing",
-    betterAuthUrl: process.env.BETTER_AUTH_URL || "Missing",
-    googleClientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
-    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
-    appleClientId: process.env.APPLE_CLIENT_ID ? "Set" : "Missing",
-    appleClientSecret: process.env.APPLE_CLIENT_SECRET ? "Set" : "Missing",
-});
+// Singleton to prevent multiple initializations
+let authInstance: ReturnType<typeof betterAuth> | null = null;
 
-export const auth = betterAuth({
+function createAuth() {
+    if (authInstance) {
+        return authInstance;
+    }
+
+    authInstance = betterAuth({
     user: {
         modelName: "User",
         fields: {
@@ -78,39 +72,25 @@ export const auth = betterAuth({
     trustedOrigins: ["balance://", "https://appleid.apple.com"],
     plugins: [nextCookies(), expo(), emailOTP(
         {
+            expiresIn: 600, // 10 minutes
+            allowedAttempts: 5,
             generateOTP: ({ email }) => {
                 const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
                 const isDemoAccount = email === 'test@paradigma.com';
 
                 if (isDemoMode && isDemoAccount) {
-                    console.log('🎭 [BetterAuth] Generating fixed OTP for demo account');
                     return '123456'; // Fixed OTP for demo account
                 }
 
                 // Default random OTP generation for regular users
-                const randomOtp = Math.random().toString(36).substring(2, 8).toUpperCase();
-                console.log('🔐 [BetterAuth] Generated random OTP for regular user');
-                return randomOtp;
+                return Math.random().toString(36).substring(2, 8).toUpperCase();
             },
             async sendVerificationOTP({ email, otp, type }) {
                 const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
                 const isDemoAccount = email === 'test@paradigma.com';
 
-                console.log("🔐 [BetterAuth] Sending verification OTP:", {
-                    email,
-                    otp,
-                    type,
-                    isDemoMode,
-                    isDemoAccount,
-                    emailHost: process.env.EMAIL_HOST,
-                    emailUser: process.env.EMAIL_USER,
-                    hasPassword: !!process.env.EMAIL_PASSWORD
-                });
-
                 // Demo mode: Skip email sending for demo account
                 if (isDemoMode && isDemoAccount) {
-                    console.log("🎭 [BetterAuth] Demo mode enabled - Skipping email for demo account");
-                    console.log("🎭 [BetterAuth] Use fixed OTP: 123456");
                     return; // Don't send email, use fixed OTP
                 }
 
@@ -125,19 +105,21 @@ export const auth = betterAuth({
                         }
                     });
 
-                    const result = await transporter.sendMail({
+                    await transporter.sendMail({
                         from: process.env.EMAIL_USER,
                         to: email,
                         subject: `Verification Code (${type})`,
                         text: `Your verification code is ${otp}`
                     });
-
-                    console.log("✅ [BetterAuth] Email sent successfully:", result);
                 } catch (error) {
-                    console.error("❌ [BetterAuth] Email sending failed:", error);
                     throw error;
                 }
             }
         }
     )],
-});
+    });
+
+    return authInstance;
+}
+
+export const auth = createAuth();

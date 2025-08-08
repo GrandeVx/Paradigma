@@ -184,23 +184,8 @@ export const mutations = {
         select: { notificationToken: true },
       });
 
-      if (!user?.notificationToken) {
-        // No notification token, nothing to clear
-        return { success: true, message: "No notification token found" };
-      }
-
-      // Import the notification service
-      const { clearNotificationBadge } = await import("../../utils/notificationService");
-      
-      // Clear the badge
-      const success = await clearNotificationBadge(user.notificationToken);
-
-      if (!success) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to clear notification badge",
-        });
-      }
+      // Note: Notification badge clearing has been removed as it's not part of the boilerplate
+      // This endpoint now simply returns success for compatibility
 
       return { success: true, message: "Badge cleared successfully" };
     }),

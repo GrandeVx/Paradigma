@@ -1,90 +1,40 @@
 import { api } from './api';
-import { transactionUtils } from './mmkv-storage';
 
 /**
- * Selective invalidation utility for when transaction data changes.
- * Optimized to only invalidate what's necessary to reduce performance impact.
+ * Generic invalidation utility for boilerplate template.
+ * Add your own invalidation patterns based on your app's specific needs.
  */
 export class InvalidationUtils {
   /**
-   * Invalidates only the essential queries related to transactions.
-   * Use this when transactions are created, updated, or deleted.
+   * Generic invalidation method for when data changes.
+   * Replace with your app's specific query invalidation logic.
    */
-  static async invalidateTransactionRelatedQueries(
+  static async invalidateDataRelatedQueries(
     utils: ReturnType<typeof api.useContext>,
     options?: {
-      currentMonth?: number;
-      currentYear?: number;
+      entityId?: string;
       clearCache?: boolean;
-      accountId?: string; // Add specific account targeting
     }
   ) {
-    const { currentMonth, currentYear, clearCache = false, accountId } = options || {};
+    const { entityId, clearCache = false } = options || {};
 
-    console.log('🔄 [InvalidationUtils] Starting selective query invalidation...');
+    console.log('🔄 [InvalidationUtils] Starting generic query invalidation...');
 
     try {
-      // === TRANSACTION QUERIES - SELECTIVE ===
-      if (currentMonth && currentYear) {
-        // Only invalidate current month transactions specifically
-        await utils.transaction.getMonthlySpending.invalidate({
-          month: currentMonth,
-          year: currentYear,
-        });
-        await utils.transaction.getMonthlySummary.invalidate({
-          month: currentMonth,
-          year: currentYear,
-        });
-      } else {
-        // Fallback: invalidate transaction queries but not all at once
-        await utils.transaction.getMonthlySpending.invalidate();
-        await utils.transaction.getMonthlySummary.invalidate();
-      }
+      // === ADD YOUR APP-SPECIFIC INVALIDATION LOGIC HERE ===
+      // Example patterns:
+      // await utils.yourRouter.yourQuery.invalidate();
+      // if (entityId) {
+      //   await utils.yourRouter.getById.invalidate({ id: entityId });
+      // }
       
-      // === ACCOUNT QUERIES - SELECTIVE ===
-      if (accountId) {
-        // Only invalidate specific account
-        await utils.account.getById.invalidate({ accountId });
-      } else {
-        // Account balances change when transactions change
-        await utils.account.listWithBalances.invalidate();
-      }
-
-      // === BUDGET QUERIES - SELECTIVE ===
-      // Only invalidate budget if we're dealing with current month
-      if (currentMonth && currentYear) {
-        const currentDate = new Date();
-        const isCurrentMonth = currentMonth === (currentDate.getMonth() + 1) && 
-                              currentYear === currentDate.getFullYear();
-        if (isCurrentMonth) {
-          await utils.budget.getCurrentSettings.invalidate();
-        }
-      }
-
       // === CACHE CLEANUP ===
-      if (clearCache && currentMonth && currentYear) {
-        // Clear MMKV cache for transactions to ensure fresh data
-        transactionUtils.setTransactionCacheData([], currentMonth, currentYear);
-        
-        // Clear adjacent months cache as well
-        const monthsToClean = [
-          { 
-            month: currentMonth - 1 || 12, 
-            year: currentMonth === 1 ? currentYear - 1 : currentYear 
-          },
-          { month: currentMonth, year: currentYear },
-          { 
-            month: currentMonth + 1 > 12 ? 1 : currentMonth + 1, 
-            year: currentMonth === 12 ? currentYear + 1 : currentYear 
-          }
-        ];
-        
-        monthsToClean.forEach(({ month, year }) => {
-          transactionUtils.setTransactionCacheData([], month, year);
-        });
+      if (clearCache) {
+        // Add your cache cleanup logic here
+        console.log('🧹 [InvalidationUtils] Cache cleanup requested');
       }
 
-      console.log('🫆 [InvalidationUtils] All queries invalidated successfully');
+      console.log('✅ [InvalidationUtils] Generic queries invalidated successfully');
     } catch (error) {
       console.error('❌ [InvalidationUtils] Error during query invalidation:', error);
       throw error;
@@ -92,296 +42,176 @@ export class InvalidationUtils {
   }
 
   /**
-   * Invalidates only account-related queries.
-   * Use this for account-specific operations.
+   * Generic pattern for entity-specific queries.
+   * Replace with your app's specific entity invalidation logic.
    */
-  static async invalidateAccountQueries(utils: ReturnType<typeof api.useContext>) {
-    await utils.account.listWithBalances.invalidate();
-    await utils.account.getById.invalidate();
+  static async invalidateEntityQueries(utils: ReturnType<typeof api.useContext>) {
+    // Example: await utils.yourEntity.list.invalidate();
+    // Example: await utils.yourEntity.getById.invalidate();
+    console.log('🔄 [InvalidationUtils] Entity queries invalidation (add your logic here)');
   }
 
   /**
-   * Invalidates only budget-related queries.
-   * Use this for budget-specific operations.
+   * Generic pattern for feature-specific queries.
+   * Replace with your app's specific feature invalidation logic.
    */
-  static async invalidateBudgetQueries(
+  static async invalidateFeatureQueries(
     utils: ReturnType<typeof api.useContext>,
     options?: {
-      currentMonth?: number;
-      currentYear?: number;
-      budgetSettings?: any[];
+      featureId?: string;
+      additionalParams?: any[];
     }
   ) {
-    console.log('💰 [InvalidationUtils] Invalidating budget-related queries...');
+    console.log('🔄 [InvalidationUtils] Feature queries invalidation...');
     
     try {
-      // Always invalidate budget settings
-      await utils.budget.getCurrentSettings.invalidate();
+      // === ADD YOUR FEATURE-SPECIFIC INVALIDATION HERE ===
+      // Example patterns:
+      // await utils.yourFeature.getSettings.invalidate();
+      // if (options?.featureId) {
+      //   await utils.yourFeature.getById.invalidate({ id: options.featureId });
+      // }
       
-      // Invalidate transaction spending data that budgets depend on
-      if (options?.currentMonth && options?.currentYear) {
-        const { currentMonth, currentYear, budgetSettings } = options;
-        
-        // Invalidate monthly spending with category filtering if budget settings available
-        if (budgetSettings && budgetSettings.length > 0) {
-          await utils.transaction.getMonthlySpending.invalidate({
-            month: currentMonth,
-            year: currentYear,
-            macroCategoryIds: budgetSettings.map(budget => budget.macroCategoryId),
-          });
-        } else {
-          // Fallback: invalidate without category filtering
-          await utils.transaction.getMonthlySpending.invalidate({
-            month: currentMonth,
-            year: currentYear,
-          });
-        }
-      } else {
-        // Fallback: broad invalidation
-        await utils.transaction.getMonthlySpending.invalidate();
-      }
-      
-      console.log('✅ [InvalidationUtils] Budget queries invalidated successfully');
+      console.log('✅ [InvalidationUtils] Feature queries invalidated successfully');
     } catch (error) {
-      console.error('❌ [InvalidationUtils] Error invalidating budget queries:', error);
+      console.error('❌ [InvalidationUtils] Error invalidating feature queries:', error);
       throw error;
     }
   }
 
   /**
-   * Invalidates category-specific transaction queries.
-   * Use this when transactions are modified to update category transaction views.
+   * Generic pattern for category or classification queries.
+   * Replace with your app's specific classification invalidation logic.
    */
-  static async invalidateCategoryQueries(
+  static async invalidateClassificationQueries(
     utils: ReturnType<typeof api.useContext>,
     options: {
-      categoryId: string;
-      currentMonth?: number;
-      currentYear?: number;
+      classificationId: string;
+      additionalFilters?: Record<string, any>;
     }
   ) {
-    const { categoryId, currentMonth, currentYear } = options;
+    const { classificationId, additionalFilters } = options;
     
-    console.log(`🏷️ [InvalidationUtils] Invalidating category queries for categoryId: ${categoryId}...`);
+    console.log(`🏷️ [InvalidationUtils] Invalidating classification queries for ID: ${classificationId}...`);
     
     try {
-      if (currentMonth && currentYear) {
-        // Invalidate specific month/year for the category
-        await utils.transaction.getCategoryTransactions.invalidate({
-          categoryId,
-          month: currentMonth,
-          year: currentYear,
-        });
-        
-        await utils.transaction.getBudgetInfo.invalidate({
-          categoryId,
-          month: currentMonth,
-          year: currentYear,
-        });
-        
-        console.log(`✅ [InvalidationUtils] Category queries invalidated for ${categoryId} - ${currentMonth}/${currentYear}`);
-      } else {
-        // Fallback: broad invalidation for all months
-        await utils.transaction.getCategoryTransactions.invalidate();
-        await utils.transaction.getBudgetInfo.invalidate();
-        
-        console.log(`✅ [InvalidationUtils] Category queries invalidated broadly for ${categoryId}`);
-      }
+      // === ADD YOUR CLASSIFICATION-SPECIFIC INVALIDATION HERE ===
+      // Example patterns:
+      // await utils.yourEntity.getByClassification.invalidate({ classificationId });
+      // if (additionalFilters) {
+      //   await utils.yourEntity.getFiltered.invalidate({ ...additionalFilters, classificationId });
+      // }
+      
+      console.log(`✅ [InvalidationUtils] Classification queries invalidated for ${classificationId}`);
     } catch (error) {
-      console.error(`❌ [InvalidationUtils] Error invalidating category queries for ${categoryId}:`, error);
+      console.error(`❌ [InvalidationUtils] Error invalidating classification queries for ${classificationId}:`, error);
       throw error;
     }
   }
 
   /**
-   * Invalidates home section queries that aggregate data.
-   * Use this when summary data needs to be refreshed.
+   * Generic pattern for dashboard/summary queries.
+   * Replace with your app's specific dashboard invalidation logic.
    */
-  static async invalidateHomeSectionQueries(
+  static async invalidateDashboardQueries(
     utils: ReturnType<typeof api.useContext>,
     options?: {
-      currentMonth?: number;
-      currentYear?: number;
+      timeFilter?: Record<string, any>;
+      scope?: string;
     }
   ) {
-    if (options?.currentMonth && options?.currentYear) {
-      const { currentMonth, currentYear } = options;
+    console.log('📊 [InvalidationUtils] Invalidating dashboard queries...');
+    
+    try {
+      // === ADD YOUR DASHBOARD-SPECIFIC INVALIDATION HERE ===
+      // Example patterns:
+      // await utils.dashboard.getSummary.invalidate(options?.timeFilter);
+      // await utils.analytics.getBreakdown.invalidate(options?.scope);
       
-      // Invalidate with specific parameters
-      await utils.transaction.getMonthlySummary.invalidate({
-        month: currentMonth,
-        year: currentYear,
-      });
-      await utils.transaction.getCategoryBreakdown.invalidate({
-        month: currentMonth,
-        year: currentYear,
-        type: 'expense',
-      });
-      await utils.transaction.getCategoryBreakdown.invalidate({
-        month: currentMonth,
-        year: currentYear,
-        type: 'income',
-      });
-      await utils.transaction.getDailySpending.invalidate({
-        month: currentMonth,
-        year: currentYear,
-      });
-      await utils.transaction.getMonthlySpending.invalidate({
-        month: currentMonth,
-        year: currentYear,
-      });
-    } else {
-      // Fallback: invalidate all
-      await utils.transaction.getMonthlySummary.invalidate();
-      await utils.transaction.getCategoryBreakdown.invalidate();
-      await utils.transaction.getSubCategoryBreakdown.invalidate();
-      await utils.transaction.getDailySpending.invalidate();
-      await utils.transaction.getMonthlySpending.invalidate();
+      console.log('✅ [InvalidationUtils] Dashboard queries invalidated successfully');
+    } catch (error) {
+      console.error('❌ [InvalidationUtils] Error invalidating dashboard queries:', error);
+      throw error;
     }
   }
 
   /**
-   * Invalidates recurring rule queries (both recurring and installment lists).
-   * Use this when recurring rules are created, updated, or deleted.
+   * Generic pattern for rule or configuration queries.
+   * Replace with your app's specific configuration invalidation logic.
    */
-  static async invalidateRecurringRuleQueries(
+  static async invalidateConfigurationQueries(
     utils: ReturnType<typeof api.useContext>
   ) {
-    console.log('🔄 [InvalidationUtils] Invalidating recurring rule queries...');
+    console.log('⚙️ [InvalidationUtils] Invalidating configuration queries...');
     
     try {
-      // Invalidate both recurring and installment lists
-      await utils.recurringRule.list.invalidate({ isInstallment: false });
-      await utils.recurringRule.list.invalidate({ isInstallment: true });
+      // === ADD YOUR CONFIGURATION-SPECIFIC INVALIDATION HERE ===
+      // Example patterns:
+      // await utils.config.list.invalidate();
+      // await utils.settings.getAll.invalidate();
+      // await utils.rules.getById.invalidate();
       
-      // Also invalidate the getById queries (broad invalidation)
-      await utils.recurringRule.getById.invalidate();
-      
-      console.log('✅ [InvalidationUtils] Recurring rule queries invalidated successfully');
+      console.log('✅ [InvalidationUtils] Configuration queries invalidated successfully');
     } catch (error) {
-      console.error('❌ [InvalidationUtils] Error invalidating recurring rule queries:', error);
+      console.error('❌ [InvalidationUtils] Error invalidating configuration queries:', error);
       throw error;
     }
   }
 
   /**
-   * Optimized chart queries invalidation.
-   * Only invalidates current month by default to improve performance.
-   * Adjacent months are invalidated only when specifically requested.
+   * Generic pattern for analytics/visualization queries.
+   * Replace with your app's specific analytics invalidation logic.
    */
-  static async invalidateChartsQueries(
+  static async invalidateAnalyticsQueries(
     utils: ReturnType<typeof api.useContext>,
     options?: {
-      currentMonth?: number;
-      currentYear?: number;
-      includeAdjacentMonths?: boolean; // New option to control adjacent month invalidation
+      timeRange?: Record<string, any>;
+      includeRelated?: boolean;
     }
   ) {
-    console.log('📊 [InvalidationUtils] Optimized chart queries invalidation...');
+    console.log('📊 [InvalidationUtils] Analytics queries invalidation...');
     
     try {
-      if (options?.currentMonth && options?.currentYear) {
-        const { currentMonth, currentYear, includeAdjacentMonths = false } = options;
-        
-        console.log(`📊 [InvalidationUtils] Invalidating specific month queries: ${currentMonth}/${currentYear}`);
-        
-        // Invalidate current month queries
-        const currentMonthPromises = [
-          utils.transaction.getMonthlySummary.invalidate({
-            month: currentMonth,
-            year: currentYear,
-          }),
-          utils.transaction.getCategoryBreakdown.invalidate({
-            month: currentMonth,
-            year: currentYear,
-            type: 'expense',
-          }),
-          utils.transaction.getCategoryBreakdown.invalidate({
-            month: currentMonth,
-            year: currentYear,
-            type: 'income',
-          }),
-          utils.transaction.getDailySpending.invalidate({
-            month: currentMonth,
-            year: currentYear,
-          }),
-        ];
-
-        // Execute current month invalidations in parallel
-        await Promise.all(currentMonthPromises);
-        
-        // Only invalidate adjacent months if explicitly requested (for background processing)
-        if (includeAdjacentMonths) {
-          console.log('📊 [InvalidationUtils] Including adjacent months in invalidation...');
-          
-          const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-          const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-          const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-          const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-          
-          // Invalidate adjacent months in parallel
-          const adjacentMonthPromises = [
-            // Previous month
-            utils.transaction.getMonthlySummary.invalidate({ month: prevMonth, year: prevYear }),
-            utils.transaction.getCategoryBreakdown.invalidate({ month: prevMonth, year: prevYear, type: 'expense' }),
-            utils.transaction.getDailySpending.invalidate({ month: prevMonth, year: prevYear }),
-            
-            // Next month
-            utils.transaction.getMonthlySummary.invalidate({ month: nextMonth, year: nextYear }),
-            utils.transaction.getCategoryBreakdown.invalidate({ month: nextMonth, year: nextYear, type: 'expense' }),
-            utils.transaction.getDailySpending.invalidate({ month: nextMonth, year: nextYear }),
-          ];
-
-          await Promise.all(adjacentMonthPromises);
-        }
-      } else {
-        // Fallback: Only invalidate critical chart queries without broad transaction invalidation
-        const fallbackPromises = [
-          utils.transaction.getMonthlySummary.invalidate(),
-          utils.transaction.getCategoryBreakdown.invalidate(),
-          utils.transaction.getDailySpending.invalidate(),
-        ];
-
-        await Promise.all(fallbackPromises);
+      // === ADD YOUR ANALYTICS-SPECIFIC INVALIDATION HERE ===
+      // Example patterns:
+      // await utils.analytics.getSummary.invalidate(options?.timeRange);
+      // await utils.charts.getData.invalidate();
+      
+      if (options?.includeRelated) {
+        // Add related queries invalidation
+        console.log('📊 [InvalidationUtils] Including related analytics queries...');
+        // await utils.analytics.getRelatedData.invalidate();
       }
       
-      console.log('✅ [InvalidationUtils] Chart queries invalidated successfully');
+      console.log('✅ [InvalidationUtils] Analytics queries invalidated successfully');
     } catch (error) {
-      console.error('❌ [InvalidationUtils] Error invalidating chart queries:', error);
+      console.error('❌ [InvalidationUtils] Error invalidating analytics queries:', error);
       throw error;
     }
   }
 
   /**
-   * Lightweight chart invalidation for immediate UI updates.
-   * Only invalidates current month essential queries.
+   * Lightweight invalidation for immediate UI updates.
+   * Replace with your app's essential queries for quick updates.
    */
-  static async invalidateChartsQueriesLight(
+  static async invalidateEssentialQueries(
     utils: ReturnType<typeof api.useContext>,
     options: {
-      currentMonth: number;
-      currentYear: number;
+      entityId?: string;
+      scope?: string;
     }
   ) {
-    console.log(`📊 [InvalidationUtils] Light chart invalidation: ${options.currentMonth}/${options.currentYear}`);
+    console.log(`⚡ [InvalidationUtils] Essential queries invalidation: ${options.entityId || 'all'}`);
     
     try {
-      // Only invalidate essential chart queries for current month
-      const promises = [
-        utils.transaction.getMonthlySummary.invalidate({
-          month: options.currentMonth,
-          year: options.currentYear,
-        }),
-        utils.transaction.getDailySpending.invalidate({
-          month: options.currentMonth,
-          year: options.currentYear,
-        }),
-      ];
-
-      await Promise.all(promises);
-      console.log('✅ [InvalidationUtils] Light chart invalidation completed');
+      // === ADD YOUR ESSENTIAL QUERIES INVALIDATION HERE ===
+      // Example patterns:
+      // await utils.essential.getData.invalidate({ id: options.entityId });
+      // await utils.summary.getQuick.invalidate({ scope: options.scope });
+      
+      console.log('✅ [InvalidationUtils] Essential queries invalidation completed');
     } catch (error) {
-      console.error('❌ [InvalidationUtils] Error in light chart invalidation:', error);
+      console.error('❌ [InvalidationUtils] Error in essential queries invalidation:', error);
       throw error;
     }
   }
