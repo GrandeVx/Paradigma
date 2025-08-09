@@ -1,7 +1,6 @@
 import { betterFetch } from "@better-fetch/fetch";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
 
 // Define Session type locally since we don't have access to the auth lib here
 type Session = {

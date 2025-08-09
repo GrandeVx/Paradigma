@@ -10,7 +10,7 @@ import Link from "next/link";
 export default function VerifyOTPPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signInWithOtp, sendVerificationOtp, error, isLoading, clearError, isAuthenticated, session } = useAuth();
+  const { signInWithOtp, sendVerificationOtp, error, isLoading, clearError } = useAuth();
 
   const emailFromParams = searchParams.get("email") || "";
   const emailFromStorage = typeof window !== 'undefined' ? sessionStorage.getItem('verify-email') : null;

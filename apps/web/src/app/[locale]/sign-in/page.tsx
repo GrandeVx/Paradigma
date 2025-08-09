@@ -33,8 +33,7 @@ export default function SignInPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const submitForm = async () => {
     clearError();
     setValidationError(null);
 
@@ -55,6 +54,11 @@ export default function SignInPage() {
     } catch (err) {
       console.error("Error sending OTP:", err);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await submitForm();
   };
 
   const canContinue = email && emailSchema.safeParse(email).success;
@@ -117,7 +121,8 @@ export default function SignInPage() {
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && canContinue) {
-                  handleSubmit(e as any);
+                  e.preventDefault();
+                  submitForm();
                 }
               }}
             />

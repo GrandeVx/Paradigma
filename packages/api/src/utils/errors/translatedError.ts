@@ -33,7 +33,7 @@ export function translatedError(
   cause?: unknown
 ): TRPCError {
   // Ottiene la lingua preferita dell'utente dall'oggetto sessione
-  const language = ctx.session?.user?.language;
+  const language = (ctx.session?.user as any)?.language;
   
   // Ottiene il messaggio tradotto
   const message = getTranslation(language, translationPath);
@@ -52,7 +52,7 @@ export function translatedError(
  * @param resourceType Tipo di risorsa (account, transaction, goal, ecc.)
  * @returns TRPCError con messaggio tradotto
  */
-export function notFoundError(ctx: Context, resourceType: 'account' | 'transaction' | 'goal' | 'category' | 'recurringRule'): TRPCError {
+export function notFoundError(ctx: Context, resourceType: 'account' | 'transaction' | 'goal' | 'category' | 'recurringRule' | 'group' | 'post' | 'comment' | 'member' | 'request' | 'user'): TRPCError {
   return translatedError(ctx, 'NOT_FOUND', [resourceType, 'errors', 'notFound']);
 }
 

@@ -1,6 +1,6 @@
 import * as z from "zod"
 import { SubscriptionStatus } from "@prisma/client"
-import { CompleteSession, relatedSessionSchema, CompleteAccount, relatedAccountSchema } from "./index"
+import { CompleteSession, relatedSessionSchema, CompleteAccount, relatedAccountSchema, CompletePost, relatedPostSchema, CompleteLike, relatedLikeSchema, CompleteComment, relatedCommentSchema, CompleteGroup, relatedGroupSchema, CompleteGroupMember, relatedGroupMemberSchema, CompleteGroupJoinRequest, relatedGroupJoinRequestSchema } from "./index"
 
 export const userSchema = z.object({
   id: z.string(),
@@ -28,6 +28,12 @@ export const userSchema = z.object({
 export interface CompleteUser extends z.infer<typeof userSchema> {
   sessions: CompleteSession[]
   accounts: CompleteAccount[]
+  posts: CompletePost[]
+  likes: CompleteLike[]
+  comments: CompleteComment[]
+  groupsOwned: CompleteGroup[]
+  groupMemberships: CompleteGroupMember[]
+  groupJoinRequests: CompleteGroupJoinRequest[]
 }
 
 /**
@@ -38,4 +44,10 @@ export interface CompleteUser extends z.infer<typeof userSchema> {
 export const relatedUserSchema: z.ZodSchema<CompleteUser> = z.lazy(() => userSchema.extend({
   sessions: relatedSessionSchema.array(),
   accounts: relatedAccountSchema.array(),
+  posts: relatedPostSchema.array(),
+  likes: relatedLikeSchema.array(),
+  comments: relatedCommentSchema.array(),
+  groupsOwned: relatedGroupSchema.array(),
+  groupMemberships: relatedGroupMemberSchema.array(),
+  groupJoinRequests: relatedGroupJoinRequestSchema.array(),
 }))

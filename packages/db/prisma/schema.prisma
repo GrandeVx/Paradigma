@@ -70,6 +70,13 @@ model User {
   accounts Account[]
 
   // Custom Relations
+  // Social platform relations
+  posts             Post[]
+  likes             Like[]
+  comments          Comment[]
+  groupsOwned       Group[]           @relation("GroupOwner")
+  groupMemberships  GroupMember[]
+  groupJoinRequests GroupJoinRequest[]
 
   @@index([id])
   @@index([isPremium])
@@ -124,4 +131,151 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@map("verification")
+}
+
+// Social Platform Models
+
+// Groups where users can create posts
+model Group {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  isPublic    Boolean  @default(true) @map("is_public")
+  image       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  ownerId String @map("owner_id")
+  owner   User   @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  members      GroupMember[]
+  posts        Post[]
+  joinRequests GroupJoinRequest[]
+
+  @@index([ownerId])
+  @@index([createdAt])
+  @@index([isPublic])
+  @@map("group")
+}
+
+// Group membership table
+model GroupMember {
+  id        String   @id @default(uuid())
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  role      String   @default("member") // member, moderator, admin
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  userId  String @map("user_id")
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId String @map("group_id")
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([groupId])
+  @@index([userId])
+  @@index([joinedAt])
+  @@map("group_member")
+}
+
+// Requests to join private groups
+model GroupJoinRequest {
+  id        String              @id @default(uuid())
+  message   String?             @db.Text
+  status    GroupRequestStatus  @default(PENDING)
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  userId  String @map("user_id")
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId String @map("group_id")
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([groupId, status])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("group_join_request")
+}
+
+// Text posts in groups
+model Post {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  isPublic  Boolean  @default(true) @map("is_public")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  authorId String @map("author_id")
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  groupId  String @map("group_id")
+  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  likes    Like[]
+  comments Comment[]
+
+  @@index([authorId])
+  @@index([groupId])
+  @@index([createdAt])
+  @@index([isDeleted])
+  @@map("post")
+}
+
+// Likes on posts
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId String @map("post_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+  @@index([createdAt])
+  @@map("like")
+}
+
+// Comments on posts
+model Comment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  authorId String @map("author_id")
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId   String @map("post_id")
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // Comment threading (optional for future)
+  parentId String?   @map("parent_id")
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([parentId])
+  @@index([isDeleted])
+  @@map("comment")
+}
+
+// Enums
+enum GroupRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

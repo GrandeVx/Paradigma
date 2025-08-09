@@ -55,6 +55,32 @@ const autoCacheConfig: AutoCacheConfig = {
       stale: 600, // 10 minuti
       excludedOperations: ['count'], // Il count degli utenti totali non è rilevante per la cache per-utente
     },
+    {
+      model: 'Post',
+      ttl: 900, // 15 minuti: i post sono relativamente statici una volta pubblicati
+      stale: 180, // 3 minuti
+      excludedOperations: ['count'], // Real-time counting more important than caching
+    },
+    {
+      model: 'Group',
+      ttl: 1800, // 30 minuti: i gruppi cambiano raramente
+      stale: 300, // 5 minuti
+    },
+    {
+      model: 'GroupMember',
+      ttl: 600, // 10 minuti: le membership cambiano più frequentemente
+      stale: 120, // 2 minuti
+    },
+    {
+      model: 'Like',
+      ttl: 60, // 1 minuto: i like sono real-time
+      stale: 10, // 10 secondi
+    },
+    {
+      model: 'Comment',
+      ttl: 300, // 5 minuti: i commenti sono meno frequenti dei like
+      stale: 60, // 1 minuto
+    },
   ],
   ttl: 300, // Default TTL (5 minuti) per le query dei modelli non specificati sopra
   // e per le operazioni (come 'aggregate') non escluse nei modelli specificati.

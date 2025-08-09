@@ -73,7 +73,6 @@ function createAuth() {
     plugins: [nextCookies(), expo(), emailOTP(
         {
             expiresIn: 600, // 10 minutes
-            allowedAttempts: 5,
             generateOTP: ({ email }) => {
                 const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE_ENABLED === 'true';
                 const isDemoAccount = email === 'test@paradigma.com';

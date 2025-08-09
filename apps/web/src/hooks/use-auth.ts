@@ -1,12 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { emailOtp, useSession, signOut as betterAuthSignOut, signIn } from "@paradigma/auth";
 
+interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+}
+
+interface Session {
+  user: User;
+  expiresAt?: Date;
+}
+
 interface AuthState {
-  user: any;
-  session: any;
+  user: User | null;
+  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 }

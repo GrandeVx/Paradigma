@@ -40,20 +40,13 @@ export const mutations = {
         }
       }
 
-      // Update user profile with cache invalidation
+      // Update user profile
       const updatedUser = await ctx.db.user.update({
         where: { id: currentUserId },
         data: {
           ...input,
           notificationToken: input.notificationToken || null,
         },
-        // Invalidate user cache when profile is updated
-        uncache: {
-          uncacheKeys: [
-            // Invalidate the specific user cache
-            `balanceapp:user:id:${currentUserId}`
-          ]
-        }
       });
 
       return updatedUser;
@@ -74,41 +67,41 @@ export const mutations = {
     try {
       // Use Prisma transaction to ensure atomicity
       const result = await ctx.db.$transaction(async (prisma) => {
-        console.log(`📊 [User] Step 1: Deleting user transactions...`);
-        // Delete all user transactions
-        const deletedTransactions = await prisma.transaction.deleteMany({
+        console.log(`📱 [User] Step 1: Deleting user posts...`);
+        // Delete all user posts (will cascade delete likes and comments)
+        const deletedPosts = await prisma.post.deleteMany({
           where: {
-            userId: currentUserId,
+            authorId: currentUserId,
           },
         });
-        console.log(`✅ [User] Deleted ${deletedTransactions.count} transactions`);
+        console.log(`✅ [User] Deleted ${deletedPosts.count} posts`);
 
-        console.log(`📈 [User] Step 2: Deleting user budgets...`);
-        // Delete all user budgets
-        const deletedBudgets = await prisma.budget.deleteMany({
+        console.log(`👥 [User] Step 2: Deleting user group memberships...`);
+        // Delete all user group memberships
+        const deletedMemberships = await prisma.groupMember.deleteMany({
           where: {
             userId: currentUserId,
           },
         });
-        console.log(`✅ [User] Deleted ${deletedBudgets.count} budgets`);
+        console.log(`✅ [User] Deleted ${deletedMemberships.count} memberships`);
 
-        console.log(`🔄 [User] Step 3: Deleting recurring transaction rules...`);
-        // Delete all user recurring transaction rules
-        const deletedRecurringRules = await prisma.recurringTransactionRule.deleteMany({
+        console.log(`📝 [User] Step 3: Deleting user join requests...`);
+        // Delete all user group join requests
+        const deletedJoinRequests = await prisma.groupJoinRequest.deleteMany({
           where: {
             userId: currentUserId,
           },
         });
-        console.log(`✅ [User] Deleted ${deletedRecurringRules.count} recurring rules`);
+        console.log(`✅ [User] Deleted ${deletedJoinRequests.count} join requests`);
 
-        console.log(`🏦 [User] Step 4: Deleting money accounts...`);
-        // Delete all user money accounts
-        const deletedAccounts = await prisma.moneyAccount.deleteMany({
+        console.log(`🏠 [User] Step 4: Deleting user owned groups...`);
+        // Delete all user owned groups (will cascade delete members, posts, etc.)
+        const deletedGroups = await prisma.group.deleteMany({
           where: {
-            userId: currentUserId,
+            ownerId: currentUserId,
           },
         });
-        console.log(`✅ [User] Deleted ${deletedAccounts.count} money accounts`);
+        console.log(`✅ [User] Deleted ${deletedGroups.count} owned groups`);
 
         console.log(`👤 [User] Step 5: Deleting user profile...`);
         // Finally, delete the user (Sessions and OAuth Accounts will be cascade deleted)
@@ -122,10 +115,10 @@ export const mutations = {
         return {
           deletedUser,
           stats: {
-            transactions: deletedTransactions.count,
-            budgets: deletedBudgets.count,
-            recurringRules: deletedRecurringRules.count,
-            accounts: deletedAccounts.count,
+            posts: deletedPosts.count,
+            memberships: deletedMemberships.count,
+            joinRequests: deletedJoinRequests.count,
+            groups: deletedGroups.count,
           },
         };
       });
