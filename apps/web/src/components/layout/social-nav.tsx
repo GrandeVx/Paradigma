@@ -18,6 +18,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Home,
   Users,
@@ -166,6 +167,14 @@ const MobileNavigation = ({ user, locale }: SocialNavProps) => {
           </div>
         </nav>
         
+        {/* Theme Toggle Section for Mobile */}
+        <div className="mt-8 pt-6 border-t">
+          <div className="flex items-center justify-between px-3 py-2">
+            <span className="text-sm font-medium">Theme</span>
+            <ThemeToggle />
+          </div>
+        </div>
+
         {user && (
           <div className="absolute bottom-6 left-6 right-6">
             <div className="rounded-lg border p-4">
@@ -258,7 +267,7 @@ export function SocialNav({ user, locale }: SocialNavProps) {
             <MobileNavigation user={user} locale={locale} />
           </div>
 
-          {/* Right side - Search, Notifications, Profile */}
+          {/* Right side - Search, Notifications, Theme, Profile */}
           <div className="hidden md:flex items-center space-x-4">
             {/* Future search functionality */}
             <div className="flex items-center space-x-2">
@@ -272,6 +281,7 @@ export function SocialNav({ user, locale }: SocialNavProps) {
                 {/* Notification badge - can be conditionally rendered */}
                 <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full" />
               </Button>
+              <ThemeToggle />
               <ProfileSection user={user} />
             </div>
           </div>
