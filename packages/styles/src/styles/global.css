@@ -242,6 +242,23 @@
     --status-busy: var(--error-500);
     --status-away: var(--warning-500);
     --status-dnd: var(--error-600);
+
+    /* Z-Index Scale - Critical for shadcn component layering */
+    --z-base: 0;
+    --z-hide: -1;
+    --z-auto: auto;
+    --z-below: -10;
+    --z-normal: 1;
+    --z-tooltip: 10;
+    --z-sticky: 20;
+    --z-banner: 30;
+    --z-header: 40;
+    --z-overlay: 50;
+    --z-modal: 60;
+    --z-popover: 70;
+    --z-skiplink: 80;
+    --z-toast: 90;
+    --z-max: 2147483647;
   }
 
   .dark {
@@ -730,16 +747,19 @@
     border-radius: 0 2px 2px 0;
   }
 
-  /* Dropdown Components */
+  /* Dropdown Components - Fixed Z-Index and Pointer Events */
   .dropdown {
     @apply relative inline-block;
   }
 
   .dropdown-content {
-    @apply absolute right-0 mt-2 w-56 origin-top-right rounded-md shadow-lg z-50;
+    @apply absolute right-0 mt-2 w-56 origin-top-right rounded-md shadow-lg;
+    z-index: var(--z-popover);
     background-color: var(--popover);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-lg);
+    pointer-events: auto;
+    contain: layout style;
   }
 
   .dropdown-item {
@@ -762,12 +782,14 @@
     background-color: var(--border);
   }
 
-  /* Toast/Notification Components */
+  /* Toast/Notification Components - Fixed Z-Index */
   .toast {
     @apply pointer-events-auto flex w-full max-w-md items-center justify-between space-x-4 overflow-hidden rounded-md p-6 pr-8 shadow-lg transition-all;
+    z-index: var(--z-toast);
     background-color: var(--card);
     border: 1px solid var(--border);
     color: var(--card-foreground);
+    contain: layout style;
   }
 
   .toast-success {
@@ -796,19 +818,25 @@
     @apply animate-spin rounded-full border-2 border-muted border-t-primary;
   }
 
-  /* Modal/Dialog Components */
+  /* Modal/Dialog Components - Fixed Z-Index and Pointer Events */
   .modal-overlay {
-    @apply fixed inset-0 z-50 flex items-center justify-center;
+    @apply fixed inset-0 flex items-center justify-center;
+    z-index: var(--z-overlay);
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
+    pointer-events: auto;
+    contain: layout style;
   }
 
   .modal-content {
     @apply relative mx-4 max-h-[90vh] w-full max-w-lg overflow-auto rounded-lg p-6;
+    z-index: var(--z-modal);
     background-color: var(--card);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-2xl);
     color: var(--card-foreground);
+    pointer-events: auto;
+    contain: layout style;
   }
 
   /* Progress Components */
@@ -1121,11 +1149,13 @@
     background: linear-gradient(135deg, var(--info-500) 0%, var(--info-600) 100%);
   }
 
-  /* Glass morphism effects */
+  /* Glass morphism effects - Fixed Pointer Events */
   .glass {
     backdrop-filter: blur(16px) saturate(180%);
     background-color: rgba(255, 255, 255, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.125);
+    pointer-events: auto;
+    contain: layout style;
   }
 
   .dark .glass {
@@ -1137,6 +1167,8 @@
     backdrop-filter: blur(24px) saturate(200%);
     background-color: rgba(255, 255, 255, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    pointer-events: auto;
+    contain: layout style;
   }
 
   .dark .glass-strong {
@@ -1206,13 +1238,29 @@
     z-index: 1;
   }
 
-  /* Theme transition utility */
+  /* Theme transition utility - Fixed for Interactive Elements */
   .theme-transition {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-colors duration-200 ease-in-out;
   }
 
-  .theme-transition * {
-    @apply transition-colors duration-300 ease-in-out;
+  /* Apply transitions selectively, excluding interactive overlay elements */
+  .theme-transition *:not([data-radix-popper-content-wrapper]):not([data-radix-dialog-content]):not([data-radix-dropdown-menu-content]):not([data-radix-select-content]):not([data-radix-sheet-content]):not([role=\"dialog\"]):not([role=\"menu\"]):not([role=\"listbox\"]):not(.modal-overlay):not(.modal-content):not(.dropdown-content) {
+    @apply transition-colors duration-200 ease-in-out;
+  }
+
+  /* Fast transitions for critical interactive elements */
+  [data-radix-popper-content-wrapper],
+  [data-radix-dialog-content],
+  [data-radix-dropdown-menu-content], 
+  [data-radix-select-content],
+  [data-radix-sheet-content],
+  [role=\"dialog\"],
+  [role=\"menu\"],
+  [role=\"listbox\"],
+  .modal-overlay,
+  .modal-content,
+  .dropdown-content {
+    transition: opacity 150ms ease-out, transform 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out !important;
   }
 
   /* Accessibility helpers */
@@ -1244,6 +1292,67 @@
 
   .safe-right {
     padding-right: env(safe-area-inset-right);
+  }
+
+  /* Z-Index utilities for proper layering */
+  .z-hide { z-index: var(--z-hide); }
+  .z-base { z-index: var(--z-base); }
+  .z-normal { z-index: var(--z-normal); }
+  .z-tooltip { z-index: var(--z-tooltip); }
+  .z-sticky { z-index: var(--z-sticky); }
+  .z-banner { z-index: var(--z-banner); }
+  .z-header { z-index: var(--z-header); }
+  .z-overlay { z-index: var(--z-overlay); }
+  .z-modal { z-index: var(--z-modal); }
+  .z-popover { z-index: var(--z-popover); }
+  .z-skiplink { z-index: var(--z-skiplink); }
+  .z-toast { z-index: var(--z-toast); }
+  .z-max { z-index: var(--z-max); }
+
+  /* Shadcn component specific z-index overrides */
+  .shadcn-dialog-overlay { z-index: var(--z-overlay) !important; }
+  .shadcn-dialog-content { z-index: var(--z-modal) !important; }
+  .shadcn-sheet-overlay { z-index: var(--z-overlay) !important; }
+  .shadcn-sheet-content { z-index: var(--z-modal) !important; }
+  .shadcn-dropdown-content { z-index: var(--z-popover) !important; }
+  .shadcn-select-content { z-index: var(--z-popover) !important; }
+  .shadcn-popover-content { z-index: var(--z-popover) !important; }
+  .shadcn-tooltip-content { z-index: var(--z-tooltip) !important; }
+
+  /* Pointer Events Utilities - Critical for fixing interaction issues */
+  .pointer-events-auto { pointer-events: auto !important; }
+  .pointer-events-none { pointer-events: none !important; }
+  .pointer-events-all { pointer-events: all !important; }
+
+  /* Performance Optimization - CSS Containment */
+  .contain-layout { contain: layout; }
+  .contain-style { contain: style; }
+  .contain-paint { contain: paint; }
+  .contain-size { contain: size; }
+  .contain-strict { contain: strict; }
+  .contain-content { contain: content; }
+
+  /* Performance Optimization - Will Change */
+  .will-change-auto { will-change: auto; }
+  .will-change-scroll { will-change: scroll-position; }
+  .will-change-contents { will-change: contents; }
+  .will-change-transform { will-change: transform; }
+  .will-change-opacity { will-change: opacity; }
+
+  /* Critical overlay interaction fixes */
+  [data-radix-dialog-overlay],
+  [data-radix-sheet-overlay] {
+    pointer-events: auto !important;
+    contain: layout style !important;
+  }
+
+  [data-radix-dialog-content],
+  [data-radix-sheet-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content] {
+    pointer-events: auto !important;
+    contain: layout style !important;
+    will-change: opacity, transform !important;
   }
 
   /* High contrast mode support */
