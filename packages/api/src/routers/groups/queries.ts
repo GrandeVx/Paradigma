@@ -8,12 +8,22 @@ import {
   getUserPendingRequestsSchema,
 } from "../../schemas/groups";
 import { notFoundError, notAuthorizedError } from "../../utils/errors";
+import { formatCacheKeyParams } from "../../utils/cache";
 
 export const queries = {
   // Get single group details with member count
   getGroup: publicProcedure
     .input(getGroupSchema)
     .query(async ({ ctx, input }) => {
+      const groupId = input.id;
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Group',
+          operation: 'getGroup',
+          groupId
+        })
+      });
+
       const group = await ctx.db.group.findUnique({
         where: { id: input.id },
         include: {
@@ -32,6 +42,10 @@ export const queries = {
             },
           },
         },
+        cache: {
+          ttl: 300,
+          key: cacheKey
+        }
       });
 
       if (!group) {

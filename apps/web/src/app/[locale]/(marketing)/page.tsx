@@ -85,7 +85,7 @@ export default function Home() {
             <Link href="#tech-stack" className="text-gray-600 hover:text-gray-900 transition-colors">
               Tech Stack
             </Link>
-            <Link href="/sign-in" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-shadow">
+            <Link href="/dashboard" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-shadow">
               Get Started
             </Link>
           </nav>
@@ -126,7 +126,7 @@ export default function Home() {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything You Need</h2>
             <p className="text-lg text-gray-600">Start with a solid foundation and build from there</p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
@@ -137,7 +137,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold mb-2">Cross-Platform</h3>
               <p className="text-gray-600">Build for web and mobile from a single codebase with Next.js and Expo.</p>
             </div>
-            
+
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +147,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold mb-2">Type-Safe</h3>
               <p className="text-gray-600">End-to-end type safety with TypeScript, tRPC, and Prisma ORM.</p>
             </div>
-            
+
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@ export default function Home() {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Modern Tech Stack</h2>
             <p className="text-lg text-gray-600">Built with the latest and most powerful tools</p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { name: "Next.js 15", category: "Framework" },
@@ -193,7 +193,7 @@ export default function Home() {
             <p className="text-lg text-gray-600 mb-8">
               Get notified about updates and new features
             </p>
-            
+
             {!isSubmitted ? (
               <form onSubmit={handleSubmit} className="flex gap-4 max-w-md mx-auto">
                 <Input

@@ -6,6 +6,7 @@ import {
   getFeedPostsSchema,
 } from "../../schemas/posts";
 import { notFoundError, notAuthorizedError } from "../../utils/errors";
+import { formatCacheKeyParams } from "../../utils/cache";
 
 export const queries = {
   // Get single post with details
@@ -132,6 +133,17 @@ export const queries = {
         where.isPublic = true;
       }
 
+      const groupId = input.groupId;
+      const page = input.cursor || 'first';
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Post',
+          operation: 'getGroupPosts',
+          groupId,
+          page
+        })
+      });
+
       const posts = await ctx.db.post.findMany({
         where,
         take: input.limit + 1,
@@ -163,6 +175,10 @@ export const queries = {
             },
           },
         },
+        cache: {
+          ttl: 180,
+          key: cacheKey
+        }
       });
 
       let nextCursor: typeof input.cursor | undefined = undefined;

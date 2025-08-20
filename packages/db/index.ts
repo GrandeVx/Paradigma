@@ -45,7 +45,7 @@ const autoCacheConfig: AutoCacheConfig = {
    * Here you can exclude models from the cache
   */
   excludedModels: [
-    'Session', 'Account', 'Verification', // Better Auth - esclusi per sicurezza
+    'Session', 'Account', 'Verification', 'Comment' // Better Auth - esclusi per sicurezza
   ],
   excludedOperations: [], // Nessuna operazione esclusa globalmente per ora
   models: [
@@ -76,11 +76,6 @@ const autoCacheConfig: AutoCacheConfig = {
       ttl: 60, // 1 minuto: i like sono real-time
       stale: 10, // 10 secondi
     },
-    {
-      model: 'Comment',
-      ttl: 300, // 5 minuti: i commenti sono meno frequenti dei like
-      stale: 60, // 1 minuto
-    },
   ],
   ttl: 300, // Default TTL (5 minuti) per le query dei modelli non specificati sopra
   // e per le operazioni (come 'aggregate') non escluse nei modelli specificati.
@@ -109,7 +104,7 @@ const cacheMainConfig: CacheConfig = {
   cacheKey: {
     case: CacheCase.SNAKE_CASE,
     delimiter: ':',
-    prefix: 'balanceapp', // Prefisso specifico per la tua applicazione
+    prefix: 'paradigma', // Prefisso specifico per la tua applicazione
   },
 };
 

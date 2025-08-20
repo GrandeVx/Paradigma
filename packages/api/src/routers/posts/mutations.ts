@@ -5,6 +5,7 @@ import {
   deletePostSchema,
 } from "../../schemas/posts";
 import { notFoundError, notAuthorizedError } from "../../utils/errors";
+import { formatCacheKeyParams } from "../../utils/cache";
 
 export const mutations = {
   // Create post in group (members only)
@@ -43,6 +44,16 @@ export const mutations = {
         throw notAuthorizedError(ctx);
       }
 
+      const groupId = input.groupId;
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Post',
+          operation: 'getGroupPosts',
+          groupId,
+          page: 'first'
+        })
+      });
+
       const post = await ctx.db.post.create({
         data: {
           content: input.content,
@@ -73,6 +84,9 @@ export const mutations = {
             },
           },
         },
+        uncache: {
+          uncacheKeys: [cacheKey]
+        }
       });
 
       return {
@@ -107,6 +121,16 @@ export const mutations = {
         throw notAuthorizedError(ctx);
       }
 
+      const groupId = post.groupId;
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Post',
+          operation: 'getGroupPosts',
+          groupId,
+          page: 'first'
+        })
+      });
+
       const updatedPost = await ctx.db.post.update({
         where: { id: input.id },
         data: {
@@ -135,6 +159,9 @@ export const mutations = {
             },
           },
         },
+        uncache: {
+          uncacheKeys: [cacheKey]
+        }
       });
 
       // Check if user liked the post
@@ -203,6 +230,16 @@ export const mutations = {
         throw notAuthorizedError(ctx);
       }
 
+      const groupId = post.groupId;
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Post',
+          operation: 'getGroupPosts',
+          groupId,
+          page: 'first'
+        })
+      });
+
       // Soft delete the post
       await ctx.db.post.update({
         where: { id: input.id },
@@ -210,6 +247,9 @@ export const mutations = {
           isDeleted: true,
           deletedAt: new Date(),
         },
+        uncache: {
+          uncacheKeys: [cacheKey]
+        }
       });
 
       return { success: true };

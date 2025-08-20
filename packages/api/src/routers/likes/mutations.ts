@@ -1,6 +1,7 @@
 import { protectedProcedure } from "../../trpc";
 import { toggleLikeSchema } from "../../schemas/likes";
 import { notFoundError, notAuthorizedError } from "../../utils/errors";
+import { formatCacheKeyParams } from "../../utils/cache";
 
 export const mutations = {
   // Toggle like on post
@@ -54,6 +55,15 @@ export const mutations = {
         },
       });
 
+      const postId = input.postId;
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Like',
+          operation: 'getLikesCount',
+          postId
+        })
+      });
+
       let isLiked: boolean;
       let likeCount: number;
 
@@ -64,6 +74,9 @@ export const mutations = {
             userId: ctx.session.user.id,
             postId: input.postId,
           },
+          uncache: {
+            uncacheKeys: [cacheKey]
+          }
         });
         isLiked = false;
       } else {
@@ -80,6 +93,9 @@ export const mutations = {
             postId: input.postId,
           },
           update: {}, // No updates needed, just ensure it exists
+          uncache: {
+            uncacheKeys: [cacheKey]
+          }
         });
         isLiked = true;
       }

@@ -5,6 +5,7 @@ import {
   getPostLikesCountSchema,
 } from "../../schemas/likes";
 import { notFoundError, notAuthorizedError } from "../../utils/errors";
+import { formatCacheKeyParams } from "../../utils/cache";
 
 export const queries = {
   // Get post likes count
@@ -52,10 +53,23 @@ export const queries = {
         }
       }
 
+      const postId = input.postId;
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Like',
+          operation: 'getLikesCount',
+          postId
+        })
+      });
+
       const count = await ctx.db.like.count({
         where: {
           postId: input.postId,
         },
+        cache: {
+          ttl: 60,
+          key: cacheKey
+        }
       });
 
       return { count };

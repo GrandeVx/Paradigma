@@ -11,6 +11,7 @@ import {
   cancelRequestSchema,
 } from "../../schemas/groups";
 import { notFoundError, notAuthorizedError, badRequestError } from "../../utils/errors";
+import { formatCacheKeyParams } from "../../utils/cache";
 
 export const mutations = {
   // Create group
@@ -64,6 +65,14 @@ export const mutations = {
         throw notAuthorizedError(ctx);
       }
 
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Group',
+          operation: 'getGroup',
+          groupId: id
+        })
+      });
+
       return await ctx.db.group.update({
         where: { id },
         data: updateData,
@@ -82,6 +91,9 @@ export const mutations = {
             },
           },
         },
+        uncache: {
+          uncacheKeys: [cacheKey]
+        }
       });
     }),
 
@@ -102,8 +114,19 @@ export const mutations = {
         throw notAuthorizedError(ctx);
       }
 
+      const cacheKey = ctx.db.getKey({
+        params: formatCacheKeyParams({
+          prisma: 'Group',
+          operation: 'getGroup',
+          groupId: input.id
+        })
+      });
+
       await ctx.db.group.delete({
         where: { id: input.id },
+        uncache: {
+          uncacheKeys: [cacheKey]
+        }
       });
 
       return { success: true };
