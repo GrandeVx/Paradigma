@@ -7,14 +7,17 @@
     ]
   },
   "enabledMcpjsonServers": [
+    "figma-work-mcp",
     "figma-personal-mcp",
     "sequential-thinking",
     "taskmaster-ai",
     "redis",
-    "ios-simulator"
+    "ios-simulator",
+    "dbhub"
   ],
   "disabledMcpjsonServers": [
     "dbhub",
     "figma-work-mcp"
-  ]
+  ],
+  "enableAllProjectMcpServers": true
 }

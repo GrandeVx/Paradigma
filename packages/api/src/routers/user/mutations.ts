@@ -1,18 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../../trpc";
-import { addUserSchema, updateProfileSchema, clearNotificationBadgeSchema } from "../../schemas/user";
+import { addUserSchema, updateProfileSchema } from "../../schemas/user";
+import { formatCacheKeyParams } from "../../utils/cache";
+import { badRequestError, notAuthenticatedError, notFoundError } from "../../utils/errors/translatedError";
 export const mutations = {
   // Update user profile
   updateProfile: protectedProcedure
     .input(updateProfileSchema)
     .mutation(async ({ ctx, input }) => {
-      const currentUserId = ctx.session?.user?.id;
-      if (!currentUserId) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "You must be logged in to update your profile",
-        });
-      }
+      const currentUserId = ctx.session.user.id;
 
       // Get current user data for audit log
       const currentUser = await ctx.db.user.findUnique({
@@ -20,10 +16,7 @@ export const mutations = {
       });
 
       if (!currentUser) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
+        throw notFoundError(ctx, 'user');
       }
 
       // Check username uniqueness if being updated
@@ -33,12 +26,22 @@ export const mutations = {
         });
 
         if (existingUser) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Username already taken",
-          });
+          throw badRequestError(ctx, 'Username already taken');
         }
       }
+
+      const userId = ctx.session.user.id;
+      const cacheKey = ctx.db.getKey(
+        {
+          params: formatCacheKeyParams(
+            {
+              prisma: 'User',
+              operation: 'getUserInfo',
+              userId
+            }
+          )
+        }
+      );
 
       // Update user profile
       const updatedUser = await ctx.db.user.update({
@@ -47,6 +50,9 @@ export const mutations = {
           ...input,
           notificationToken: input.notificationToken || null,
         },
+        uncache: {
+          uncacheKeys: [cacheKey]
+        }
       });
 
       return updatedUser;
@@ -54,13 +60,8 @@ export const mutations = {
 
   // Delete user account (hard delete with complete data removal)
   deleteAccount: protectedProcedure.mutation(async ({ ctx }) => {
-    const currentUserId = ctx.session?.user?.id;
-    if (!currentUserId) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to delete your account",
-      });
-    }
+    const currentUserId = ctx.session.user.id;
+
 
     console.log(`🗑️ [User] Starting complete account deletion for user: ${currentUserId}`);
 
@@ -105,10 +106,25 @@ export const mutations = {
 
         console.log(`👤 [User] Step 5: Deleting user profile...`);
         // Finally, delete the user (Sessions and OAuth Accounts will be cascade deleted)
+        const cacheKey = ctx.db.getKey(
+          {
+            params: formatCacheKeyParams(
+              {
+                prisma: 'User',
+                operation: 'getUserInfo',
+                userId: currentUserId
+              }
+            )
+          }
+        );
+
         const deletedUser = await prisma.user.delete({
           where: {
             id: currentUserId,
           },
+          uncache: {
+            uncacheKeys: [cacheKey]
+          }
         });
         console.log(`✅ [User] User profile deleted successfully`);
 
@@ -123,10 +139,10 @@ export const mutations = {
         };
       });
 
-          console.log(`🎉 [User] Account deletion completed successfully:`, result.stats);
-    
-    // Note: Caches will be automatically invalidated when data is deleted
-    return { success: true, deletedData: result.stats };
+      console.log(`🎉 [User] Account deletion completed successfully:`, result.stats);
+
+      // Note: Caches will be automatically invalidated when data is deleted
+      return { success: true, deletedData: result.stats };
 
     } catch (error) {
       console.error(`❌ [User] Error during account deletion:`, error);
@@ -141,12 +157,6 @@ export const mutations = {
     .input(addUserSchema)
     .mutation(async ({ ctx, input }) => {
       const currentUserId = input.id;
-      if (!currentUserId) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "You must be logged in to add a user",
-        });
-      }
 
       const newUser = await ctx.db.user.create({
         data: {
@@ -159,27 +169,5 @@ export const mutations = {
       return newUser;
     }),
 
-  // Clear notification badge
-  clearNotificationBadge: protectedProcedure
-    .input(clearNotificationBadgeSchema)
-    .mutation(async ({ ctx }) => {
-      const currentUserId = ctx.session?.user?.id;
-      if (!currentUserId) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "You must be logged in to clear badge",
-        });
-      }
 
-      // Get user's notification token
-      const user = await ctx.db.user.findUnique({
-        where: { id: currentUserId },
-        select: { notificationToken: true },
-      });
-
-      // Note: Notification badge clearing has been removed as it's not part of the boilerplate
-      // This endpoint now simply returns success for compatibility
-
-      return { success: true, message: "Badge cleared successfully" };
-    }),
 };
