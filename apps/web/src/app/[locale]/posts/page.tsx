@@ -9,8 +9,10 @@ import { Plus, MessageCircle, TrendingUp, Clock } from "lucide-react";
 import { api } from "@/trpc/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { CreatePostDialog } from "@/components/social/create-post-dialog";
 
 export default function PostsPage() {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const params = useParams();
   const locale = (params?.locale as string) || "en";
 
@@ -100,11 +102,9 @@ export default function PostsPage() {
               Discover the latest posts from your communities
             </p>
           </div>
-          <Button asChild>
-            <Link href={`/${locale}/posts/create`}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Post
-            </Link>
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Post
           </Button>
         </div>
 
@@ -192,11 +192,9 @@ export default function PostsPage() {
                     Browse Groups
                   </Link>
                 </Button>
-                <Button asChild>
-                  <Link href={`/${locale}/posts/create`}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Post
-                  </Link>
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Post
                 </Button>
               </div>
             </CardContent>
@@ -230,6 +228,12 @@ export default function PostsPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Create Post Dialog */}
+        <CreatePostDialog 
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+        />
       </div>
     </SocialLayout>
   );
