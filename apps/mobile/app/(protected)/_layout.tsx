@@ -98,6 +98,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="(transaction-flow)"
         options={{
+
           // This title is used to set the title of the bottom tab
           // title: t("tab-bar.transactions"),
           tabBarIcon: () => {
