@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import { HeroSection } from "@/components/sections/hero-section";
 import { TechShowcase } from "@/components/sections/tech-showcase";
 import { BentoSection } from "@/components/sections/bento-section";
-import { 
-  Code, 
+import {
+  Code,
   Github,
   Twitter,
   MessageSquare
@@ -48,7 +48,7 @@ export default function HomePage() {
               Paradigma
             </span>
           </div>
-          
+
           <nav className="hidden md:flex items-center gap-8">
             <Link href="#bento" className="text-muted-foreground hover:text-foreground transition-colors">
               Features
@@ -59,7 +59,7 @@ export default function HomePage() {
             <Link href="#community" className="text-muted-foreground hover:text-foreground transition-colors">
               Community
             </Link>
-            <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
               <Link href="/sign-in">Get Started</Link>
             </Button>
           </nav>
@@ -84,7 +84,7 @@ export default function HomePage() {
                 Stop Reinventing The Wheel
               </h2>
               <p className="text-xl text-muted-foreground leading-relaxed">
-                Building modern fullstack applications shouldn't take months of setup. 
+                Building modern fullstack applications shouldn't take months of setup.
                 Focus on your unique features, not boilerplate code.
               </p>
             </div>
@@ -164,7 +164,7 @@ export default function HomePage() {
                 Paradigma
               </span>
             </div>
-            
+
             <div className="flex items-center gap-6">
               <Link href="https://github.com" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
                 <Github className="w-5 h-5" />
@@ -176,7 +176,7 @@ export default function HomePage() {
                 <MessageSquare className="w-5 h-5" />
               </Link>
             </div>
-            
+
             <p className="text-sm text-muted-foreground">
               Built with ❤️ by the community
             </p>
