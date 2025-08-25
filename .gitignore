@@ -187,6 +187,18 @@ apps/mobile/build-*
 npm-debug.log*
 dev-debug.log
 # Environment variables
+.env
+.env.*
+!.env.example
+
+# Security - Private keys and certificates
+*.p8
+*.pem
+*.key
+*.crt
+*.cert
+authKey*
+
 # Editor directories and files
 .vscode
 *.suo
