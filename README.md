@@ -1,4 +1,6 @@
-# Modern Fullstack Boilerplate
+# Paradigma FullStack Boilerplate
+
+![Hero](docs/public/header.png)
 
 A clean, production-ready boilerplate for building modern fullstack applications with Next.js, Expo, and powerful monorepo architecture.
 
@@ -91,6 +93,7 @@ Paradigma/
 The project includes optimized Docker configurations for both development and production:
 
 ### Development with Hot Reload
+
 ```bash
 # Quick start (recommended)
 ./scripts/docker-setup.sh start-dev
@@ -100,6 +103,7 @@ docker-compose -f docker-compose.dev.yml up -d
 ```
 
 ### Production Build
+
 ```bash
 # Production deployment
 ./scripts/docker-setup.sh start-prod
@@ -121,27 +125,31 @@ docker-compose up -d
 ### Setup
 
 1. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 2. **Configure environment**
+
    ```bash
    cp .env.example .env.local
    # Edit .env.local with your database URL and other configurations
    ```
 
 3. **Setup database**
+
    ```bash
    pnpm --filter @paradigma/db exec prisma generate
    pnpm --filter @paradigma/db exec prisma db push
    ```
 
 4. **Start development servers**
+
    ```bash
    # Start all apps in development mode
    pnpm dev
-   
+
    # Or start individual apps
    pnpm --filter @paradigma/web dev    # Web app on http://localhost:3000
    pnpm --filter @paradigma/mobile dev # Mobile app with Expo
@@ -150,6 +158,7 @@ docker-compose up -d
 ## 🏗️ Build & Deploy
 
 ### Web Application
+
 ```bash
 # Build web app for production
 pnpm --filter @paradigma/web build
@@ -159,6 +168,7 @@ pnpm --filter @paradigma/web start
 ```
 
 ### Mobile Application
+
 ```bash
 # Start mobile development
 pnpm --filter @paradigma/mobile expo start
@@ -171,6 +181,7 @@ pnpm --filter @paradigma/mobile eas build --platform android
 ## 🛠️ Development Tools
 
 ### Code Generation
+
 ```bash
 # Generate new components
 pnpm turbo gen react-component
@@ -184,6 +195,7 @@ pnpm turbo gen rn-screen
 ```
 
 ### Database Management
+
 ```bash
 # Generate Prisma client
 pnpm --filter @paradigma/db exec prisma generate
@@ -199,6 +211,7 @@ pnpm --filter @paradigma/db exec prisma studio
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 pnpm test
@@ -209,6 +222,7 @@ pnpm --filter @paradigma/api test
 ```
 
 ### Linting & Formatting
+
 ```bash
 # Lint all packages
 pnpm lint
@@ -266,7 +280,7 @@ The boilerplate includes a clean PostgreSQL schema with Prisma ORM:
 - **Verification**: Email/phone verification tokens
 - **Whitelist**: User access control
 
-*Additional tables can be easily added for your specific application needs.*
+_Additional tables can be easily added for your specific application needs._
 
 ## 🌍 Internationalization
 
@@ -339,6 +353,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 This boilerplate includes several common UI patterns ready to customize:
 
 ### Mobile App Patterns
+
 - **List Pattern**: Date-based list view (`/(protected)/(home)/(daily-transactions)/[date]`)
 - **Category Grid**: Category selection with icons (`CategoryBottomSheet`)
 - **Tab Navigation**: Multi-tab interface with smooth transitions
@@ -347,6 +362,7 @@ This boilerplate includes several common UI patterns ready to customize:
 - **Settings**: Profile management with toggles and selections
 
 ### Bottom Sheets Included
+
 - **CategoryBottomSheet**: Category selection with subcategories
 - **NotificationsBottomSheet**: Notification settings with time picker
 - **Money Account Bottom Sheet**: Mock account selection (customizable)
