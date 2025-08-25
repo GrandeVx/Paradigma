@@ -220,3 +220,5 @@ tasks/
 apps/mobile/ios/*
 apps/mobile/.expo/*
 apps/mobile/android/*
+
+.claude/*
