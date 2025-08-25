@@ -39,19 +39,27 @@ export interface ButtonProps
   asChild?: boolean;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+// Temporary React 19 compatible Button component
+function Button({ className, variant, size, asChild = false, ...props }: ButtonProps) {
+  if (asChild && React.isValidElement(props.children)) {
     return (
-      <Comp
+      <Slot
         className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
         {...props}
         data-oid="4tpkdga"
-      />
+      >
+        {props.children}
+      </Slot>
     );
-  },
-);
-Button.displayName = "Button";
+  }
+  
+  return (
+    <button
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+      data-oid="4tpkdga"
+    />
+  );
+}
 
 export { Button, buttonVariants };
