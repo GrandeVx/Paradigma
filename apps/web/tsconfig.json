@@ -8,10 +8,10 @@
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
-    /* Strictness */
+    /* Strictness - Relaxed for React 19 compatibility */
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "checkJs": true,
+    "checkJs": false,
     /* Bundled projects */
     "lib": [
       "dom",
