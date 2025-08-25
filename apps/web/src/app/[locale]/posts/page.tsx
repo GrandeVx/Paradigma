@@ -26,15 +26,28 @@ export default function PostsPage() {
   });
 
   interface Group {
+    id: string;
+    name: string;
+    image: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    description: string | null;
+    ownerId: string;
     isPublic: boolean;
     owner: {
       id: string;
+      email: string;
+      name: string | null;
+      image: string | null;
     };
-    memberCount: number;
+    _count: {
+      posts: number;
+      members: number;
+    };
   }
 
   const allGroups = groupsData?.groups || [];
-  const visibleGroups = allGroups.filter((group: Group) => 
+  const visibleGroups = allGroups.filter((group: Group) =>
     group.isPublic || group.owner.id === userInfo?.id
   );
 
@@ -60,7 +73,7 @@ export default function PostsPage() {
       comments: number;
     };
   }
-  
+
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
@@ -75,7 +88,7 @@ export default function PostsPage() {
 
       try {
         setIsLoadingPosts(true);
-        const postsPromises = visibleGroups.slice(0, 10).map((group: Group) => 
+        const postsPromises = visibleGroups.slice(0, 10).map((group: Group) =>
           fetch(`/api/trpc/posts.getGroupPosts?input=${encodeURIComponent(JSON.stringify({ groupId: group.id, limit: 5 }))}`)
             .then(res => res.json())
             .then(data => data.result.data.posts || [])
@@ -84,10 +97,10 @@ export default function PostsPage() {
 
         const groupPosts = await Promise.all(postsPromises);
         const flatPosts = groupPosts.flat();
-        
+
         // Sort by creation date (newest first)
         flatPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        
+
         setAllPosts(flatPosts.slice(0, 20)); // Limit to 20 most recent posts
       } catch (error) {
         console.error("Failed to fetch posts:", error);
@@ -149,7 +162,8 @@ export default function PostsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {visibleGroups.reduce((sum, group) => sum + group.memberCount, 0)}
+
+                {visibleGroups.reduce((sum, group) => sum + group._count.members, 0)}
               </div>
               <p className="text-xs text-muted-foreground">
                 Across all groups
@@ -238,7 +252,7 @@ export default function PostsPage() {
         </Card>
 
         {/* Create Post Dialog */}
-        <CreatePostDialog 
+        <CreatePostDialog
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
         />

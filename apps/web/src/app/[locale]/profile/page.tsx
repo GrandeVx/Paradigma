@@ -117,13 +117,13 @@ export default function ProfilePage() {
                   <div className="flex space-x-6">
                     <div className="text-center">
                       <div className="text-xl font-bold text-primary">
-                        {allGroups.reduce((sum, group) => sum + group.postCount, 0)}
+                        {allGroups.reduce((sum, group) => sum + group._count.posts, 0)}
                       </div>
                       <div className="text-xs text-muted-foreground">Posts</div>
                     </div>
                     <div className="text-center">
                       <div className="text-xl font-bold text-primary">
-                        {allGroups.reduce((sum, group) => sum + group.memberCount, 0)}
+                      {allGroups.reduce((sum, group) => sum + group._count.members, 0)}
                       </div>
                       <div className="text-xs text-muted-foreground">Community Size</div>
                     </div>
@@ -198,7 +198,7 @@ export default function ProfilePage() {
                               <Crown className="h-3 w-3 text-yellow-500 flex-shrink-0" />
                             </div>
                             <p className="text-xs text-muted-foreground">
-                              {group.memberCount} members • {group.postCount} posts
+                              {group._count.members} members • {group._count.posts} posts
                             </p>
                           </div>
                         </div>
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                               {group.name}
                             </Link>
                             <p className="text-xs text-muted-foreground">
-                              {group.memberCount} members • {group.postCount} posts
+                              {group._count.members} members • {group._count.posts} posts
                             </p>
                           </div>
                         </div>
@@ -329,14 +329,21 @@ export default function ProfilePage() {
                       Groups You Own ({ownedGroups.length})
                     </h2>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                      {ownedGroups.map((group) => (
-                        <GroupCard
-                          key={group.id}
-                          group={group}
-                          currentUserId={userInfo.id}
-                          showJoinButton={false}
-                        />
-                      ))}
+                      {ownedGroups.map((group) => {
+                        const groupWithCounts = {
+                          ...group,
+                          memberCount: group._count.members,
+                          postCount: group._count.posts,
+                        };
+                        return (
+                          <GroupCard
+                            key={group.id}
+                            group={groupWithCounts}
+                            currentUserId={userInfo.id}
+                            showJoinButton={false}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -348,14 +355,21 @@ export default function ProfilePage() {
                       Groups You're In ({memberGroups.length})
                     </h2>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                      {memberGroups.map((group) => (
-                        <GroupCard
-                          key={group.id}
-                          group={group}
-                          currentUserId={userInfo.id}
-                          showJoinButton={false}
-                        />
-                      ))}
+                      {memberGroups.map((group) => {
+                        const groupWithCounts = {
+                          ...group,
+                          memberCount: group._count.members,
+                          postCount: group._count.posts,
+                        };
+                        return (
+                          <GroupCard
+                            key={group.id}
+                            group={groupWithCounts}
+                            currentUserId={userInfo.id}
+                            showJoinButton={false}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 )}

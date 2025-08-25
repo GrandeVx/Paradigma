@@ -43,12 +43,14 @@ interface GroupData {
   id: string;
   name: string;
   isPublic: boolean;
-  memberCount: number;
-  postCount: number;
   owner: {
     id: string;
     name: string | null;
     image: string | null;
+  };
+  _count: {
+    posts: number;
+    members: number;
   };
 }
 
@@ -308,7 +310,7 @@ export function CreatePostForm({
                                   <Crown className="h-3 w-3 text-yellow-500" />
                                 )}
                                 <span className="text-xs text-muted-foreground ml-auto">
-                                  {group.memberCount}
+                                  {group._count.members}
                                 </span>
                               </div>
                             </SelectItem>

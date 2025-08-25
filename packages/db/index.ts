@@ -36,6 +36,8 @@ const redisClientConfig = isRedisConfigured ? {
   port: parseInt(process.env.REDIS_PORT || "6379", 10),
 } : null;
 
+
+
 const logger = pino({
   level: process.env.NODE_ENV === "development" ? "debug" : "info",
 });
@@ -111,14 +113,11 @@ const cacheMainConfig: CacheConfig = {
 };
 
 // Istanza PrismaClient estesa con il caching Redis (solo se configurato)
-export const db = redisClientConfig 
-  ? prismaBase.$extends(
-      PrismaExtensionRedis({ config: cacheMainConfig, client: redisClientConfig })
-    )
-  : (() => {
-      logger.info("Redis not configured - running without cache");
-      return prismaBase;
-    })();
+export const db =
+  prismaBase.$extends(
+    PrismaExtensionRedis({ config: cacheMainConfig, client: redisClientConfig! })
+  )
+
 
 // Esporta tutti gli schemi Zod generati
 export * from "./prisma/zod";

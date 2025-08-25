@@ -27,8 +27,8 @@ function getRGBA(color: string): string {
   
   // Handle rgb/rgba colors - extract numbers
   const rgbaMatch = color.match(/rgba?\(([^)]+)\)/);
-  if (rgbaMatch) {
-    const values = rgbaMatch[1].split(',').map(v => v.trim());
+  if (rgbaMatch && rgbaMatch[1]) {
+    const values = rgbaMatch![1].split(',').map(v => v.trim());
     return `${values[0]}, ${values[1]}, ${values[2]}`;
   }
   
@@ -124,9 +124,9 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
             (value, index) => index % 4 === 0 && value > 0,
           );
 
-          const opacity = squares[i * rows + j];
+          const opacity = squares[i * rows + j] ?? 0;
           const finalOpacity = hasText
-            ? Math.min(1, opacity * 3 + 0.4)
+            ? Math.min(1, opacity! * 3 + 0.4)
             : opacity;
 
           ctx.fillStyle = colorWithOpacity(memoizedColor, finalOpacity);
@@ -216,7 +216,9 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({
 
     const intersectionObserver = new IntersectionObserver(
       ([entry]) => {
-        setIsInView(entry.isIntersecting);
+        if (entry) {
+          setIsInView(entry.isIntersecting);
+        }
       },
       { threshold: 0 },
     );
