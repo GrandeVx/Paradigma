@@ -3,7 +3,6 @@ import { router, Tabs, useSegments } from "expo-router";
 import { FontAwesome6 } from "@expo/vector-icons";
 import TabBar from "@/components/TabBar";
 import { theme } from "@/lib/constants";
-import { useTabPrefetching } from "@/hooks/use-tab-prefetching";
 import { useTranslation } from "react-i18next";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { View, Text } from "react-native";

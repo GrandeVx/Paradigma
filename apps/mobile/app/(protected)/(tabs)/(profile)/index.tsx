@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 import { StyleSheet, ScrollView, Pressable, Alert, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import HeaderContainer from "@/components/layouts/_header";
@@ -7,19 +7,14 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/context/auth-provider";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRef } from "react";
-import BottomSheet, { BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetBackdropProps, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import * as WebBrowser from "expo-web-browser";
 import { reloadAppAsync } from "expo";
 import { api } from "@/lib/api";
-import { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
-import { useCurrency, type Currency } from "@/hooks/use-currency";
 import { useProfileIcon } from "@/hooks/use-profile-icon";
 import { useUpdateStatus } from "@/hooks/use-update-status";
-import { cacheUtils, budgetUtils, transactionUtils, goalsUtils, notificationUtils } from "@/lib/mmkv-storage";
 import { useBiometricAuth } from "@/hooks/use-biometric-auth";
 import { NotificationsBottomSheet } from "@/components/bottom-sheets/notifications-bottom-sheet";
-
 
 const LANGUAGES = [
   { code: "en-US", flag: "🇺🇸", name: "English" },
@@ -50,7 +45,7 @@ const CategoryItem: React.FC<{
   onPress?: () => void;
   textColor?: string;
 }> = ({ label, value, hasArrow = false, isToggle = false, toggleValue = false, customIcon, onPress, textColor = "#6B7280" }) => (
-  <Pressable style={styles.categoryItem} onPress={onPress}>
+  <Pressable style={styles.categoryItem} onPress={onPress} disabled={!onPress}>
     <Text style={[styles.categoryLabel, { color: textColor }]}>{label}</Text>
     {value && (
       <Text style={styles.categoryValue}>{value}</Text>
@@ -81,89 +76,44 @@ export default function ProfileScreen() {
   const { isSupported, isEnabled, enableBiometric, disableBiometric } = useBiometricAuth();
 
   const { mutate: deleteAccount, isLoading: isDeletingAccount } = api.user.deleteAccount.useMutation({
-    onSuccess: async (data) => {
-      console.log('✅ Account deleted successfully:', data.deletedData);
-
+    onSuccess: async () => {
       try {
-        console.log('🧹 Clearing AsyncStorage...');
         await AsyncStorage.multiRemove([
           'language',
-          'currency',
           'profileIcon',
           'onboarding_completed',
           'user_preferences'
         ]);
 
-        console.log('🧹 Clearing MMKV cache data...');
-        try {
-          cacheUtils.clearCache();
-
-          budgetUtils.clearMonthlyTotalBudget();
-          budgetUtils.clearBudgetCache();
-          goalsUtils.clearGoalsCache();
-
-          // Clear notification settings
-          notificationUtils.clearNotificationPreferences();
-          notificationUtils.clearDailyReminderSettings();
-
-          // Clear transaction caches for current and recent months
-          const currentDate = new Date();
-          const currentMonth = currentDate.getMonth() + 1;
-          const currentYear = currentDate.getFullYear();
-
-          // Clear last 12 months of transaction and chart caches
-          for (let i = 0; i < 12; i++) {
-            let month = currentMonth - i;
-            let year = currentYear;
-
-            if (month <= 0) {
-              month += 12;
-              year -= 1;
-            }
-
-            transactionUtils.clearTransactionCache(month, year);
-          }
-
-          console.log('✅ MMKV cache cleared successfully');
-        } catch (error) {
-          console.warn('⚠️ Some MMKV caches failed to clear:', error);
-          // Continue with account deletion even if cache clearing fails
-        }
-
-        console.log('🔐 Signing out user...');
-        // Sign out the user to clear session
         await signOut();
 
-        // Show success message before redirect
         Alert.alert(
           t('profile.accountDeleted'),
           t('profile.accountDeletedMessage'),
-          [
-            {
-              text: t('common.ok'),
-            }
-          ]
+          [{ text: t('common.ok') }]
         );
-
       } catch (error) {
         console.error('Error during cleanup after account deletion:', error);
-        // Even if cleanup fails, still redirect to auth
         router.replace("/(auth)");
       }
     },
     onError: (error) => {
-      console.error('❌ Failed to delete account:', error);
       Alert.alert(
         t('common.error'),
         error.message || t('profile.errorDeletingAccount'),
-        [{ text: t('common.ok'), style: 'default' }]
+        [{ text: t('common.ok') }]
       );
     },
   });
+
   const { t, i18n: i18nInstance } = useTranslation();
-  const { currency, setCurrency, supportedCurrencies } = useCurrency();
   const { icon, setIcon, supportedIcons } = useProfileIcon();
   const updateStatus = useUpdateStatus();
+
+  // Bottom sheet refs
+  const languageBottomSheetRef = useRef<BottomSheet>(null);
+  const profileIconBottomSheetRef = useRef<BottomSheet>(null);
+  const notificationsBottomSheetRef = useRef<BottomSheet>(null);
 
   const handleLanguageChange = async (language: string) => {
     try {
@@ -172,26 +122,7 @@ export default function ProfileScreen() {
       languageBottomSheetRef.current?.close();
       reloadAppAsync();
     } catch (error) {
-      console.error("Error changing language:", error);
       Alert.alert("Error", "Failed to change language. Please try again.");
-    }
-  };
-
-  const handleCurrencyChange = async (selectedCurrency: Currency) => {
-    try {
-      await setCurrency(selectedCurrency);
-      currencyBottomSheetRef.current?.close();
-      Alert.alert(t('profile.currencyUpdated'), t('profile.currencyUpdatedMessage', { currency: selectedCurrency.name }), [
-        {
-          text: t('profile.restart'),
-          onPress: () => {
-            reloadAppAsync();
-          }
-        }
-      ]);
-    } catch (error) {
-      console.error("Error changing currency:", error);
-      Alert.alert(t('common.error'), t('profile.errorChangingCurrency'));
     }
   };
 
@@ -199,18 +130,15 @@ export default function ProfileScreen() {
     try {
       await setIcon(selectedIcon);
       profileIconBottomSheetRef.current?.close();
-      // generate an alert to tell the user that we need to restart the app to see the new icon
-      Alert.alert(t('profile.iconUpdated'), t('profile.iconUpdatedMessage'), [
-        {
+      Alert.alert(
+        t('profile.iconUpdated'), 
+        t('profile.iconUpdatedMessage'), 
+        [{
           text: t('profile.restart'),
-          onPress: () => {
-            reloadAppAsync();
-          }
-        }
-      ])
-
+          onPress: () => reloadAppAsync()
+        }]
+      );
     } catch (error) {
-      console.error("Error changing icon:", error);
       Alert.alert(t('common.error'), t('profile.errorChangingIcon'));
     }
   };
@@ -237,39 +165,26 @@ export default function ProfileScreen() {
   );
 
   const handleDeleteAccount = () => {
-    // Don't allow deletion if already in progress
-    if (isDeletingAccount) {
-      return;
-    }
+    if (isDeletingAccount) return;
 
     Alert.alert(
       t("settings.account.deleteConfirmTitle"),
       t("settings.account.deleteConfirmMessage"),
       [
-        {
-          text: t("settings.account.cancel"),
-          style: "cancel",
-        },
+        { text: t("settings.account.cancel"), style: "cancel" },
         {
           text: t("settings.account.delete"),
           style: "destructive",
           onPress: () => {
-            // Show additional confirmation for such a destructive action
             Alert.alert(
               t("profile.finalDeleteConfirmTitle"),
               t("profile.finalDeleteConfirmMessage"),
               [
-                {
-                  text: t("settings.account.cancel"),
-                  style: "cancel",
-                },
+                { text: t("settings.account.cancel"), style: "cancel" },
                 {
                   text: t("profile.deleteForever"),
                   style: "destructive",
-                  onPress: () => {
-                    console.log('🗑️ Starting account deletion process...');
-                    deleteAccount();
-                  },
+                  onPress: () => deleteAccount(),
                 },
               ]
             );
@@ -280,22 +195,21 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert(t("settings.signOut.title"), t("settings.signOut.message"), [
-      {
-        text: t("settings.account.cancel"),
-        style: "cancel",
-      },
-      {
-        text: t("settings.account.signOut"),
-        style: "destructive",
-        onPress: () => {
-          console.log("Starting sign out process...");
-          signOut();
-          console.log("Sign out completed");
-          router.replace("/(auth)");
+    Alert.alert(
+      t("settings.signOut.title"), 
+      t("settings.signOut.message"), 
+      [
+        { text: t("settings.account.cancel"), style: "cancel" },
+        {
+          text: t("settings.account.signOut"),
+          style: "destructive",
+          onPress: () => {
+            signOut();
+            router.replace("/(auth)");
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleRestartOnboarding = () => {
@@ -303,32 +217,16 @@ export default function ProfileScreen() {
       t("profile.restartOnboardingTitle"),
       t("profile.restartOnboardingMessage"),
       [
-        {
-          text: t("settings.account.cancel"),
-          style: "cancel",
-        },
+        { text: t("settings.account.cancel"), style: "cancel" },
         {
           text: t("profile.restartOnboarding"),
           onPress: async () => {
             try {
-              console.log("🔄 Restarting onboarding process...");
-
-              // Set onboarding as not completed
               await AsyncStorage.setItem("hasCompletedOnboarding", "false");
-
-              // Clear the onboarded state in Supabase context
               await setIsOnboarded(false);
-
-              console.log("✅ Onboarding reset completed");
-
-              // Navigate to onboarding
               router.replace("/(onboarding)");
             } catch (error) {
-              console.error("❌ Error restarting onboarding:", error);
-              Alert.alert(
-                t("common.error"),
-                t("profile.errorRestartingOnboarding")
-              );
+              Alert.alert(t("common.error"), t("profile.errorRestartingOnboarding"));
             }
           },
         },
@@ -336,14 +234,9 @@ export default function ProfileScreen() {
     );
   };
 
-  // Get user display name - fallback to email prefix if no name
   const getUserDisplayName = () => {
-    if (userInfo?.name) {
-      return userInfo.name;
-    }
-    if (user?.email) {
-      return user.email.split('@')[0];
-    }
+    if (userInfo?.name) return userInfo.name;
+    if (user?.email) return user.email.split('@')[0];
     return t('profile.user');
   };
 
@@ -354,26 +247,17 @@ export default function ProfileScreen() {
         disappearsOnIndex={-1}
         appearsOnIndex={0}
         opacity={0.5}
-        enableTouchThrough={false}
         pressBehavior="close"
-        style={[
-          { backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 10 },
-          props.style
-        ]}
       />
     ),
     []
   );
 
-  const languageBottomSheetRef = useRef<BottomSheet>(null);
-  const currencyBottomSheetRef = useRef<BottomSheet>(null);
-  const profileIconBottomSheetRef = useRef<BottomSheet>(null);
-  const notificationsBottomSheetRef = useRef<BottomSheet>(null);
   return (
     <>
       <HeaderContainer variant="secondary" hideBackButton={true} customTitle={t('tab-bar.profile')}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-          {/* IMPOSTAZIONI ACCOUNT */}
+          {/* ACCOUNT SETTINGS */}
           <Section title={t('profile.accountSettings')}>
             {/* Profile Picture */}
             <Pressable style={styles.profileContainer} onPress={() => profileIconBottomSheetRef.current?.expand()}>
@@ -400,7 +284,7 @@ export default function ProfileScreen() {
             />
           </Section>
 
-          {/* PREFERENZE */}
+          {/* PREFERENCES */}
           <Section title={t('profile.preferences')}>
             <CategoryItem
               label={t('profile.language')}
@@ -410,41 +294,13 @@ export default function ProfileScreen() {
             />
 
             <CategoryItem
-              label={t('profile.currency')}
-              value={`${currency.symbol} ${currency.name}`}
-              hasArrow={true}
-              onPress={() => currencyBottomSheetRef.current?.expand()}
-            />
-
-            <CategoryItem
               label={t('profile.notifications')}
               hasArrow={true}
               onPress={() => notificationsBottomSheetRef.current?.expand()}
             />
           </Section>
 
-
-
-          {/* PAGAMENTI */}
-          <Section title={t('profile.payments')}>
-            <CategoryItem
-              label={t('profile.recurring')}
-              hasArrow={true}
-              onPress={() => {
-                router.push("/(protected)/(profile)/(settings)")
-              }}
-            />
-
-            <CategoryItem
-              label={t('profile.installments')}
-              hasArrow={true}
-              onPress={() => {
-                router.push("/(protected)/(profile)/(settings)/installments")
-              }}
-            />
-          </Section>
-
-          {/* AIUTO */}
+          {/* HELP */}
           <Section title={t('profile.help')}>
             <CategoryItem
               label={t('profile.requestFeatures')}
@@ -469,10 +325,9 @@ export default function ProfileScreen() {
               hasArrow={true}
               onPress={handleRestartOnboarding}
             />
-
           </Section>
 
-          {/* AGGIORNAMENTI */}
+          {/* UPDATES */}
           <Section title={t('profile.updates')}>
             <CategoryItem
               label={t('profile.updates')}
@@ -486,8 +341,7 @@ export default function ProfileScreen() {
             />
           </Section>
 
-
-          {/* AZIONI */}
+          {/* ACCOUNT ACTIONS */}
           <Section title="">
             <CategoryItem
               label={t('profile.signOut')}
@@ -500,150 +354,59 @@ export default function ProfileScreen() {
               onPress={isDeletingAccount ? undefined : handleDeleteAccount}
             />
           </Section>
-
-          <View style={styles.bottomSpacer} />
         </ScrollView>
       </HeaderContainer>
-      {/* Language Selection Bottom Sheet */}
+
+      {/* Language Bottom Sheet */}
       <BottomSheet
         ref={languageBottomSheetRef}
-        snapPoints={["40%"]}
         index={-1}
+        snapPoints={['40%']}
         enablePanDownToClose
-
         backdropComponent={renderBackdrop}
-        handleStyle={{
-          backgroundColor: '#FFFFFF', // Consider theme variables
-          borderTopLeftRadius: 15,
-          borderTopRightRadius: 15,
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: "#000", // Consider theme variables
-          width: 40,
-        }}
-        containerStyle={{
-          zIndex: 1000,
-        }}
-        backgroundStyle={{
-          backgroundColor: "#FFFFFF" // Consider theme variables
-        }}
       >
         <View style={styles.bottomSheetContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              {t("settings.language.select")}
-            </Text>
-          </View>
+          <Text style={styles.bottomSheetTitle}>{t('settings.language.title')}</Text>
           {LANGUAGES.map((language) => (
             <Pressable
               key={language.code}
               style={[
-                styles.languageOption,
-                i18nInstance.language === language.code &&
-                styles.selectedLanguage,
+                styles.languageItem,
+                i18nInstance.language === language.code && styles.languageItemActive
               ]}
               onPress={() => handleLanguageChange(language.code)}
             >
-              <Text style={styles.languageText}>
-                {language.flag} {language.name}
-              </Text>
+              <Text style={styles.languageFlag}>{language.flag}</Text>
+              <Text style={styles.languageName}>{language.name}</Text>
               {i18nInstance.language === language.code && (
-                <SvgIcon name="checks" width={16} height={16} color="#007AFF" />
+                <SvgIcon name="checks" width={20} height={20} color="#005EFD" />
               )}
             </Pressable>
           ))}
         </View>
       </BottomSheet>
 
-      {/* Currency Selection Bottom Sheet */}
-      <BottomSheet
-        ref={currencyBottomSheetRef}
-        snapPoints={["60%"]}
-        index={-1}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-        handleStyle={{
-          backgroundColor: '#FFFFFF',
-          borderTopLeftRadius: 15,
-          borderTopRightRadius: 15,
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: "#000",
-          width: 40,
-        }}
-        containerStyle={{
-          zIndex: 1000,
-        }}
-        backgroundStyle={{
-          backgroundColor: "#FFFFFF"
-        }}
-      >
-        <View style={styles.bottomSheetContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t('profile.selectCurrency')}</Text>
-          </View>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {supportedCurrencies.map((currencyOption) => (
-              <Pressable
-                key={currencyOption.code}
-                style={[
-                  styles.languageOption,
-                  currency.code === currencyOption.code && styles.selectedLanguage,
-                ]}
-                onPress={() => handleCurrencyChange(currencyOption)}
-              >
-                <Text style={styles.languageText}>
-                  {currencyOption.symbol} {currencyOption.name}
-                </Text>
-                {currency.code === currencyOption.code && (
-                  <SvgIcon name="checks" width={16} height={16} color="#007AFF" />
-                )}
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-      </BottomSheet>
-
-      {/* Profile Icon Selection Bottom Sheet */}
+      {/* Profile Icon Bottom Sheet */}
       <BottomSheet
         ref={profileIconBottomSheetRef}
-        snapPoints={["60%"]}
         index={-1}
+        snapPoints={['50%']}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
-        handleStyle={{
-          backgroundColor: '#FFFFFF',
-          borderTopLeftRadius: 15,
-          borderTopRightRadius: 15,
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: "#000",
-          width: 40,
-        }}
-        containerStyle={{
-          zIndex: 1000,
-        }}
-        backgroundStyle={{
-          backgroundColor: "#FFFFFF"
-        }}
       >
         <View style={styles.bottomSheetContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t('profile.selectIcon')}</Text>
-          </View>
+          <Text style={styles.bottomSheetTitle}>{t('profile.selectIcon')}</Text>
           <View style={styles.iconGrid}>
-            {supportedIcons.map((iconOption) => (
+            {supportedIcons.map((supportedIcon) => (
               <Pressable
-                key={iconOption}
+                key={supportedIcon}
                 style={[
-                  styles.iconOption,
-                  icon === iconOption && styles.selectedIcon,
+                  styles.iconItem,
+                  icon === supportedIcon && styles.iconItemActive
                 ]}
-                onPress={() => handleIconChange(iconOption)}
+                onPress={() => handleIconChange(supportedIcon)}
               >
-                <Text style={styles.iconText}>
-                  {iconOption}
-                </Text>
+                <Text style={styles.iconText}>{supportedIcon}</Text>
               </Pressable>
             ))}
           </View>
@@ -651,18 +414,12 @@ export default function ProfileScreen() {
       </BottomSheet>
 
       {/* Notifications Bottom Sheet */}
-      <NotificationsBottomSheet
-        bottomSheetRef={notificationsBottomSheetRef as React.RefObject<BottomSheet>}
-        snapPoints={["85%"]}
+      <NotificationsBottomSheet 
+        bottomSheetRef={notificationsBottomSheetRef}
+        snapPoints={['60%']}
         renderBackdrop={renderBackdrop}
         handleClosePress={() => notificationsBottomSheetRef.current?.close()}
         mode="settings"
-        initialNotifications={userInfo?.notifications || false}
-        initialNotificationToken={userInfo?.notificationToken || undefined}
-        onSaveComplete={() => {
-          // Show success message
-          Alert.alert('Successo', 'Le impostazioni delle notifiche sono state aggiornate.');
-        }}
       />
     </>
   );
@@ -671,145 +428,135 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 16,
+    backgroundColor: '#F9FAFB',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-    textTransform: "uppercase",
-    marginBottom: 8,
-    paddingHorizontal: 16,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 16,
+    paddingHorizontal: 24,
   },
   sectionContainer: {
-    paddingHorizontal: 16,
-    gap: 8,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginHorizontal: 24,
+    paddingVertical: 4,
   },
   profileContainer: {
-    alignItems: "center",
-    marginBottom: 8,
+    alignItems: 'center',
+    paddingVertical: 20,
   },
   profilePic: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#1E94FF",
-    justifyContent: "center",
-    alignItems: "center",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   profileEmoji: {
     fontSize: 32,
-    lineHeight: 44,
   },
   categoryItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F9FAFB",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   categoryLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000",
     flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
   },
   categoryValue: {
     fontSize: 16,
-    color: "#D1D5DB",
-    marginLeft: "auto",
+    color: '#6B7280',
+    marginRight: 8,
   },
   toggle: {
-    width: 51,
-    height: 31,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 100,
-    padding: 2,
-    justifyContent: "center",
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
   },
   toggleActive: {
-    backgroundColor: "#1E94FF",
+    backgroundColor: '#10B981',
   },
   toggleKnob: {
-    width: 27,
-    height: 27,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 100,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   toggleKnobActive: {
     transform: [{ translateX: 20 }],
   },
-  bottomSpacer: {
-    height: 96,
-  },
   bottomSheetContent: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "white",
+    padding: 24,
   },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  modalTitle: {
+  bottomSheetTitle: {
     fontSize: 20,
-    color: "#000",
-    fontWeight: "600",
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 24,
+    textAlign: 'center',
   },
-  languageOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    borderRadius: 10,
+  languageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
   },
-  selectedLanguage: {
-    backgroundColor: "#f0f0f0",
+  languageItemActive: {
+    backgroundColor: '#EBF5FF',
   },
-  languageText: {
+  languageFlag: {
+    fontSize: 24,
+    marginRight: 16,
+  },
+  languageName: {
+    flex: 1,
     fontSize: 16,
-    color: "#000",
-    fontWeight: "500",
+    fontWeight: '500',
+    color: '#111827',
   },
   iconGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  iconOption: {
-    width: 80,
-    height: 80,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#F9FAFB",
+  iconItem: {
+    width: '15%',
+    aspectRatio: 1,
     borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  selectedIcon: {
+  iconItemActive: {
+    backgroundColor: '#EBF5FF',
     borderWidth: 2,
-    borderColor: "#1E94FF",
+    borderColor: '#005EFD',
   },
   iconText: {
-    fontSize: 32,
+    fontSize: 24,
   },
 });
