@@ -88,11 +88,6 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
       }
     }
 
-    if (currentPath.includes('(home)/(daily-transactions)')) {
-      // Use normal back navigation for daily transactions
-      router.back();
-      return;
-    }
 
     // For transaction edit, use normal back navigation instead of forcing home
     // This allows proper stack navigation in flows

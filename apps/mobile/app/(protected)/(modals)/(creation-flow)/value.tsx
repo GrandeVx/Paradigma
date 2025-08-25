@@ -1,22 +1,25 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
+import HeaderContainer from "@/components/layouts/_header";
 
 export default function ValueScreen() {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Creation Flow - Value
-      </Text>
-      <Text style={styles.subtitle}>
-        Set amount or value
-      </Text>
-      <Text style={styles.description}>
-        This is a template screen for the creation flow value step.
-      </Text>
-    </View>
+    <HeaderContainer variant="secondary" customTitle="Creation Flow - Value">
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          Creation Flow - Value
+        </Text>
+        <Text style={styles.subtitle}>
+          Set amount or value
+        </Text>
+        <Text style={styles.description}>
+          This is a template screen for the creation flow value step.
+        </Text>
+      </View>
+    </HeaderContainer>
   );
 }
 

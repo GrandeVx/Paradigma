@@ -1,22 +1,25 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
+import HeaderContainer from "@/components/layouts/_header";
 
 export default function AccountsScreen() {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        {t("tab-bar.accounts", "Accounts")}
-      </Text>
-      <Text style={styles.subtitle}>
-        Manage your financial accounts
-      </Text>
-      <Text style={styles.description}>
-        This is the accounts tab. Here you can view and manage your bank accounts, credit cards, and other financial accounts.
-      </Text>
-    </View>
+    <HeaderContainer variant="secondary" hideBackButton={true} customTitle={t("tab-bar.accounts", "Accounts")}>
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          {t("tab-bar.accounts", "Accounts")}
+        </Text>
+        <Text style={styles.subtitle}>
+          Manage your financial accounts
+        </Text>
+        <Text style={styles.description}>
+          This is the accounts tab. Here you can view and manage your bank accounts, credit cards, and other financial accounts.
+        </Text>
+      </View>
+    </HeaderContainer>
   );
 }
 

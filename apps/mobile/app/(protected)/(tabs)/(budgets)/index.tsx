@@ -1,22 +1,25 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
+import HeaderContainer from "@/components/layouts/_header";
 
 export default function BudgetsScreen() {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        {t("tab-bar.budgets", "Budgets")}
-      </Text>
-      <Text style={styles.subtitle}>
-        Track your spending goals
-      </Text>
-      <Text style={styles.description}>
-        This is the budgets tab. Here you can manage your spending categories and financial goals.
-      </Text>
-    </View>
+    <HeaderContainer variant="secondary" hideBackButton={true} customTitle={t("tab-bar.budgets", "Budgets")}>
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          {t("tab-bar.budgets", "Budgets")}
+        </Text>
+        <Text style={styles.subtitle}>
+          Track your spending goals
+        </Text>
+        <Text style={styles.description}>
+          This is the budgets tab. Here you can manage your spending categories and financial goals.
+        </Text>
+      </View>
+    </HeaderContainer>
   );
 }
 

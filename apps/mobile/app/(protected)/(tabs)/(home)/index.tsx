@@ -1,22 +1,25 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
+import HeaderContainer from "@/components/layouts/_header";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        {t("tab-bar.home", "Home")}
-      </Text>
-      <Text style={styles.subtitle}>
-        Welcome to your financial dashboard
-      </Text>
-      <Text style={styles.description}>
-        This is the home tab. The TabBar should be visible at the bottom.
-      </Text>
-    </View>
+    <HeaderContainer variant="secondary" hideBackButton={true} customTitle={t("tab-bar.home", "Home")}>
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          {t("tab-bar.home", "Home")}
+        </Text>
+        <Text style={styles.subtitle}>
+          Welcome to your financial dashboard
+        </Text>
+        <Text style={styles.description}>
+          This is the home tab. The TabBar should be visible at the bottom.
+        </Text>
+      </View>
+    </HeaderContainer>
   );
 }
 

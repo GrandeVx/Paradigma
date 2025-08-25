@@ -1,22 +1,25 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
+import HeaderContainer from "@/components/layouts/_header";
 
 export default function TransactionValueScreen() {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Transaction Flow - Value
-      </Text>
-      <Text style={styles.subtitle}>
-        Enter transaction amount
-      </Text>
-      <Text style={styles.description}>
-        This is a template screen for the transaction flow value step. The user would enter transaction details here.
-      </Text>
-    </View>
+    <HeaderContainer variant="secondary" customTitle="Transaction Flow - Value">
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          Transaction Flow - Value
+        </Text>
+        <Text style={styles.subtitle}>
+          Enter transaction amount
+        </Text>
+        <Text style={styles.description}>
+          This is a template screen for the transaction flow value step. The user would enter transaction details here.
+        </Text>
+      </View>
+    </HeaderContainer>
   );
 }
 

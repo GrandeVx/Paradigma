@@ -12,11 +12,6 @@ export default function HomeLayout() {
         animation: "none",
         animationDuration: 0,
       }} />
-
-      <Stack.Screen name="(daily-transactions)" options={{
-        animation: "slide_from_right",
-        presentation: "card",
-      }} />
     </Stack>
   );
 }
