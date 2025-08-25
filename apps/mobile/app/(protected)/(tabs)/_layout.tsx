@@ -19,13 +19,8 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const { icon, isIconReady } = useProfileIcon();
-  const segments = useSegments();
-  const { t } = useTranslation();
-  // Get current tab for prefetching - adjusted for new structure
-  const currentTab = segments[2] || "(home)"; // segments[2] now contains the tab name
 
-  // Enable intelligent prefetching
-  useTabPrefetching(currentTab);
+  const { t } = useTranslation();
 
   return (
     <Tabs
