@@ -75,7 +75,7 @@ export default function PostsPage() {
 
       try {
         setIsLoadingPosts(true);
-        const postsPromises = visibleGroups.slice(0, 10).map(group => 
+        const postsPromises = visibleGroups.slice(0, 10).map((group: Group) => 
           fetch(`/api/trpc/posts.getGroupPosts?input=${encodeURIComponent(JSON.stringify({ groupId: group.id, limit: 5 }))}`)
             .then(res => res.json())
             .then(data => data.result.data.posts || [])
