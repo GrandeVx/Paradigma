@@ -1,23 +1,23 @@
 import { Stack } from "expo-router";
 
-export default function ProtectedLayout() {
+export default function ModalsLayout() {
   return (
     <Stack
       screenOptions={{
+        presentation: "modal",
         headerShown: false,
       }}
     >
-      <Stack.Screen
-        name="(tabs)"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="(modals)"
+      <Stack.Screen 
+        name="(creation-flow)" 
         options={{
           presentation: "modal",
-          headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="(transaction-flow)" 
+        options={{
+          presentation: "modal",
         }}
       />
     </Stack>

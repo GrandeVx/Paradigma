@@ -19,15 +19,22 @@ const TabBar = React.memo<BottomTabBarProps>(({
   const router = useRouter();
 
   // Memoize filtered routes to avoid recalculating on every render
+  // Keep the central action button even if href is null
   const filteredRoutes = React.useMemo(() =>
-    state.routes.filter((route) => (route?.params as { href?: string })?.href !== null || false),
+    state.routes.filter((route) => {
+      // Always show add-transaction button
+      if (route.name === "add-transaction") {
+        return true;
+      }
+      // For other routes, check href param
+      const params = route?.params as { href?: string };
+      return params?.href !== null;
+    }),
     [state.routes]
   );
 
-  // Calculate visibility after all hooks are called
-  const Flows = ["(creation-flow)", "(transaction-flow)"];
-  const isCreationFlow = state.routes.filter((route, index) => state.index === index).some((route) => Flows.includes(route.name));
-  const shouldHideTabBar = isCreationFlow || !isTabBarVisible;
+  // Calculate visibility after all hooks are called - flows are now in modals, no longer in tabs
+  const shouldHideTabBar = !isTabBarVisible;
 
   if (shouldHideTabBar) {
     return null;
@@ -61,6 +68,14 @@ const TabBar = React.memo<BottomTabBarProps>(({
             // Regular function instead of useCallback (hooks can't be called in loops)
             const onPress = async () => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              
+              // Special handling for central action button
+              if (route.name === "add-transaction") {
+                // Navigate to transaction modal
+                router.push("/(protected)/(modals)/(transaction-flow)/value");
+                return;
+              }
+              
               const event = navigation.emit({
                 type: "tabPress",
                 target: route.key,
@@ -68,13 +83,7 @@ const TabBar = React.memo<BottomTabBarProps>(({
               });
 
               if (!isFocused && !event.defaultPrevented) {
-                // Special handling for transaction-flow to always reset to value screen
-                if (route.name === "(transaction-flow)") {
-                  // Force complete reset to value screen, clearing navigation stack
-                  router.replace("/(protected)/(transaction-flow)/value");
-                } else {
-                  navigation.navigate(route.name);
-                }
+                navigation.navigate(route.name);
               }
             };
 
