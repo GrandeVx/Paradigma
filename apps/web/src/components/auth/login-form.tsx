@@ -1,0 +1,240 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Code } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/components/ui/use-toast";
+import { signIn } from "@paradigma/auth";
+import Link from "next/link";
+
+export function LoginForm({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<"div">) {
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"email" | "otp">("email");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const auth = useAuth();
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    try {
+      setIsLoading(true);
+      await auth.sendVerificationOtp(email);
+      setStep("otp");
+      toast({
+        title: "Verification code sent",
+        description: "Check your email for the verification code",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send verification code",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp) return;
+
+    try {
+      setIsLoading(true);
+      await auth.signInWithOtp(email, otp);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Invalid verification code",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSocialAuth = async (provider: "google" | "apple") => {
+    try {
+      setIsLoading(true);
+      const result = await signIn.social({
+        provider,
+        callbackURL: "/dashboard",
+      });
+
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error.message || `Failed to sign in with ${provider}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to sign in with ${provider}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setStep("email");
+    setOtp("");
+    setEmail("");
+  };
+
+  // Auto-submit when OTP is complete
+  useEffect(() => {
+    if (otp.length === 6 && step === "otp" && !isLoading) {
+      handleOtpSubmit({ preventDefault: () => {} } as React.FormEvent);
+    }
+  }, [otp, step, isLoading]);
+
+  return (
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <form onSubmit={step === "email" ? handleEmailSubmit : handleOtpSubmit}>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <Link
+              href="/"
+              className="flex flex-col items-center gap-2 font-medium"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600">
+                <Code className="size-5 text-white" />
+              </div>
+              <span className="sr-only">Paradigma</span>
+            </Link>
+            <h1 className="text-xl font-bold">Welcome to Paradigma</h1>
+            <div className="text-center text-sm">
+              Don&apos;t have an account?{" "}
+              <Link href="/sign-up" className="underline underline-offset-4">
+                Sign up
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            {step === "email" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center text-sm text-muted-foreground">
+                  We sent a verification code to <strong>{email}</strong>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="otp">Verification Code</Label>
+                  <div className="flex justify-center">
+                    <InputOTP
+                      maxLength={6}
+                      value={otp}
+                      onChange={setOtp}
+                      disabled={isLoading}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetForm}
+                  disabled={isLoading}
+                  className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Use different email
+                </Button>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Loading..." : step === "email" ? "Continue" : "Sign In"}
+            </Button>
+          </div>
+
+          {step === "email" && (
+            <>
+              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+              <div className="grid gap-1 sm:grid-cols-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={isLoading}
+                  onClick={() => handleSocialAuth("apple")}
+                >
+                  <span className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5">
+                      <path
+                        d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    Continue with Apple
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={isLoading}
+                  onClick={() => handleSocialAuth("google")}
+                >
+                  <span className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5">
+                      <path
+                        d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    Continue with Google
+                  </span>
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </form>
+      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
+        By continuing, you agree to our{" "}
+        <Link href="/terms">Terms of Service</Link> and{" "}
+        <Link href="/privacy-policy">Privacy Policy</Link>.
+      </div>
+    </div>
+  );
+}

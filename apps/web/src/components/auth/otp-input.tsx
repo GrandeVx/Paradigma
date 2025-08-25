@@ -41,7 +41,7 @@ export function OTPInput({
 
     // Allow alphanumeric characters (letters and numbers)
     const alphanumericValue = inputValue.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-    
+
     if (alphanumericValue.length <= 1) {
       const newValue = value.split("");
       newValue[index] = alphanumericValue;
@@ -61,7 +61,7 @@ export function OTPInput({
     if (e.key === "Backspace") {
       e.preventDefault();
       const newValue = value.split("");
-      
+
       if (newValue[index]) {
         // Clear current input
         newValue[index] = "";
@@ -83,11 +83,11 @@ export function OTPInput({
 
   const handlePaste = (e: React.ClipboardEvent) => {
     if (disabled) return;
-    
+
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text/plain");
     const alphanumericData = pastedData.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, length);
-    
+
     if (alphanumericData) {
       onChange(alphanumericData);
       // Focus the last filled input or the last input if all are filled
@@ -104,6 +104,7 @@ export function OTPInput({
           ref={(el) => { inputRefs.current[index] = el; }}
           type="text"
           inputMode="text"
+          autoFocus={autoFocus}
           maxLength={1}
           value={value[index] || ""}
           onChange={(e) => handleChange(index, e.target.value)}

@@ -122,9 +122,9 @@ export default function DashboardPage() {
   }
 
   const allGroups = groupsData?.groups || [];
-  const ownedGroups = allGroups.filter(group => group.owner.id === userInfo?.id);
-  const totalMembers = allGroups.reduce((sum, group) => sum + group.memberCount, 0);
-  const totalPosts = allGroups.reduce((sum, group) => sum + group.postCount, 0);
+  const ownedGroups = allGroups.filter((group: any) => group.owner.id === userInfo?.id);
+  const totalMembers = allGroups.reduce((sum: number, group: any) => sum + group.memberCount, 0);
+  const totalPosts = allGroups.reduce((sum: number, group: any) => sum + group.postCount, 0);
 
   return (
     <SocialLayout>

@@ -25,14 +25,16 @@ export const prismaBase = // Rinominato per chiarezza, useremo 'db' per l'istanz
         : ["error"],
   });
 
-// Configurazione client Redis
-const redisClientConfig = { // Rinominato per chiarezza
-  host: process.env.REDIS_HOST || "127.0.0.1", // Usa variabili d'ambiente
+// Configurazione client Redis - solo se Redis è configurato
+const isRedisConfigured = process.env.REDIS_HOST && process.env.REDIS_HOST.trim() !== "";
+
+const redisClientConfig = isRedisConfigured ? {
+  host: process.env.REDIS_HOST,
   username: process.env.REDIS_USERNAME || "default",
-  password: process.env.REDIS_PASSWORD || undefined, // Gestisci assenza di password
+  password: process.env.REDIS_PASSWORD || undefined,
   db: parseInt(process.env.REDIS_DB || "0", 10),
   port: parseInt(process.env.REDIS_PORT || "6379", 10),
-};
+} : null;
 
 const logger = pino({
   level: process.env.NODE_ENV === "development" ? "debug" : "info",
@@ -108,10 +110,15 @@ const cacheMainConfig: CacheConfig = {
   },
 };
 
-// Istanza PrismaClient estesa con il caching Redis
-export const db = prismaBase.$extends(
-  PrismaExtensionRedis({ config: cacheMainConfig, client: redisClientConfig })
-);
+// Istanza PrismaClient estesa con il caching Redis (solo se configurato)
+export const db = redisClientConfig 
+  ? prismaBase.$extends(
+      PrismaExtensionRedis({ config: cacheMainConfig, client: redisClientConfig })
+    )
+  : (() => {
+      logger.info("Redis not configured - running without cache");
+      return prismaBase;
+    })();
 
 // Esporta tutti gli schemi Zod generati
 export * from "./prisma/zod";
