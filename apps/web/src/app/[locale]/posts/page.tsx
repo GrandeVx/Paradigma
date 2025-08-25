@@ -25,8 +25,16 @@ export default function PostsPage() {
     onlyPublic: false,
   });
 
+  interface Group {
+    isPublic: boolean;
+    owner: {
+      id: string;
+    };
+    memberCount: number;
+  }
+
   const allGroups = groupsData?.groups || [];
-  const visibleGroups = allGroups.filter(group => 
+  const visibleGroups = allGroups.filter((group: Group) => 
     group.isPublic || group.owner.id === userInfo?.id
   );
 

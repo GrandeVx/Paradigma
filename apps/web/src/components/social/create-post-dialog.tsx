@@ -1,19 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Dialog, 
+import {
+  Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle 
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { 
-  PenSquare, 
-  X, 
+import {
+  PenSquare,
+  X,
   Expand,
-  Users,
-  Globe 
 } from "lucide-react";
 import { CreatePostForm } from "./create-post-form";
 import { cn } from "@/lib/utils";
@@ -24,24 +22,23 @@ interface CreatePostDialogProps {
   initialGroupId?: string;
 }
 
-export function CreatePostDialog({ 
-  open, 
-  onOpenChange, 
-  initialGroupId 
+export function CreatePostDialog({
+  open,
+  onOpenChange,
+  initialGroupId
 }: CreatePostDialogProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
+      <DialogContent
         className={cn(
           "linear-dialog transition-all duration-300 ease-out",
           "border-0 shadow-2xl backdrop-blur-sm",
-          isExpanded 
-            ? "sm:max-w-4xl max-h-[95vh]" 
+          isExpanded
+            ? "sm:max-w-4xl max-h-[95vh]"
             : "sm:max-w-2xl max-h-[90vh]"
         )}
-        hideClose={true}
       >
         {/* Linear-style Header */}
         <DialogHeader className="linear-dialog-header flex-row items-center justify-between space-y-0 pb-4 border-b">
@@ -58,7 +55,7 @@ export function CreatePostDialog({
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-1">
             {/* Expand button */}
             <Button
@@ -69,7 +66,7 @@ export function CreatePostDialog({
             >
               <Expand className="h-4 w-4" />
             </Button>
-            
+
             {/* Close button */}
             <Button
               variant="ghost"
@@ -84,11 +81,10 @@ export function CreatePostDialog({
 
         {/* Form Content */}
         <div className="flex-1 overflow-auto px-1">
-          <CreatePostForm 
+          <CreatePostForm
             initialGroupId={initialGroupId}
             onSuccess={() => onOpenChange(false)}
             onCancel={() => onOpenChange(false)}
-            isDialog={true}
             isExpanded={isExpanded}
           />
         </div>

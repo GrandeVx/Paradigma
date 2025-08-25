@@ -1,0 +1,65 @@
+services:
+  # Applicazione Web Next.js
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgresql://username:password@host:port/database?pgbouncer=true
+        DIRECT_URL: postgresql://username:password@host:port/database
+    restart: unless-stopped
+    environment:
+      # Database Configuration
+      DATABASE_URL: postgresql://username:password@host:port/database?pgbouncer=true
+      DIRECT_URL: postgresql://username:password@host:port/database
+
+      # App Configuration
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: 1
+      PORT: 3000
+      SKIP_ENV_VALIDATION: true
+
+      # Better Auth Configuration
+      BETTER_AUTH_SECRET: your-better-auth-secret-key-here
+      BETTER_AUTH_URL: http://localhost:3000
+
+      # Email Configuration
+      EMAIL_HOST: your-email-host
+      EMAIL_USER: your-email@domain.com
+      EMAIL_PASSWORD: your-email-password
+
+      # Redis Configuration
+      REDIS_HOST: your-redis-host
+      REDIS_USERNAME: default
+      REDIS_PASSWORD: your-redis-password
+      REDIS_DB: 0
+
+    ports:
+      - "3000:3000"
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    command: >-
+      sh -c "
+        echo 'Updating database schema...' &&
+        pnpm --filter @paradigma/db exec prisma db push &&
+        echo 'Starting application...' &&
+        pnpm start -p 3000
+      "
+
+networks:
+  default:
+    name: paradigma-network

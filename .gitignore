@@ -199,6 +199,11 @@ dev-debug.log
 *.cert
 authKey*
 
+# Docker Compose files (may contain sensitive data)
+docker-compose.yml
+docker-compose.*.yml
+!docker-compose.example.yml
+
 # Editor directories and files
 .vscode
 *.suo

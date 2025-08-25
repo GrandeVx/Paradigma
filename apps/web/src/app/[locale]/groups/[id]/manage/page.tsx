@@ -422,7 +422,7 @@ export default function ManageGroupPage() {
                   <p className="text-sm text-muted-foreground">No members found.</p>
                 ) : (
                   <div className="space-y-4">
-                    {members.map((member) => (
+                    {members.map((member: typeof members[number]) => (
                       <div
                         key={member.id}
                         className="flex items-center justify-between p-4 border rounded-lg"
@@ -494,7 +494,7 @@ export default function ManageGroupPage() {
                   <p className="text-sm text-muted-foreground">No pending requests.</p>
                 ) : (
                   <div className="space-y-4">
-                    {requests.map((request) => (
+                    {requests.map((request: typeof requests[number]) => (
                       <div
                         key={request.id}
                         className="flex items-center justify-between p-4 border rounded-lg"

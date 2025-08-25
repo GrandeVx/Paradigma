@@ -121,10 +121,17 @@ export default function DashboardPage() {
     );
   }
 
+type Group = {
+  id: string;
+  owner: { id: string };
+  memberCount: number;
+  postCount: number;
+};
+
   const allGroups = groupsData?.groups || [];
-  const ownedGroups = allGroups.filter((group: any) => group.owner.id === userInfo?.id);
-  const totalMembers = allGroups.reduce((sum: number, group: any) => sum + group.memberCount, 0);
-  const totalPosts = allGroups.reduce((sum: number, group: any) => sum + group.postCount, 0);
+  const ownedGroups = allGroups.filter((group: Group) => group.owner.id === userInfo?.id);
+  const totalMembers = allGroups.reduce((sum: number, group: Group) => sum + group.memberCount, 0);
+  const totalPosts = allGroups.reduce((sum: number, group: Group) => sum + group.postCount, 0);
 
   return (
     <SocialLayout>

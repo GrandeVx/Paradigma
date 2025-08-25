@@ -12,21 +12,19 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
-import { 
-  Users, 
-  Globe, 
-  Lock, 
+import {
+  Users,
+  Globe,
+  Lock,
   Crown,
   Plus,
   CheckCircle2
@@ -58,7 +56,6 @@ interface CreatePostFormProps {
   initialGroupId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
-  isDialog?: boolean;
   isExpanded?: boolean;
 }
 
@@ -66,7 +63,6 @@ export function CreatePostForm({
   initialGroupId = "",
   onSuccess,
   onCancel,
-  isDialog = false,
   isExpanded = false
 }: CreatePostFormProps) {
   const router = useRouter();
@@ -96,12 +92,12 @@ export function CreatePostForm({
         title: "Post created",
         description: "Your post has been published successfully.",
       });
-      
+
       // Clear form and draft
       form.reset();
       localStorage.removeItem("post-draft");
       localStorage.removeItem("post-draft-group");
-      
+
       // Call success callback or navigate
       if (onSuccess) {
         onSuccess();
@@ -138,11 +134,11 @@ export function CreatePostForm({
   useEffect(() => {
     const savedDraft = localStorage.getItem("post-draft");
     const savedGroup = localStorage.getItem("post-draft-group");
-    
+
     if (savedDraft) {
       form.setValue("content", savedDraft);
     }
-    
+
     if (savedGroup) {
       form.setValue("groupId", savedGroup);
     }
@@ -159,7 +155,7 @@ export function CreatePostForm({
   });
 
   // Find selected group for display
-  const selectedGroup = userGroups.find(group => group.id === groupId);
+  const selectedGroup = userGroups.find((group: GroupData) => group.id === groupId);
 
   // Loading state
   if (isLoadingUser || isLoadingGroups) {
@@ -251,7 +247,7 @@ export function CreatePostForm({
             <div className="text-muted-foreground text-sm">
               Add description...
             </div>
-            
+
             {/* Character Count */}
             <div className="flex justify-between items-center text-xs text-muted-foreground">
               <span>{content.length}/2000 characters</span>
@@ -339,8 +335,8 @@ export function CreatePostForm({
 
               {/* Right side - Actions */}
               <div className="flex items-center gap-3">
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   onClick={onCancel}
@@ -349,8 +345,8 @@ export function CreatePostForm({
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   size="sm"
                   disabled={createPostMutation.isLoading || !form.formState.isValid}
                   className="min-w-[100px] bg-primary hover:bg-primary/90"

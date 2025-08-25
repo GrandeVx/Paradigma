@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PenSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useParams, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { CreatePostDialog } from "./create-post-dialog";
 
 interface FloatingCreateButtonProps {
@@ -13,9 +13,7 @@ interface FloatingCreateButtonProps {
 
 export function FloatingCreateButton({ className }: FloatingCreateButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const params = useParams();
   const searchParams = useSearchParams();
-  const locale = (params?.locale as string) || "en";
   const groupId = searchParams.get("groupId") || "";
 
   return (
@@ -34,8 +32,8 @@ export function FloatingCreateButton({ className }: FloatingCreateButtonProps) {
       >
         <PenSquare className="h-6 w-6" />
       </Button>
-      
-      <CreatePostDialog 
+
+      <CreatePostDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         initialGroupId={groupId}

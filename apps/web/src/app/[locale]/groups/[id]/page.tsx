@@ -21,6 +21,7 @@ import {
 import { api } from "@/trpc/react";
 import { toast } from "@/components/ui/use-toast";
 import Link from "next/link";
+import { type RouterOutputs } from "@paradigma/api";
 
 export default function GroupDetailPage() {
   const router = useRouter();
@@ -106,7 +107,7 @@ export default function GroupDetailPage() {
   const members = membersData?.members ?? [];
 
   const isOwner = userInfo?.id === group?.owner.id;
-  const isMember = members.some((member) => member.user.id === userInfo?.id);
+  const isMember = members.some((member: RouterOutputs['groups']['getGroupMembers']['members'][number]) => member.user.id === userInfo?.id);
 
   if (groupError) {
     return (
@@ -187,7 +188,7 @@ export default function GroupDetailPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Groups
           </Link>
-          
+
           <Card>
             <CardHeader>
               <div className="flex flex-col space-y-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
@@ -237,7 +238,7 @@ export default function GroupDetailPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   {isOwner && (
                     <Button asChild variant="outline">
@@ -272,13 +273,13 @@ export default function GroupDetailPage() {
               <TabsList>
                 <TabsTrigger value="posts">Posts</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="posts" className="mt-6 space-y-6">
                 {/* Create Post (only for members) */}
                 {isMember && (
                   <Card className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors">
                     <CardContent className="flex items-center justify-center py-8">
-                      <Button 
+                      <Button
                         onClick={handleCreatePost}
                         size="lg"
                         className="h-12 px-8"
@@ -343,7 +344,7 @@ export default function GroupDetailPage() {
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {members.slice(0, 10).map((member) => (
+                    {members.slice(0, 10).map((member: RouterOutputs['groups']['getGroupMembers']['members'][number]) => (
                       <div key={member.id} className="flex items-center space-x-3">
                         <UserAvatar user={member.user} size="sm" />
                         <div className="flex-1 min-w-0">
