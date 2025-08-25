@@ -78,12 +78,12 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
     const currentPath = segments.join('/');
 
     // Special handling for cross-tab navigation issues
-    if (currentPath.includes('(home)/(category-transactions)')) {
+    if (currentPath.includes('(dashboard)/(category-transactions)')) {
       const referrer = searchParams.referrer;
 
-      if (referrer === 'budgets') {
-        // Navigate back to budgets instead of home
-        router.navigate('/(protected)/(budgets)/' as Href);
+      if (referrer === 'groups') {
+        // Navigate back to groups instead of dashboard
+        router.navigate('/(protected)/(groups)/' as Href);
         return;
       }
     }
@@ -102,14 +102,14 @@ const HeaderContainer: React.FC<ContainerWithChildrenProps> = ({
     } else {
       // Fallback: navigate to appropriate tab home based on current context
       const currentTab = segments.find(segment =>
-        ['(home)', '(budgets)', '(accounts)', '(profile)'].includes(segment)
+        ['(dashboard)', '(groups)', '(posts)', '(profile)'].includes(segment)
       );
 
       if (currentTab) {
         router.navigate(`/(protected)/${currentTab}/` as Href);
       } else {
-        // Ultimate fallback: go to home
-        router.navigate('/(protected)/(home)/' as Href);
+        // Ultimate fallback: go to dashboard
+        router.navigate('/(protected)/(dashboard)/' as Href);
       }
     }
   };

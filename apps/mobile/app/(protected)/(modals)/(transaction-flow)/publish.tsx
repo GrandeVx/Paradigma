@@ -116,7 +116,7 @@ export default function PostPublishScreen() {
         [
           {
             text: "OK",
-            onPress: () => router.push("/(protected)/(home)/")
+            onPress: () => router.push("/(protected)/(dashboard)/")
           }
         ]
       );

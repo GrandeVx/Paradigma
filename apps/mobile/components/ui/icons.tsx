@@ -22,12 +22,14 @@ export const UpIcon = createIconComponent("up");
 export const DownIcon = createIconComponent("down");
 export const LeftIcon = createIconComponent("left");
 export const RightIcon = createIconComponent("right");
+export const ActivityIcon = createIconComponent("activity");
 export const AIIcon = createIconComponent("ai");
 export const BankCardIcon = createIconComponent("bank-card");
 export const BankIcon = createIconComponent("bank");
 export const CalendarIcon = createIconComponent("calendar");
 export const CashIcon = createIconComponent("cash");
 export const LinkIcon = createIconComponent("link");
+export const MessageCircleIcon = createIconComponent("message-circle");
 export const PigMoneyIcon = createIconComponent("pig-money");
 export const ScheduleIcon = createIconComponent("schedule");
 export const WalletIcon = createIconComponent("wallet");
@@ -43,6 +45,7 @@ export const EyeIcon = createIconComponent("eye");
 export const DeleteIcon = createIconComponent("delete");
 export const ChecksIcon = createIconComponent("checks");
 export const AtIcon = createIconComponent("at");
+export const UsersIcon = createIconComponent("users");
 
 
 
@@ -75,6 +78,7 @@ export const AccountColors = {
 
 // Export the list of all available icons for documentation or UI purposes
 export const iconNames = [
+  "activity",
   "close",
   "next",
   "previous",
@@ -90,6 +94,7 @@ export const iconNames = [
   "calendar",
   "cash",
   "link",
+  "message-circle",
   "pig-money",
   "schedule",
   "wallet",
@@ -105,6 +110,7 @@ export const iconNames = [
   "delete",
   "checks",
   "at",
+  "users",
 ] as const;
 
 export type IconName = typeof iconNames[number]; 

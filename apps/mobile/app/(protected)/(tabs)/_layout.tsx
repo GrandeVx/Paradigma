@@ -34,29 +34,29 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="(home)"
+        name="(dashboard)"
         initialParams={{}}
         options={{
-          title: t("tab-bar.home"),
-          tabBarIcon: ({ color }) => <SvgIcon name="chart-vertical" color={color} />,
+          title: t("tab-bar.dashboard"),
+          tabBarIcon: ({ color }) => <SvgIcon name="activity" color={color} />,
         }}
       />
 
       <Tabs.Screen
-        name="(budgets)"
+        name="(groups)"
         initialParams={{}}
         options={{
-          title: t("tab-bar.budgets"),
-          tabBarIcon: ({ color }) => <SvgIcon name="target" color={color} />,
+          title: t("tab-bar.groups"),
+          tabBarIcon: ({ color }) => <SvgIcon name="users" color={color} />,
         }}
       />
 
       <Tabs.Screen
-        name="(accounts)"
+        name="(posts)"
         initialParams={{}}
         options={{
-          title: t("tab-bar.accounts"),
-          tabBarIcon: ({ color }) => <SvgIcon name="wallet" size={30} color={color} />,
+          title: t("tab-bar.posts"),
+          tabBarIcon: ({ color }) => <SvgIcon name="message-circle" color={color} />,
         }}
       />
 

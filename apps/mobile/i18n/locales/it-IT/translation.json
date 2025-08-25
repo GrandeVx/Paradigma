@@ -1,13 +1,13 @@
 {
   "language": "Lingua",
   "tab-bar": {
-    "home": "Home",
+    "dashboard": "Dashboard",
     "profile": "Profilo",
-    "accounts": "Conti",
+    "posts": "Post",
     "sign-in": "Crea un account",
     "sign-up": "Accedi",
     "settings": "Impostazioni",
-    "budgets": "Budget",
+    "groups": "Gruppi",
     "transactions": "Transazioni"
   },
   "home": {

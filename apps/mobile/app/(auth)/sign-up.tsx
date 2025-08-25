@@ -148,7 +148,7 @@ export default function AuthIndex() {
       } else {
         // Existing user - has accounts, go to home
         console.log("[OAuth] Existing user detected - redirecting to home");
-        router.replace("/(protected)/(accounts)" as never);
+        router.replace("/(protected)/(posts)" as never);
       }
     } catch (error) {
       console.error("[OAuth] Error during OAuth completion:", error);

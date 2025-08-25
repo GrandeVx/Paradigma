@@ -1,13 +1,13 @@
 {
   "language": "Language",
   "tab-bar": {
-    "home": "Home",
+    "dashboard": "Dashboard",
     "profile": "Profile",
     "settings": "Settings",
     "sign-in": "Create an account",
     "sign-up": "Sign Update",
-    "budgets": "Budgets",
-    "accounts": "Accounts"
+    "groups": "Groups",
+    "posts": "Posts"
   },
   "home": {
     "title": "Home",
