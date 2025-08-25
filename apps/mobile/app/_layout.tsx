@@ -118,7 +118,7 @@ function RootLayoutNav() {
             <ThemeProvider
               value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
             >
-              <GestureHandlerRootView style={{ flex: 1 }} className="container grid grid-cols-4 grid-rows-8 gap-4">
+              <GestureHandlerRootView style={{ flex: 1 }}>
                 <TabBarProvider>
                   <AppWithNetworkState />
                 </TabBarProvider>
