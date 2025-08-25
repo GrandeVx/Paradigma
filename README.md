@@ -4,6 +4,8 @@
 
 A clean, production-ready boilerplate for building modern fullstack applications with Next.js, Expo, and powerful monorepo architecture.
 
+> **This is an Alpha release of Paradigma.** While the boilerplate generates fully functional applications with modern tech stack, it contains several bugs and incomplete features due to our rapid development approach. We recommend to use it with caution.
+
 ## 🚀 Features
 
 - **Cross-Platform**: Next.js web frontend and Expo/React Native mobile app
@@ -343,6 +345,38 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: Check the `docs/` directory
 - **Issues**: Create issues in your project repository
 - **Discussions**: Start discussions for feature requests and improvements
+
+---
+
+## 📝 Development Todo List
+
+### 🐛 Known Issues & Bug Fixes
+
+- [ ] **Authentication Flow**: Resolve OTP input validation edge cases
+- [ ] **Error Handling**: Improve error boundaries and user feedback
+- [ ] **Form Validation**: Fix inconsistent validation states across forms
+
+### 📚 Documentation Improvements
+
+- [ ] **API Documentation**: Generate tRPC router documentation with examples
+- [ ] **Component Library**: Document all reusable
+- [ ] **Database Schema**: Add comprehensive schema documentation
+- [ ] **Deployment Guide**: Create step-by-step deployment instructions
+- [ ] **Contributing Guide**: Detailed contribution guidelines and code standards
+- [ ] **Architecture Decisions**: Document ADRs (Architecture Decision Records)
+- [ ] **Troubleshooting Guide**: Common issues and solutions
+
+### 🚀 Feature Enhancements
+
+- [ ] **Performance**: Mobile app optimization and bundle size reduction
+- [ ] **Internationalization**: Complete translation management system
+
+### 🔧 Technical Debt
+
+- [ ] **Code Refactoring**: Clean up rapid development artifacts
+- [ ] **Type Safety**: Improve TypeScript coverage to 100%
+- [ ] **Dependencies**: Audit and optimize package dependencies
+- [ ] **Code Standards**: Establish and enforce coding conventions
 
 ---
 
