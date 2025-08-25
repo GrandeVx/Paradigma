@@ -537,9 +537,9 @@
       "timeLabel": "Time",
       "body": "Have you added your expenses today? 👀"
     },
-    "recurringPayments": {
-      "title": "Recurring and installments",
-      "description": "We'll send you a notification to remind you of your recurring payments and installments"
+    "recurring": {
+      "title": "Event notifications",
+      "description": "We'll send you notifications to remind you of important events and app updates"
     },
     "preview": {
       "title": "PREVIEW",

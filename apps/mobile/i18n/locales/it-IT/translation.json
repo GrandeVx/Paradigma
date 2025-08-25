@@ -567,9 +567,9 @@
       "timeLabel": "Orario",
       "body": "Hai aggiunto le tue spese oggi? 👀"
     },
-    "recurringPayments": {
-      "title": "Ricorrenze e rate",
-      "description": "Ti invieremo una notifica per ricordarti dei tuoi pagamenti ricorrenti e delle rate"
+    "recurring": {
+      "title": "Notifiche eventi",
+      "description": "Ti invieremo notifiche per ricordarti degli eventi importanti e aggiornamenti dell'app"
     },
     "preview": {
       "title": "ANTEPRIMA",

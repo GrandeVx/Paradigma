@@ -400,10 +400,10 @@ export const NotificationsBottomSheet: React.FC<NotificationsBottomSheetProps> =
             <View className="flex-row justify-center gap-x-6">
               <View className="flex-1 gap-y-1">
                 <Text className="text-black text-base font-semibold">
-                  {t('notifications.recurringPayments.title')}
+                  {t('notifications.recurring.title')}
                 </Text>
                 <Text className="text-gray-500 text-sm leading-5">
-                  {t('notifications.recurringPayments.description')}
+                  {t('notifications.recurring.description')}
                 </Text>
               </View>
               <Toggle
