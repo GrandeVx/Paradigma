@@ -8,14 +8,8 @@ export default function ModalsLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen 
-        name="(creation-flow)" 
-        options={{
-          presentation: "modal",
-        }}
-      />
-      <Stack.Screen 
-        name="(transaction-flow)" 
+      <Stack.Screen
+        name="(transaction-flow)"
         options={{
           presentation: "modal",
         }}

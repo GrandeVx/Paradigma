@@ -21,14 +21,11 @@ export default function GroupsLayout() {
       />
 
       <Stack.Screen
-        name="group-management"
+        name="[groupId]"
         options={{
           presentation: "card",
-          animation: Platform.OS === "ios" ? "slide_from_bottom" : "fade_from_bottom",
+          animation: Platform.OS === "ios" ? "slide_from_right" : "fade",
           animationDuration: 300,
-        }}
-        initialParams={{
-          title: "Group Management",
         }}
       />
     </Stack>

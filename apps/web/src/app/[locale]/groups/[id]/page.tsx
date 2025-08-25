@@ -33,7 +33,8 @@ export default function GroupDetailPage() {
 
   // Fetch group details
   const { data: group, isLoading: isLoadingGroup, error: groupError } = api.groups.getGroup.useQuery(
-    { id: groupId }
+    { id: groupId },
+    { enabled: !!groupId }
   );
 
   // Fetch group posts

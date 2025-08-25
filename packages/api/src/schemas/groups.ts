@@ -75,3 +75,8 @@ export const getUserPendingRequestsSchema = z.object({
   limit: z.number().min(1).max(100).default(20),
   cursor: z.string().uuid().optional(),
 });
+
+// Leave group schema
+export const leaveGroupSchema = z.object({
+  groupId: z.string().uuid(),
+});

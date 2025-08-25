@@ -153,12 +153,67 @@ export const queries = {
         nextCursor = nextItem!.id;
       }
 
-      return {
-        groups: groups.map(group => ({
+      // For authenticated users, include their membership and join request status
+      let groupsWithUserData = groups;
+      if (ctx.session?.user) {
+        const userId = ctx.session.user.id;
+        
+        // Get user's memberships for all these groups in one query
+        const userMemberships = await ctx.db.groupMember.findMany({
+          where: {
+            userId,
+            groupId: { in: groups.map(g => g.id) },
+            isActive: true,
+          },
+          select: {
+            groupId: true,
+            role: true,
+            joinedAt: true,
+          },
+        });
+
+        // Get user's pending join requests for all these groups
+        const userJoinRequests = await ctx.db.groupJoinRequest.findMany({
+          where: {
+            userId,
+            groupId: { in: groups.map(g => g.id) },
+            status: 'PENDING',
+          },
+          select: {
+            id: true,
+            groupId: true,
+            status: true,
+            createdAt: true,
+          },
+        });
+
+        // Create lookup maps
+        const membershipMap = new Map(
+          userMemberships.map(m => [m.groupId, m])
+        );
+        const requestMap = new Map(
+          userJoinRequests.map(r => [r.groupId, r])
+        );
+
+        groupsWithUserData = groups.map(group => ({
           ...group,
           memberCount: group._count.members,
           postCount: group._count.posts,
-        })),
+          userMembership: membershipMap.get(group.id) || null,
+          userJoinRequest: requestMap.get(group.id) || null,
+        }));
+      } else {
+        groupsWithUserData = groups.map(group => ({
+          ...group,
+          memberCount: group._count.members,
+          postCount: group._count.posts,
+          userMembership: null,
+          userJoinRequest: null,
+        }));
+      }
+
+      return {
+        groups: groupsWithUserData,
         nextCursor,
       };
     }),

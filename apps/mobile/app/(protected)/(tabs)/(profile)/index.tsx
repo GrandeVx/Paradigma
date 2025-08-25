@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { RefObject, useCallback, useRef } from "react";
 import { StyleSheet, ScrollView, Pressable, Alert, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import HeaderContainer from "@/components/layouts/_header";
@@ -131,8 +131,8 @@ export default function ProfileScreen() {
       await setIcon(selectedIcon);
       profileIconBottomSheetRef.current?.close();
       Alert.alert(
-        t('profile.iconUpdated'), 
-        t('profile.iconUpdatedMessage'), 
+        t('profile.iconUpdated'),
+        t('profile.iconUpdatedMessage'),
         [{
           text: t('profile.restart'),
           onPress: () => reloadAppAsync()
@@ -196,8 +196,8 @@ export default function ProfileScreen() {
 
   const handleSignOut = () => {
     Alert.alert(
-      t("settings.signOut.title"), 
-      t("settings.signOut.message"), 
+      t("settings.signOut.title"),
+      t("settings.signOut.message"),
       [
         { text: t("settings.account.cancel"), style: "cancel" },
         {
@@ -414,8 +414,8 @@ export default function ProfileScreen() {
       </BottomSheet>
 
       {/* Notifications Bottom Sheet */}
-      <NotificationsBottomSheet 
-        bottomSheetRef={notificationsBottomSheetRef}
+      <NotificationsBottomSheet
+        bottomSheetRef={notificationsBottomSheetRef as RefObject<BottomSheet>}
         snapPoints={['60%']}
         renderBackdrop={renderBackdrop}
         handleClosePress={() => notificationsBottomSheetRef.current?.close()}
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   sectionContainer: {
     backgroundColor: 'white',
     borderRadius: 12,
-    marginHorizontal: 24,
+    marginHorizontal: 0,
     paddingVertical: 4,
   },
   profileContainer: {

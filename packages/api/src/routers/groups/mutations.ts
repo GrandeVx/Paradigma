@@ -9,6 +9,7 @@ import {
   requestJoinSchema,
   respondToRequestSchema,
   cancelRequestSchema,
+  leaveGroupSchema,
 } from "../../schemas/groups";
 import { notFoundError, notAuthorizedError, badRequestError } from "../../utils/errors";
 import { formatCacheKeyParams } from "../../utils/cache";
@@ -478,6 +479,66 @@ export const mutations = {
 
       await ctx.db.groupJoinRequest.delete({
         where: { id: input.requestId },
+      });
+
+      return { success: true };
+    }),
+
+  // Leave group (members only, owners can't leave)
+  leaveGroup: protectedProcedure
+    .input(leaveGroupSchema)
+    .mutation(async ({ ctx, input }) => {
+      const group = await ctx.db.group.findUnique({
+        where: { id: input.groupId },
+        select: { id: true, ownerId: true },
+      });
+
+      if (!group) {
+        throw notFoundError(ctx, 'group' as any);
+      }
+
+      // Owners cannot leave their own group
+      if (group.ownerId === ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Group owners cannot leave their own group',
+        });
+      }
+
+      // Check if user is actually a member
+      const membership = await ctx.db.groupMember.findUnique({
+        where: {
+          userId_groupId: {
+            userId: ctx.session.user.id,
+            groupId: input.groupId,
+          },
+        },
+      });
+
+      if (!membership) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'You are not a member of this group',
+        });
+      }
+
+      // Remove membership
+      await ctx.db.groupMember.delete({
+        where: {
+          userId_groupId: {
+            userId: ctx.session.user.id,
+            groupId: input.groupId,
+          },
+        },
+      });
+
+      // Also cancel any pending join requests (cleanup)
+      await ctx.db.groupJoinRequest.deleteMany({
+        where: {
+          userId: ctx.session.user.id,
+          groupId: input.groupId,
+          status: 'PENDING',
+        },
       });
 
       return { success: true };

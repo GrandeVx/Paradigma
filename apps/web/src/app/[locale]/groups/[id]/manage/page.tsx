@@ -67,7 +67,7 @@ export default function ManageGroupPage() {
   // Fetch group details
   const { data: group, isLoading: isLoadingGroup } = api.groups.getGroup.useQuery({
     id: groupId,
-  });
+  }, { enabled: !!groupId });
 
   // Fetch group members
   const { data: membersData, isLoading: isLoadingMembers } = api.groups.getGroupMembers.useQuery({

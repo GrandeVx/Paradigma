@@ -21,13 +21,6 @@ export default function AuthLayout() {
         }}
       />
 
-      <Stack.Screen
-        name="installments"
-        options={{
-          title: "Rate",
-        }}
-      />
-
     </Stack>
   );
 }

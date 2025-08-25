@@ -46,6 +46,8 @@ export const DeleteIcon = createIconComponent("delete");
 export const ChecksIcon = createIconComponent("checks");
 export const AtIcon = createIconComponent("at");
 export const UsersIcon = createIconComponent("users");
+export const HeartIcon = createIconComponent("heart");
+export const ShareIcon = createIconComponent("share");
 
 
 
@@ -111,6 +113,8 @@ export const iconNames = [
   "checks",
   "at",
   "users",
+  "heart",
+  "share",
 ] as const;
 
 export type IconName = typeof iconNames[number]; 
