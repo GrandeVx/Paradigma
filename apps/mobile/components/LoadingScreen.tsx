@@ -233,16 +233,16 @@ export const LoadingScreen = React.memo<LoadingScreenProps>(({ isVisible, networ
 
           {/* Animated currency symbols with smooth transitions */}
           <Animated.Text style={[styles.currencySymbol, styles.dollarSymbol, dollarStyle]}>
-            $
+            👀
           </Animated.Text>
           <Animated.Text style={[styles.currencySymbol, styles.euroSymbol, euroStyle]}>
-            €
+            🚀
           </Animated.Text>
           <Animated.Text style={[styles.currencySymbol, styles.poundSymbol, poundStyle]}>
-            £
+            🙈
           </Animated.Text>
           <Animated.Text style={[styles.currencySymbol, styles.yenSymbol, yenStyle]}>
-            ¥
+            🤯
           </Animated.Text>
 
           {/* Status Message */}
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   },
   currencySymbol: {
     position: "absolute",
-    fontSize: 146,
+    fontSize: 90,
     zIndex: 30,
     fontWeight: "700",
     color: "#359AF8", // Blue color for symbols

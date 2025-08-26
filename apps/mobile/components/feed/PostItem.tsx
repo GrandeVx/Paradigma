@@ -59,16 +59,16 @@ export function PostItem({ post, onLike, onComment }: PostItemProps) {
         </View>
 
         {/* Content */}
-        <View className="flex-1">
+        <View className="flex-1 w-full">
           {/* Header with user info */}
           {post.group && (
-            <>
-              <View className="bg-gray-100 dark:bg-gray-800 py-0.5 rounded-full">
-                <Text className="text-sm text-gray-600 dark:text-gray-300">
-                  {post.group.name}
-                </Text>
-              </View>
-            </>
+
+            <View className="bg-gray-100 dark:bg-gray-800 py-0.5 rounded-full flex w-24 flex-row items-center justify-center mb-1">
+              <Text className="text-sm text-gray-600 dark:text-gray-300 px-2">
+                {post.group.name}
+              </Text>
+            </View>
+
           )}
           <View className="flex-row items-center mb-1">
             <Text className="text-base font-bold text-black dark:text-white mr-1">
