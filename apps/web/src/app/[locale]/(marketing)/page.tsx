@@ -166,19 +166,21 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-6">
-              <Link href="https://github.com" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="https://github.com/GrandeVx/Paradigma" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
                 <Github className="w-5 h-5" />
               </Link>
-              <Link href="https://twitter.com" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="https://x.com/vittoIam" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
                 <Twitter className="w-5 h-5" />
               </Link>
-              <Link href="https://discord.gg" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="https://discord.gg/G2qEWYbmgj" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
                 <MessageSquare className="w-5 h-5" />
               </Link>
             </div>
 
             <p className="text-sm text-muted-foreground">
-              Built with ❤️ by the community
+              Built with ❤️ by <Link href="https://x.com/vittoIam" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
+                @vittoIam
+              </Link>
             </p>
           </div>
         </div>
