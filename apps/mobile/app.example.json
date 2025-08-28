@@ -14,7 +14,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "appleTeamId": "CA5W3WY58U",
+      "appleTeamId": "YOUR_APPLE_TEAM_ID",
       "jsEngine": "hermes"
     },
     "notification": {
@@ -49,7 +49,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.1010271507170-gq1tot6k4ojt9u55fpt3et3g9lthm2qo"
+          "iosUrlScheme": "com.googleusercontent.apps.YOUR_GOOGLE_CLIENT_ID"
         }
       ],
       [
@@ -69,7 +69,7 @@
       [
         "@bacons/apple-targets",
         {
-          "appleTeamId": "CA5W3WY58U"
+          "appleTeamId": "YOUR_APPLE_TEAM_ID"
         }
       ],
       "expo-secure-store",
@@ -92,11 +92,9 @@
         "origin": false
       },
       "googleSignIn": {
-        "iosClientId": "1010271507170-gq1tot6k4ojt9u55fpt3et3g9lthm2qo.apps.googleusercontent.com"
+        "iosClientId": ""
       },
-      "eas": {
-        "projectId": "099565be-c3fd-4641-b9b0-44330ad1425c"
-      }
+      "eas": {}
     },
     "runtimeVersion": {
       "policy": "appVersion"

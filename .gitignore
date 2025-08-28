@@ -199,6 +199,9 @@ dev-debug.log
 *.cert
 authKey*
 
+# Expo app configuration with sensitive data
+apps/mobile/app.json
+
 # Docker Compose files (may contain sensitive data)
 docker-compose.yml
 docker-compose.*.yml
