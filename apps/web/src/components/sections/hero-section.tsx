@@ -41,7 +41,7 @@ export function HeroSection() {
 
           {/* Subheading */}
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-            The complete fullstack boilerplate with authentication, real-time features, 
+            The complete fullstack boilerplate with authentication, real-time features,
             and modern tooling. Skip the setup, focus on what makes your app unique.
           </p>
 
@@ -52,10 +52,10 @@ export function HeroSection() {
               Try Demo App
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
-            
-            <Button 
-              variant="outline" 
-              size="lg" 
+
+            <Button
+              variant="outline"
+              size="lg"
               className="w-full sm:w-auto h-12 px-8 font-medium border-border hover:bg-accent"
               asChild
             >
@@ -69,14 +69,14 @@ export function HeroSection() {
 
           {/* Stats */}
           <div className="flex flex-col sm:flex-row gap-8 justify-center items-center text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span>15.2k+ GitHub Stars</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               <span>2.3k+ Contributors</span>
-            </div>
+            </div> */}
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
               <span>100% TypeScript</span>

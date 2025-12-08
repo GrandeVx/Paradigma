@@ -110,13 +110,13 @@ export default function SignInVerify(
         // Existing user login - go to home/accounts
         console.log("[🚥 SignInVerify] Existing user login - go to home/accounts");
         router.dismissTo({
-          pathname: "/(protected)/(accounts)",
+          pathname: "/(protected)/(tabs)/(dashboard)"
         });
       } else {
         // New user registration - start account creation flow from name step
         console.log("[🚥 SignInVerify] New user registration - start account creation flow from name step");
         router.dismissTo({
-          pathname: "/(protected)/(creation-flow)/name",
+          pathname: "/(protected)/(tabs)/(dashboard)",
           params: {
             firstAccount: "true",
           },
