@@ -1,4 +1,14 @@
-FROM node:20-alpine AS builder
+FROM node:24.22.0-alpine AS node-security-base
+RUN test "$(apk --print-arch)" = "x86_64" \
+ && apk add --no-cache --virtual .node-patch curl xz \
+ && curl -fsSLo /tmp/node.tar.xz https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64-musl.tar.xz \
+ && echo "b83b6d679e4bf1128c8e9e982f3e64cd8badaddf1e38613aa36f93186395f9fa  /tmp/node.tar.xz" | sha256sum -c - \
+ && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
+ && rm /tmp/node.tar.xz \
+ && apk del .node-patch \
+ && test "$(node --version)" = "v24.22.1"
+
+FROM node-security-base AS builder
 RUN npm install -g pnpm
 
 # Install OpenSSL for Prisma compatibility
@@ -76,7 +86,7 @@ ENV SKIP_ENV_VALIDATION=true
 # Build the web application
 RUN pnpm turbo run build --filter=@paradigma/web
 
-FROM node:20-alpine
+FROM node-security-base
 RUN npm install -g pnpm
 
 # Install OpenSSL for Prisma compatibility in production
