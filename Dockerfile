@@ -1,9 +1,26 @@
-FROM node:20-alpine AS builder
+FROM node:24.22.0-bookworm-slim AS node-security-base
+ARG TARGETARCH
+RUN set -eu; \
+    case "$TARGETARCH" in \
+      amd64) node_arch=x64; node_sha=6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6 ;; \
+      arm64) node_arch=arm64; node_sha=dbabf7a1cbf947e6059ffad2c27b80041db97dea1e553b62afdee7f13fca336e ;; \
+      *) echo "Unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
+    esac; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl xz-utils; \
+    curl -fsSLo /tmp/node.tar.xz "https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-${node_arch}.tar.xz"; \
+    echo "$node_sha  /tmp/node.tar.xz" | sha256sum -c -; \
+    tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1; \
+    rm /tmp/node.tar.xz; \
+    rm -rf /var/lib/apt/lists/*; \
+    test "$(node --version)" = "v24.22.1"
+
+FROM node-security-base AS builder
 RUN npm install -g pnpm
 
 # Install OpenSSL for Prisma compatibility
-RUN apk add --no-cache openssl libc6-compat
-RUN apk add --no-cache curl
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 # Define build arguments for environment variables needed during build
 ARG DATABASE_URL
@@ -76,12 +93,12 @@ ENV SKIP_ENV_VALIDATION=true
 # Build the web application
 RUN pnpm turbo run build --filter=@paradigma/web
 
-FROM node:20-alpine
+FROM node-security-base
 RUN npm install -g pnpm
 
 # Install OpenSSL for Prisma compatibility in production
-RUN apk add --no-cache openssl libc6-compat
-RUN apk add --no-cache curl
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 # Define build arguments for environment variables needed at runtime
 ARG DATABASE_URL
